@@ -7,6 +7,7 @@ export interface JobContext {
   title: string;
   url: string;
   siteName: string;
+  companyName?: string;
 }
 
 interface UIState {

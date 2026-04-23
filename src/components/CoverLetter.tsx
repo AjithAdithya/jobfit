@@ -4,8 +4,8 @@ import {
   ArrowRight, Mail, Loader2, Copy, Download, Check,
   AlertCircle, Sparkles, ExternalLink,
 } from 'lucide-react';
-import { generateCoverLetterStream } from '../lib/agents';
-import type { AnalysisResult, CoverLetterTone } from '../lib/agents';
+import { generateCoverLetterStream, runCompanyResearchAgent, formatCompanyResearch } from '../lib/agents';
+import type { AnalysisResult, CoverLetterTone, CompanyResearch } from '../lib/agents';
 import type { JobContext } from '../store/useUIStore';
 import { useUIStore } from '../store/useUIStore';
 import { supabase } from '../lib/supabase';
@@ -52,8 +52,20 @@ const CoverLetter: React.FC<CoverLetterProps> = ({
   const [generating, setGenerating] = useState(false);
   const [driveConnected, setDriveConnected] = useState(false);
   const [driveError, setDriveError] = useState<string | null>(null);
+  const [companyResearch, setCompanyResearch] = useState<CompanyResearch | null>(null);
+  const [researchLoading, setResearchLoading] = useState(false);
 
   useEffect(() => { hasDriveAccess().then(setDriveConnected); }, []);
+  useEffect(() => {
+    const company = jobContext.companyName || extractCompanyName(jobContext);
+    if (!company || company === 'the company') return;
+    setResearchLoading(true);
+    runCompanyResearchAgent(company, jobContext.title)
+      .then(r => setCompanyResearch(r))
+      .catch(() => {})
+      .finally(() => setResearchLoading(false));
+  }, [jobContext.companyName, jobContext.title]);
+
   const [stage, setStage] = useState<string>('');
   const [streamedText, setStreamedText] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -125,9 +137,19 @@ const CoverLetter: React.FC<CoverLetterProps> = ({
         analysis.matches.length > 0 ? `Requirements already aligned: ${analysis.matches.slice(0, 5).join('; ')}` : '',
       ].filter(Boolean).join('\n');
 
+      // Run research if not already loaded
+      let research = companyResearch;
+      if (!research && !researchLoading) {
+        const company = jobContext.companyName || extractCompanyName(jobContext);
+        setStage(`Researching ${company || 'company'}...`);
+        research = await runCompanyResearchAgent(company, jobContext.title).catch(() => null);
+        if (research) setCompanyResearch(research);
+      }
+
       setStage('Writing your cover letter...');
 
-      const companyName = extractCompanyName(jobContext);
+      const companyName = jobContext.companyName || extractCompanyName(jobContext);
+      const companyContext = research ? formatCompanyResearch(research) : undefined;
 
       let fullText = '';
       await generateCoverLetterStream(
@@ -137,6 +159,7 @@ const CoverLetter: React.FC<CoverLetterProps> = ({
           companyName,
           roleTitle: jobContext.title,
           tone: selectedTone,
+          companyContext,
         },
         (chunk) => {
           fullText += chunk;
@@ -269,13 +292,68 @@ body { font-family: Georgia, serif; font-size: 11pt; line-height: 1.5; color: #0
           <span className="eyebrow text-crimson-500">Writing for</span>
         </div>
         <p className="text-sm font-bold text-ink-900 leading-snug">{jobContext.title}</p>
-        <p className="text-xs text-ink-500 mt-1">{extractCompanyName(jobContext)}</p>
+        <p className="text-xs text-ink-500 mt-1">{jobContext.companyName || extractCompanyName(jobContext)}</p>
         {(selectedGaps.length + selectedKeywords.length) > 0 && (
           <p className="eyebrow text-ink-400 mt-2 normal-case tracking-normal text-[10px]">
             Personalizing around {selectedGaps.length + selectedKeywords.length} selection{selectedGaps.length + selectedKeywords.length !== 1 ? 's' : ''}
           </p>
         )}
       </div>
+
+      {/* Company research panel */}
+      {(researchLoading || companyResearch) && (
+        <div className="border border-ink-200 overflow-hidden">
+          <div className="flex items-center justify-between px-4 py-2.5 bg-ink-900 text-cream">
+            <span className="eyebrow text-cream/70">Company Intelligence</span>
+            {researchLoading && <Loader2 className="w-3 h-3 animate-spin text-cream/50" />}
+            {companyResearch && !researchLoading && (
+              <span className={`eyebrow text-[9px] px-1.5 py-0.5 border ${
+                companyResearch.confidence === 'high' ? 'border-citrus/40 text-citrus' :
+                companyResearch.confidence === 'medium' ? 'border-sky/40 text-sky' :
+                'border-ink-500 text-ink-400'
+              }`}>{companyResearch.confidence} confidence</span>
+            )}
+          </div>
+          {researchLoading && (
+            <div className="px-4 py-3 text-xs text-ink-500 italic font-serif">
+              Researching company profile…
+            </div>
+          )}
+          {companyResearch && !researchLoading && (
+            <div className="px-4 py-3 space-y-2.5 bg-cream">
+              {companyResearch.overview && (
+                <p className="text-xs text-ink-700 leading-relaxed">{companyResearch.overview}</p>
+              )}
+              <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-[11px]">
+                {companyResearch.stage && companyResearch.stage !== 'Unknown' && (
+                  <div>
+                    <span className="eyebrow text-ink-400 block mb-0.5">Stage</span>
+                    <span className="text-ink-700">{companyResearch.stage}</span>
+                  </div>
+                )}
+                {companyResearch.teamSize && companyResearch.teamSize !== 'Unknown' && (
+                  <div>
+                    <span className="eyebrow text-ink-400 block mb-0.5">Team</span>
+                    <span className="text-ink-700">{companyResearch.teamSize}</span>
+                  </div>
+                )}
+                {companyResearch.techStack.length > 0 && (
+                  <div className="col-span-2">
+                    <span className="eyebrow text-ink-400 block mb-0.5">Tech</span>
+                    <span className="text-ink-700">{companyResearch.techStack.slice(0, 6).join(', ')}</span>
+                  </div>
+                )}
+                {companyResearch.recentDevelopments && companyResearch.recentDevelopments !== 'Unknown' && (
+                  <div className="col-span-2">
+                    <span className="eyebrow text-ink-400 block mb-0.5">Recent</span>
+                    <span className="text-ink-700">{companyResearch.recentDevelopments}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Tone selector */}
       <div className="space-y-3">
