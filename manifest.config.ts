@@ -34,7 +34,8 @@ export default defineManifest(async (env) => ({
     'https://accounts.google.com/*',
     'https://*.googleusercontent.com/*',
     'https://api.anthropic.com/*',
-    'https://api.voyageai.com/*'
+    'https://api.voyageai.com/*',
+    'https://api.duckduckgo.com/*',
   ],
   background: {
     service_worker: 'src/background/index.ts',

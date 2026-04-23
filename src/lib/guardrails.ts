@@ -35,7 +35,7 @@ const INVISIBLE_CSS_RE = /style\s*=\s*["'][^"']*(?:color\s*:\s*(?:white|#fff(?:f
 const BASE64_RE = /[A-Za-z0-9+/]{100,}={0,2}/;
 
 // Layer 1: Unicode normalization + invisible char stripping + detection
-export function sanitizeJD(raw: string, maxLength = 8000): SanitizationResult {
+export function sanitizeJD(raw: string, maxLength = 20000): SanitizationResult {
   const reasons: string[] = [];
 
   // Normalize Unicode
@@ -73,7 +73,7 @@ export function sanitizeJD(raw: string, maxLength = 8000): SanitizationResult {
   const truncated = clean.length > maxLength;
   if (truncated) {
     clean = clean.slice(0, maxLength);
-    reasons.push(`Truncated to ${maxLength} characters`);
+    reasons.push(`Truncated to ${maxLength.toLocaleString()} characters`);
   }
 
   return {

@@ -10,7 +10,7 @@ import { useAuth } from './hooks/useAuth'
 import { useResumes } from './hooks/useResumes'
 import {
   runJobMatchAnalysis, generateTailoredResume,
-  runPlannerSync,
+  runPlannerSync, NotJobDescriptionError,
 } from './lib/agents'
 import { applyStyleAndFitA4 } from './lib/styleUtils'
 import { getMatchLevel } from './lib/matchLevel'
@@ -70,7 +70,7 @@ const Alert: React.FC<{
 }
 
 const SidePanel: React.FC = () => {
-  const { user, loading: authLoading, signInWithGoogle } = useAuth()
+  const { user, loading: authLoading, signingIn, authError, clearAuthError, getRedirectUri, signInWithGoogle } = useAuth()
   const { uploadAndProcess, processing: resumeProcessing } = useResumes()
   const [loading, setLoading] = useState(false)
   const [analyzing, setAnalyzing] = useState(false)
@@ -82,6 +82,7 @@ const SidePanel: React.FC = () => {
   const [selectedKeywords, setSelectedKeywords] = useState<string[]>([])
   const [generatingResume, setGeneratingResume] = useState(false)
   const [generatedResume, setGeneratedResume] = useState<string | null>(null)
+  const [regenerateNote, setRegenerateNote] = useState('')
   const [activeStyle, setActiveStyle] = useState<ResumeStyle>(DEFAULT_RESUME_STYLE)
   const [showStylePresets, setShowStylePresets] = useState(false)
   const [activeSection, setActiveSection] = useState<'matches' | 'gaps' | 'keywords' | null>(null)
@@ -164,9 +165,10 @@ const SidePanel: React.FC = () => {
           title: response.data.title,
           url: response.data.url,
           siteName: response.data.siteName,
+          companyName: response.data.companyName || '',
         })
-        setView('analysis')
-        await performAnalysis(response.data.content)
+        const succeeded = await performAnalysis(response.data.content)
+        if (succeeded) setView('analysis')
       } else {
         setError(response?.error || 'Failed to extract content')
       }
@@ -191,7 +193,7 @@ const SidePanel: React.FC = () => {
     setLoading(false)
   }
 
-  const performAnalysis = async (content: string) => {
+  const performAnalysis = async (content: string): Promise<boolean> => {
     setAnalyzing(true)
     setGeneratedResume(null)
     setSelectedGaps([])
@@ -200,7 +202,9 @@ const SidePanel: React.FC = () => {
       const result = await runJobMatchAnalysis(content)
       setAnalysis(result)
 
-      if (result.guardrailResult?.flagged) {
+      if (result.guardrailResult?.truncated) {
+        setWarning('Job description exceeded 20,000 characters and was trimmed. Core content is preserved.')
+      } else if (result.guardrailResult?.flagged) {
         setWarning(`Security notice: ${result.guardrailResult.flagReasons.slice(0, 2).join('; ')}`)
       }
 
@@ -223,15 +227,22 @@ const SidePanel: React.FC = () => {
           useUIStore.getState().setActiveHistory(data)
         }
       }
+      return true
     } catch (err: any) {
+      if (err instanceof NotJobDescriptionError) {
+        const r = err.reason.length > 100 ? err.reason.slice(0, 97) + '…' : err.reason;
+        setError(`This page doesn't look like a job description — ${r} Navigate to a job posting and try again.`)
+        return false
+      }
       console.error('Analysis error:', err)
       setError('Analysis failed: ' + (err.message || 'Check your API keys'))
+      return false
     } finally {
       setAnalyzing(false)
     }
   }
 
-  const handleGenerateResume = async () => {
+  const handleGenerateResume = async (feedback?: string) => {
     if (!jobContext || !activeResumeId) return
 
     setGeneratingResume(true)
@@ -252,7 +263,8 @@ const SidePanel: React.FC = () => {
         jobContext,
         selectedGaps,
         selectedKeywords,
-        fullContext
+        fullContext,
+        feedback
       )
 
       if (guardianResult && !guardianResult.safe) {
@@ -401,16 +413,50 @@ div.WordSection1 { page: WordSection1; }
 
           <button
             onClick={signInWithGoogle}
-            className="w-full max-w-[280px] flex items-center justify-center gap-3 bg-ink-900 text-cream hover:bg-ink-700 py-4 px-6 font-bold transition-all active:scale-[0.98] shadow-print-sm border border-ink-900"
+            disabled={signingIn}
+            className="w-full max-w-[280px] flex items-center justify-center gap-3 bg-ink-900 text-cream hover:bg-ink-700 disabled:opacity-60 disabled:cursor-not-allowed py-4 px-6 font-bold transition-all active:scale-[0.98] shadow-print-sm border border-ink-900"
           >
-            <svg className="w-5 h-5" viewBox="0 0 24 24">
-              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/>
-              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-            </svg>
-            Sign in with Google
+            {signingIn ? (
+              <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              </svg>
+            ) : (
+              <svg className="w-5 h-5" viewBox="0 0 24 24">
+                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/>
+                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+              </svg>
+            )}
+            {signingIn ? 'Signing in…' : 'Sign in with Google'}
           </button>
+
+          {authError && (
+            <div className="w-full max-w-[320px] mt-2 space-y-2">
+              <div className="bg-crimson-50 border border-crimson-200 rounded p-3 text-xs text-crimson-700 text-left">
+                <p className="font-bold mb-1">Sign-in failed</p>
+                <p className="whitespace-pre-wrap break-words">{authError}</p>
+                <button onClick={clearAuthError} className="mt-2 text-crimson-500 underline text-[11px]">Dismiss</button>
+              </div>
+              {authError.includes('Redirect URL') || authError.includes('redirect URL') || authError.includes('Redirect URLs') ? (
+                <div className="bg-ink-100 border border-ink-200 rounded p-3 text-xs text-ink-600 text-left">
+                  <p className="font-bold text-ink-800 mb-1">Configure Supabase</p>
+                  <p className="mb-1">Add this exact URL to <span className="font-mono">Auth → URL Configuration → Redirect URLs</span>:</p>
+                  <div className="flex items-center gap-1">
+                    <code className="flex-1 bg-ink-200 px-2 py-1 rounded text-[10px] break-all font-mono">{getRedirectUri()}</code>
+                    <button
+                      onClick={() => navigator.clipboard.writeText(getRedirectUri())}
+                      className="shrink-0 text-ink-500 hover:text-ink-900 transition-colors"
+                      title="Copy"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" strokeWidth="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" strokeWidth="2"/></svg>
+                    </button>
+                  </div>
+                </div>
+              ) : null}
+            </div>
+          )}
         </div>
       </div>
     )
@@ -823,7 +869,7 @@ div.WordSection1 { page: WordSection1; }
                   {(plannerIntent === 'tailor_resume') && !generatedResume && (
                     <motion.button
                       initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-                      onClick={handleGenerateResume}
+                      onClick={() => handleGenerateResume()}
                       disabled={generatingResume}
                       className="w-full mt-4 flex items-center justify-center gap-3 p-4 bg-crimson-500 hover:bg-crimson-600 disabled:opacity-50 text-cream font-bold uppercase tracking-widest transition-all shadow-print-sm active:scale-95 border border-crimson-600"
                     >
@@ -854,7 +900,13 @@ div.WordSection1 { page: WordSection1; }
                         Tailored Resume Generated
                       </h3>
 
-                      <div className="bg-white border border-ink-200 max-h-[500px] overflow-y-auto">
+                      <div className="relative bg-white border border-ink-200 max-h-[500px] overflow-y-auto">
+                        {generatingResume && (
+                          <div className="absolute inset-0 bg-cream/80 flex flex-col items-center justify-center gap-3 z-10">
+                            <Loader2 className="w-8 h-8 animate-spin text-crimson-500" />
+                            <p className="eyebrow text-ink-500">Regenerating…</p>
+                          </div>
+                        )}
                         <div
                           className="html-resume-preview"
                           style={{ colorScheme: 'light' }}
@@ -898,13 +950,32 @@ div.WordSection1 { page: WordSection1; }
                         )}
                       </div>
 
-                      <button
-                        onClick={handleGenerateResume}
-                        className="w-full text-xs font-bold text-ink-500 hover:text-ink-700 transition-colors py-1 flex items-center justify-center gap-2"
-                      >
-                        <Sparkles className="w-3 h-3" />
-                        Regenerate Tailored Resume
-                      </button>
+                      {/* Regenerate with feedback */}
+                      <div className="border border-ink-200 bg-ink-50">
+                        <div className="px-4 pt-3 pb-2">
+                          <p className="eyebrow text-ink-500 mb-2">Revision notes</p>
+                          <textarea
+                            value={regenerateNote}
+                            onChange={e => setRegenerateNote(e.target.value)}
+                            placeholder="e.g. Add more focus on leadership experience, shorten the summary, highlight Python skills more…"
+                            rows={3}
+                            className="w-full p-3 bg-white border border-ink-200 text-xs text-ink-900 resize-none focus:outline-none focus:border-crimson-500 placeholder:text-ink-400"
+                          />
+                        </div>
+                        <button
+                          onClick={() => {
+                            handleGenerateResume(regenerateNote || undefined)
+                            setRegenerateNote('')
+                          }}
+                          disabled={generatingResume}
+                          className="w-full flex items-center justify-center gap-2 px-4 py-3 border-t border-ink-200 text-[10px] font-bold uppercase tracking-widest text-ink-600 hover:bg-ink-900 hover:text-cream disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                        >
+                          {generatingResume
+                            ? <><Loader2 className="w-3 h-3 animate-spin" /> Regenerating…</>
+                            : <><Sparkles className="w-3 h-3" /> Regenerate Resume</>
+                          }
+                        </button>
+                      </div>
                     </motion.div>
                   )}
                 </div>
