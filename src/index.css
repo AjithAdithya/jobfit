@@ -1,18 +1,76 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,700&family=DM+Serif+Display:ital@0;1&family=Fjalla+One&family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;1,400&display=swap');
 @import "tailwindcss";
+@config "../tailwind.config.js";
+
+:root {
+  color-scheme: light;
+  --brand-red-500: #C01414;
+  --accent-cream:  #EDE9E3;
+  --accent-citrus: #D7FF3A;
+  --accent-flare:  #FF4D2E;
+  --accent-sky:    #5DD4FF;
+  --ink-900: #0A0B0E;
+  --ink-500: #555A63;
+  --ink-300: #A9AEB6;
+  --ink-200: #D3D6DB;
+  --ink-100: #E9EBEE;
+  --ink-50:  #F5F6F7;
+  --ink-0:   #FFFFFF;
+}
 
 @layer base {
   body {
-    @apply bg-[#020617] text-slate-100 antialiased;
+    background: var(--accent-cream);
+    color: var(--ink-900);
+    font-family: 'Poppins', system-ui, sans-serif;
+    font-weight: 400;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
   }
 }
 
 @layer utilities {
-  .glass {
-    @apply bg-white/5 backdrop-blur-xl border border-white/10;
+  .font-chunk { font-family: 'Fjalla One', 'Poppins', sans-serif; }
+  .font-serif-accent { font-family: 'DM Serif Display', Georgia, serif; font-style: italic; }
+  .font-mono-ds { font-family: 'JetBrains Mono', ui-monospace, monospace; }
+
+  .serif-accent {
+    font-family: 'DM Serif Display', Georgia, serif;
+    font-style: italic;
+    font-weight: 400;
   }
-  
+
+  .num {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-variant-numeric: tabular-nums lining-nums;
+    letter-spacing: 0.01em;
+  }
+
+  .eyebrow {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: var(--ink-500);
+    font-weight: 500;
+  }
+
+  .card-ui {
+    background: var(--ink-0);
+    border: 1px solid var(--ink-200);
+    border-radius: 14px;
+  }
+
+  .card-editorial {
+    background: var(--accent-cream);
+    border: 1px solid var(--ink-900);
+    border-radius: 0;
+  }
+
+  /* Resume preview styles */
   .html-resume-preview h1 { @apply text-xl font-bold uppercase text-center mb-1; }
-  .html-resume-preview h2 { @apply text-base font-bold uppercase border-b-2 border-slate-300 pb-1 mt-4 mb-2; }
+  .html-resume-preview h2 { @apply text-base font-bold uppercase border-b-2 border-ink-300 pb-1 mt-4 mb-2; }
   .html-resume-preview h3 { @apply text-sm font-bold mt-2 mb-1; }
   .html-resume-preview ul { @apply list-disc pl-5 mt-1 mb-3; }
   .html-resume-preview li { @apply mb-1; }
@@ -20,38 +78,14 @@
   .html-resume-preview div { @apply text-center text-xs mb-3; }
 }
 
-:root {
-  color-scheme: dark;
-}
+/* Selection */
+::selection { background: var(--brand-red-500); color: var(--ink-0); }
 
-.custom-scrollbar::-webkit-scrollbar {
-  width: 5px;
-}
-.custom-scrollbar::-webkit-scrollbar-track {
-  background: transparent;
-}
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #1e293b;
-  border-radius: 10px;
-}
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: #334155;
-}
-
-:root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
-
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #0f172a;
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
+/* Scrollbar */
+.custom-scrollbar::-webkit-scrollbar { width: 5px; }
+.custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: var(--ink-200); border-radius: 10px; }
+.custom-scrollbar::-webkit-scrollbar-thumb:hover { background: var(--ink-300); }
 
 body {
   margin: 0;

@@ -1,0 +1,92 @@
+@import url('../../colors_and_type.css');
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body { background: var(--neutral-100); color: var(--fg); font-family: var(--font-body); padding: 40px 24px; }
+
+.kit { max-width: 1100px; margin: 0 auto; display: flex; flex-direction: column; gap: 48px; }
+.kit > header { display: flex; align-items: baseline; justify-content: space-between; border-bottom: 1px solid var(--neutral-900); padding-bottom: 16px; }
+.kit > header h1 { font-family: var(--font-chunk); font-size: 40px; margin: 0; letter-spacing: -0.01em; }
+.kit > header h1 em { font-family: var(--font-edit); color: var(--brand-violet-500); font-style: normal; }
+.kit > header .label { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--fg-muted); }
+
+.section-label { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--fg-muted); margin-bottom: 14px; display: flex; gap: 8px; align-items: center; }
+.section-label::before { content: ''; width: 5px; height: 5px; background: var(--brand-violet-500); border-radius: 50%; }
+
+/* Business card */
+.cards-row { display: flex; gap: 32px; flex-wrap: wrap; }
+.bcard {
+  width: 360px; height: 216px;
+  border-radius: 14px; padding: 24px; display: flex; flex-direction: column;
+  justify-content: space-between; color: #fff;
+  background: var(--grad-ultraviolet); position: relative; overflow: hidden;
+  box-shadow: var(--shadow-lg);
+  font-family: var(--font-sans);
+}
+.bcard.back { background: var(--accent-cream); color: var(--neutral-900); border: 1px solid var(--neutral-900); box-shadow: var(--shadow-md); }
+.bcard .mark { width: 44px; height: 44px; }
+.bcard .mark img { width: 100%; height: 100%; object-fit: contain; }
+.bcard .sparkle { position: absolute; top: 18px; right: 20px; color: var(--accent-citrus); font-size: 18px; }
+.bcard .bcard-name { font-family: var(--font-chunk); font-size: 30px; letter-spacing: -0.01em; line-height: 1; }
+.bcard .bcard-name em { font-family: var(--font-edit); font-style: normal; color: var(--accent-citrus); }
+.bcard.back .bcard-name em { color: var(--brand-violet-500); }
+.bcard .bcard-role { font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.14em; margin-top: 6px; opacity: 0.8; }
+.bcard .contact { font-family: var(--font-mono); font-size: 11px; line-height: 1.6; letter-spacing: 0.04em; }
+.bcard .contact span { display: block; opacity: 0.85; }
+.bcard.back .quote { font-family: var(--font-edit); font-size: 26px; line-height: 1.1; color: var(--brand-violet-500); }
+.bcard.back .attribution { font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--fg-muted); }
+
+/* Social banner 1500x500 */
+.banner {
+  width: 100%; max-width: 1080px; aspect-ratio: 3 / 1;
+  background: var(--grad-ultraviolet); border-radius: 16px; color: #fff;
+  padding: 48px; position: relative; overflow: hidden;
+  display: flex; flex-direction: column; justify-content: space-between;
+  box-shadow: var(--shadow-lg);
+}
+.banner .sparkle { position: absolute; top: 36px; right: 44px; color: var(--accent-citrus); font-size: 28px; }
+.banner .eye { font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.16em; opacity: 0.8; }
+.banner h2 { font-family: var(--font-chunk); font-size: clamp(40px, 6vw, 80px); letter-spacing: -0.015em; line-height: 0.98; margin: 0; }
+.banner h2 em { font-family: var(--font-edit); font-style: normal; color: var(--accent-citrus); }
+.banner .handle { font-family: var(--font-mono); font-size: 13px; letter-spacing: 0.08em; opacity: 0.85; }
+.banner .mark { position: absolute; bottom: 40px; right: 48px; width: 72px; height: 72px; opacity: 0.9; }
+.banner .mark img { width: 100%; height: 100%; object-fit: contain; }
+
+/* Avatar */
+.avatars { display: flex; gap: 24px; align-items: center; }
+.avatar {
+  width: 120px; height: 120px; border-radius: 50%;
+  background: var(--grad-ultraviolet); display: grid; place-items: center;
+  box-shadow: var(--shadow-md); position: relative;
+}
+.avatar.ink { background: var(--neutral-900); }
+.avatar.paper { background: var(--accent-cream); border: 1px solid var(--neutral-900); }
+.avatar img { width: 70%; height: 70%; object-fit: contain; }
+.avatar .label { position: absolute; bottom: -22px; left: 0; right: 0; text-align: center; font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--fg-muted); }
+
+/* Email signature */
+.signature {
+  background: #fff; border: 1px solid var(--border); border-radius: 12px;
+  padding: 24px; max-width: 520px; display: flex; gap: 20px; align-items: flex-start;
+}
+.signature .sigmark { width: 56px; height: 56px; flex: 0 0 56px; }
+.signature .sigmark img { width: 100%; height: 100%; object-fit: contain; }
+.signature .name { font-family: var(--font-chunk); font-size: 22px; letter-spacing: -0.01em; margin: 0; line-height: 1; }
+.signature .name em { font-family: var(--font-edit); font-style: normal; color: var(--brand-violet-500); }
+.signature .role { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--fg-muted); margin-top: 4px; }
+.signature .links { display: flex; gap: 12px; margin-top: 10px; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.06em; }
+.signature .links a { color: var(--brand-violet-500); text-decoration: none; }
+
+/* Sticker / pin */
+.stickers { display: flex; gap: 24px; flex-wrap: wrap; }
+.sticker {
+  width: 180px; aspect-ratio: 1; display: grid; place-items: center;
+  font-family: var(--font-chunk); font-size: 32px; line-height: 0.95;
+  text-align: center; padding: 16px; letter-spacing: -0.01em;
+}
+.sticker em { font-family: var(--font-edit); font-style: normal; color: inherit; }
+.sticker.round { border-radius: 50%; background: var(--accent-citrus); color: var(--neutral-900); }
+.sticker.square { border-radius: 14px; background: var(--brand-violet-500); color: #fff; }
+.sticker.ink { border-radius: 14px; background: var(--neutral-900); color: var(--accent-citrus); }
+.sticker.ink em { color: #fff; }
+.sticker.square em { color: var(--accent-citrus); }
+.sticker.flare { border-radius: 50%; background: var(--accent-flare); color: var(--accent-cream); }

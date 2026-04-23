@@ -1,0 +1,299 @@
+/* ============================================================
+   AJITH DESIGN SYSTEM — Core tokens
+   Poppins (sans) + DM Serif Display (editorial accent)
+   + Fjalla One (chunky display) + JetBrains Mono (numbers & code)
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap');
+
+/* ----- Poppins — sans / body / UI ----- */
+@font-face { font-family: 'Poppins'; src: url('fonts/Poppins-Thin.otf') format('opentype');       font-weight: 100; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Poppins'; src: url('fonts/Poppins-Light.otf') format('opentype');      font-weight: 300; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Poppins'; src: url('fonts/Poppins-Regular.otf') format('opentype');    font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Poppins'; src: url('fonts/Poppins-Medium.otf') format('opentype');     font-weight: 500; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Poppins'; src: url('fonts/Poppins-SemiBold.otf') format('opentype');   font-weight: 600; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Poppins'; src: url('fonts/Poppins-Bold.otf') format('opentype');       font-weight: 700; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Poppins'; src: url('fonts/Poppins-ExtraBold.otf') format('opentype');  font-weight: 800; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Poppins'; src: url('fonts/Poppins-Black.otf') format('opentype');      font-weight: 900; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Poppins'; src: url('fonts/Poppins-Italic.otf') format('opentype');     font-weight: 400; font-style: italic; font-display: swap; }
+@font-face { font-family: 'Poppins'; src: url('fonts/Poppins-BoldItalic.otf') format('opentype'); font-weight: 700; font-style: italic; font-display: swap; }
+
+/* ----- DM Serif Display — editorial accent serif ----- */
+@font-face { font-family: 'DM Serif Display'; src: url('fonts/DMSerifDisplay-Regular.ttf') format('truetype'); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: 'DM Serif Display'; src: url('fonts/DMSerifDisplay-Italic.ttf')  format('truetype'); font-weight: 400; font-style: italic; font-display: swap; }
+
+/* ----- Fjalla One — chunky condensed display ----- */
+@font-face { font-family: 'Fjalla One'; src: url('fonts/FjallaOne-Regular.ttf') format('truetype'); font-weight: 400; font-style: normal; font-display: swap; }
+
+:root {
+  /* ---------- BRAND CORE PALETTE ---------- */
+  /* Hero: Crimson — bold, sharp red scale */
+  --brand-red-50:   #FDECEC;
+  --brand-red-100:  #F9D0D0;
+  --brand-red-200:  #F1A1A1;
+  --brand-red-300:  #E66B6B;
+  --brand-red-400:  #D63838;
+  --brand-red-500:  #C01414;   /* primary */
+  --brand-red-600:  #9C0A0A;
+  --brand-red-700:  #7A0707;
+  --brand-red-800:  #530303;
+  --brand-red-900:  #2E0202;
+  --brand-red-ink:  #1A0000;
+
+  /* Back-compat aliases — legacy --brand-violet-* pointed at the hero scale */
+  --brand-violet-50:  var(--brand-red-50);
+  --brand-violet-100: var(--brand-red-100);
+  --brand-violet-200: var(--brand-red-200);
+  --brand-violet-300: var(--brand-red-300);
+  --brand-violet-400: var(--brand-red-400);
+  --brand-violet-500: var(--brand-red-500);
+  --brand-violet-600: var(--brand-red-600);
+  --brand-violet-700: var(--brand-red-700);
+  --brand-violet-800: var(--brand-red-800);
+  --brand-violet-900: var(--brand-red-900);
+  --brand-violet-ink: var(--brand-red-ink);
+
+  /* Bold accents */
+  --accent-citrus:  #D7FF3A;   /* acid lime — electric pop */
+  --accent-flare:   #FF4D2E;   /* crimson-tangerine */
+  --accent-cream:   #EDE9E3;   /* warm paper */
+  --accent-sky:     #5DD4FF;   /* electric cyan */
+
+  /* Neutrals — cool dark greys, not warm paper anymore */
+  --neutral-0:    #FFFFFF;
+  --neutral-50:   #F5F6F7;      /* cool near-white */
+  --neutral-100:  #E9EBEE;
+  --neutral-200:  #D3D6DB;
+  --neutral-300:  #A9AEB6;
+  --neutral-400:  #7B8088;
+  --neutral-500:  #555A63;
+  --neutral-600:  #3A3E46;
+  --neutral-700:  #24272D;
+  --neutral-800:  #14161B;
+  --neutral-900:  #0A0B0E;      /* near-black */
+
+  /* ---------- SEMANTIC — LIGHT ---------- */
+  --bg:           var(--neutral-50);
+  --bg-elev:      var(--neutral-0);
+  --bg-sunken:    var(--neutral-100);
+  --bg-invert:    var(--brand-violet-ink);
+
+  --fg:           var(--neutral-900);
+  --fg-muted:     var(--neutral-500);
+  --fg-subtle:    var(--neutral-400);
+  --fg-invert:    var(--neutral-50);
+
+  --border:        var(--neutral-200);
+  --border-strong: var(--neutral-300);
+  --border-ink:    var(--neutral-900);
+
+  --accent:       var(--brand-violet-500);
+  --accent-fg:    var(--neutral-0);
+  --accent-soft:  var(--brand-violet-50);
+
+  --link:         var(--brand-violet-500);
+  --link-hover:   var(--brand-violet-700);
+
+  --success: #1E9D5A;
+  --warning: #E6A100;
+  --danger:  var(--accent-flare);
+
+  /* ---------- TYPOGRAPHY ---------- */
+  --font-sans:     "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-serif:    "DM Serif Display", "Playfair Display", Georgia, serif;
+  --font-chunk:    "Fjalla One", "Poppins", sans-serif;      /* condensed display */
+  --font-mono:     "JetBrains Mono", "Berkeley Mono", ui-monospace, SFMono-Regular, monospace;
+
+  --font-display:  var(--font-chunk);        /* big editorial headlines — fjalla */
+  --font-edit:     var(--font-serif);        /* editorial accent serif — DM Serif Display */
+  --font-heading:  var(--font-sans);         /* UI headings, labels */
+  --font-body:     var(--font-sans);
+  --font-code:     var(--font-mono);
+
+  /* Fluid type scale — minor third + editorial leaps at display sizes */
+  --fs-xs:   0.75rem;    /* 12 */
+  --fs-sm:   0.8125rem;  /* 13 */
+  --fs-base: 0.9375rem;  /* 15 */
+  --fs-md:   1rem;       /* 16 */
+  --fs-lg:   1.125rem;   /* 18 */
+  --fs-xl:   1.375rem;   /* 22 */
+  --fs-2xl:  1.75rem;    /* 28 */
+  --fs-3xl:  2.375rem;   /* 38 */
+  --fs-4xl:  3.25rem;    /* 52 */
+  --fs-5xl:  4.5rem;     /* 72 */
+  --fs-6xl:  6.5rem;     /* 104 */
+  --fs-hero: clamp(3.5rem, 9vw, 9rem);
+
+  --lh-tight:   1.02;
+  --lh-snug:    1.15;
+  --lh-normal:  1.4;
+  --lh-relaxed: 1.55;
+
+  --ls-tight:  -0.03em;
+  --ls-snug:   -0.015em;
+  --ls-normal: 0;
+  --ls-wide:   0.06em;
+  --ls-caps:   0.12em;
+
+  /* ---------- SPACING (4pt base) ---------- */
+  --s-0:   0;
+  --s-1:   0.25rem;
+  --s-2:   0.5rem;
+  --s-3:   0.75rem;
+  --s-4:   1rem;
+  --s-5:   1.5rem;
+  --s-6:   2rem;
+  --s-7:   2.5rem;
+  --s-8:   3rem;
+  --s-9:   4rem;
+  --s-10:  5rem;
+  --s-12:  6rem;
+  --s-16:  8rem;
+
+  /* ---------- RADII ---------- */
+  --r-xs:    4px;
+  --r-sm:    6px;
+  --r-md:    10px;
+  --r-lg:    14px;
+  --r-xl:    20px;
+  --r-2xl:   28px;
+  --r-pill:  999px;
+  --r-circle: 50%;
+
+  /* ---------- SHADOWS (soft, print-like) ---------- */
+  --shadow-xs:  0 1px 0 0 rgba(12,3,64,0.04);
+  --shadow-sm:  0 1px 2px rgba(12,3,64,0.06), 0 1px 0 rgba(12,3,64,0.03);
+  --shadow-md:  0 6px 18px -4px rgba(12,3,64,0.10), 0 2px 4px rgba(12,3,64,0.04);
+  --shadow-lg:  0 22px 48px -16px rgba(12,3,64,0.22), 0 8px 16px -8px rgba(12,3,64,0.08);
+  --shadow-xl:  0 40px 80px -24px rgba(12,3,64,0.35), 0 16px 32px -16px rgba(12,3,64,0.12);
+  --shadow-glow: 0 0 0 1px rgba(91,47,230,0.20), 0 10px 40px -8px rgba(91,47,230,0.55);
+  --shadow-inset: inset 0 1px 0 rgba(255,255,255,0.08), inset 0 -1px 0 rgba(12,3,64,0.05);
+
+  /* ---------- MOTION ---------- */
+  --ease-out-expo:   cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-out-quart:  cubic-bezier(0.25, 1, 0.5, 1);
+  --ease-spring:     cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-in-out:     cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-instant: 80ms;
+  --dur-fast:    160ms;
+  --dur-med:     260ms;
+  --dur-slow:    440ms;
+
+  /* ---------- GRADIENTS ---------- */
+  --grad-ultraviolet: linear-gradient(120deg, #C01414 0%, #7A0707 55%, #1A0000 100%);  /* legacy name, now crimson→ink */
+  --grad-crimson:     linear-gradient(120deg, #C01414 0%, #7A0707 55%, #1A0000 100%);
+  --grad-ink:         linear-gradient(180deg, #24272D 0%, #0A0B0E 100%);
+  --grad-aurora:      linear-gradient(135deg, #C01414 0%, #FF4D2E 55%, #D7FF3A 100%);
+  --grad-paper:       linear-gradient(180deg, #F5F6F7 0%, #E9EBEE 100%);
+}
+
+/* ============================================================
+   DARK MODE
+   ============================================================ */
+:root[data-theme="dark"],
+.theme-dark {
+  --bg:        var(--neutral-900);
+  --bg-elev:   var(--neutral-800);
+  --bg-sunken: #050608;
+  --bg-invert: var(--neutral-50);
+
+  --fg:        var(--neutral-50);
+  --fg-muted:  #A9AEB6;
+  --fg-subtle: #7B8088;
+  --fg-invert: var(--neutral-900);
+
+  --border:        #24272D;
+  --border-strong: #3A3E46;
+  --border-ink:    var(--neutral-50);
+
+  --accent:       var(--brand-red-400);
+  --accent-soft:  #2E0202;
+}
+
+/* ============================================================
+   BASE ELEMENT STYLES
+   ============================================================ */
+html { font-size: 16px; }
+body {
+  font-family: var(--font-body);
+  font-size: var(--fs-base);
+  line-height: var(--lh-relaxed);
+  color: var(--fg);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1, h2, h3, h4, h5, h6 { font-family: var(--font-heading); font-weight: 700; letter-spacing: var(--ls-snug); line-height: var(--lh-snug); margin: 0; }
+
+/* Editorial display — serif italic for signature look */
+.display, .display-serif {
+  font-family: var(--font-edit);
+  font-weight: 400;
+  letter-spacing: var(--ls-tight);
+  line-height: var(--lh-tight);
+  font-style: italic;
+}
+.display-chunk {
+  font-family: var(--font-chunk);
+  font-weight: 400;
+  letter-spacing: var(--ls-tight);
+  line-height: var(--lh-tight);
+}
+
+h1, .h1 { font-size: var(--fs-4xl); letter-spacing: var(--ls-tight); }
+h2, .h2 { font-size: var(--fs-3xl); }
+h3, .h3 { font-size: var(--fs-2xl); }
+h4, .h4 { font-size: var(--fs-xl);  font-weight: 600; }
+h5, .h5 { font-size: var(--fs-lg);  font-weight: 600; }
+h6, .h6 { font-size: var(--fs-md);  font-weight: 700; text-transform: uppercase; letter-spacing: var(--ls-caps); }
+
+p { margin: 0 0 1em; max-width: 64ch; text-wrap: pretty; }
+
+small, .caption { font-size: var(--fs-sm); color: var(--fg-muted); }
+
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  text-transform: uppercase;
+  letter-spacing: var(--ls-caps);
+  color: var(--fg-muted);
+  font-weight: 500;
+}
+
+code, kbd, samp, pre { font-family: var(--font-code); font-size: 0.92em; }
+code { background: var(--bg-sunken); padding: 0.12em 0.4em; border-radius: var(--r-xs); border: 1px solid var(--border); }
+pre { background: var(--bg-sunken); padding: var(--s-4); border-radius: var(--r-md); border: 1px solid var(--border); overflow: auto; }
+
+a { color: var(--link); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 0.18em; transition: color var(--dur-fast) var(--ease-out-quart); }
+a:hover { color: var(--link-hover); }
+
+::selection { background: var(--brand-violet-500); color: var(--neutral-0); }
+
+hr { border: 0; border-top: 1px solid var(--border); margin: var(--s-6) 0; }
+
+blockquote {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: var(--fs-2xl);
+  line-height: var(--lh-snug);
+  border-left: 2px solid var(--accent);
+  padding-left: var(--s-5);
+  margin: var(--s-6) 0;
+}
+
+/* Shared utilities */
+.mono { font-family: var(--font-mono); }
+.serif { font-family: var(--font-serif); }
+.italic { font-style: italic; }
+.uppercase { text-transform: uppercase; letter-spacing: var(--ls-caps); }
+.number-tabular { font-variant-numeric: tabular-nums; }
+
+/* Numbers & numerals — any digit-heavy bit of text gets the mono face.
+   Apply to counters, stats, prices, dates, years, version tags, indices. */
+.num,
+.numeric {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums lining-nums;
+  letter-spacing: 0.01em;
+}

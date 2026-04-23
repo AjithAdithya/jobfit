@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="_card.css">
+<style>
+  body { background: var(--accent-cream); padding: 0; overflow: hidden; }
+  .nav { display: flex; align-items: center; gap: 28px; padding: 18px 28px; border-bottom: 1px solid var(--border); background: rgba(250,248,244,0.72); backdrop-filter: blur(12px); }
+  .mark { width: 34px; height: 34px; display: grid; place-items: center; }
+  .mark img { width: 100%; height: 100%; object-fit: contain; }
+  .links { display: flex; gap: 22px; flex: 1; font-family: var(--font-sans); font-size: 14px; font-weight: 500; letter-spacing: -0.005em; }
+  .links a { color: var(--fg); text-decoration: none; }
+  .links a.current { color: var(--brand-violet-500); text-decoration: underline; text-underline-offset: 0.24em; text-decoration-thickness: 1.5px; }
+  .theme { font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--fg-muted); border: 1px solid var(--border); padding: 6px 10px; border-radius: 999px; }
+  .body { padding: 22px 28px; font-family: var(--font-mono); font-size: 11px; color: var(--fg-subtle); letter-spacing: 0.1em; text-transform: uppercase; }
+</style>
+</head><body class="card-shell" style="padding:0">
+<nav class="nav">
+  <div class="mark"><img src="../assets/logo-mark-black.png" alt=""></div>
+  <div class="links">
+    <a class="current">work</a><a>writing</a><a>about</a><a>notes</a>
+  </div>
+  <span class="theme">◐ theme</span>
+</nav>
+<div class="body">STICKY NAV · BLUR · MARK + 4 LINKS + THEME TOGGLE</div>
+</body></html>

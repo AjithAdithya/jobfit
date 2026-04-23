@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ajith · Design System</title>
+<link rel="stylesheet" href="colors_and_type.css">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--neutral-50);
+    color: var(--neutral-900);
+    font-family: var(--font-sans);
+    min-height: 100vh;
+    padding: 48px 40px 80px;
+  }
+  .wrap { max-width: 1100px; margin: 0 auto; }
+
+  /* ---------- masthead ---------- */
+  .masthead { border-bottom: 1px solid var(--neutral-900); padding-bottom: 20px; display: flex; justify-content: space-between; align-items: flex-end; }
+  .masthead .eye { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--neutral-500); }
+  .masthead .meta { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--neutral-500); display: flex; gap: 16px; }
+  .masthead .meta .dot { color: var(--neutral-300); }
+
+  /* ---------- hero ---------- */
+  .hero { padding: 64px 0 48px; border-bottom: 1px solid var(--neutral-200); }
+  .hero h1 {
+    font-family: var(--font-chunk);
+    font-size: clamp(64px, 10vw, 140px);
+    line-height: 0.95;
+    letter-spacing: -0.02em;
+    margin: 0;
+    text-wrap: balance;
+    color: var(--neutral-900);
+  }
+  .hero h1 em {
+    font-family: var(--font-edit);
+    font-style: normal;
+    color: var(--brand-red-500);
+    font-size: 1.05em;
+    padding: 0 0.04em;
+  }
+  .hero p {
+    font-size: 19px;
+    line-height: 1.55;
+    max-width: 620px;
+    margin: 22px 0 0;
+    color: var(--neutral-700);
+  }
+
+  /* ---------- sections ---------- */
+  section { padding: 56px 0; border-bottom: 1px solid var(--neutral-200); }
+  section h2 {
+    font-family: var(--font-chunk);
+    font-size: 44px;
+    letter-spacing: -0.015em;
+    line-height: 1;
+    margin: 0 0 28px;
+  }
+  section h2 em { font-family: var(--font-edit); font-style: normal; color: var(--brand-red-500); }
+
+  /* ---------- index grid ---------- */
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+  .card {
+    background: #fff;
+    border: 1px solid var(--neutral-200);
+    border-radius: 14px;
+    padding: 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-height: 190px;
+    text-decoration: none;
+    color: inherit;
+    transition: transform 220ms cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 220ms, border-color 220ms;
+  }
+  .card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 14px 32px rgba(0,0,0,0.08);
+    border-color: var(--neutral-900);
+  }
+  .card .num { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--neutral-500); }
+  .card h3 { font-family: var(--font-chunk); font-size: 28px; letter-spacing: -0.01em; line-height: 1.05; margin: 0; }
+  .card h3 em { font-family: var(--font-edit); font-style: normal; color: var(--brand-red-500); }
+  .card p { font-size: 14px; line-height: 1.5; color: var(--neutral-600); margin: 0; }
+  .card .arrow { margin-top: auto; font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.1em; color: var(--brand-red-500); }
+
+  /* ---------- signature move panel ---------- */
+  .signature-panel {
+    background: var(--grad-ultraviolet);
+    color: #fff;
+    border-radius: 20px;
+    padding: 64px 56px;
+    position: relative;
+    overflow: hidden;
+  }
+  .signature-panel .sparkle { position: absolute; top: 28px; right: 36px; color: var(--accent-citrus); font-size: 28px; }
+  .signature-panel .eye { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; opacity: 0.8; }
+  .signature-panel h3 {
+    font-family: var(--font-chunk);
+    font-size: clamp(44px, 6vw, 84px);
+    letter-spacing: -0.015em;
+    line-height: 0.98;
+    margin: 16px 0 0;
+    text-wrap: balance;
+  }
+  .signature-panel h3 em { font-family: var(--font-edit); font-style: normal; color: var(--accent-citrus); font-size: 1.05em; }
+  .signature-panel .sub { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; opacity: 0.75; margin-top: 24px; }
+
+  /* ---------- token quicklook ---------- */
+  .tokens { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+  .tok { aspect-ratio: 1; border-radius: 12px; display: flex; flex-direction: column; justify-content: flex-end; padding: 12px; font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.08em; }
+  .tok .name { font-weight: 600; font-size: 11px; }
+
+  /* ---------- footer ---------- */
+  footer { padding: 40px 0 0; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--neutral-500); display: flex; justify-content: space-between; }
+</style>
+</head><body>
+<div class="wrap">
+  <div class="masthead">
+    <span class="eye">№ 01 · PERSONAL DESIGN SYSTEM</span>
+    <div class="meta">
+      <span>BANGALORE</span><span class="dot">·</span><span>2026</span><span class="dot">·</span><span>V 1.0</span>
+    </div>
+  </div>
+
+  <div class="hero">
+    <h1>I build <em>quiet</em> tools in loud colors.</h1>
+    <p>A personal design system for Ajith — designer, engineer, occasional typographer.
+      Three type families, one crimson hero scale, cool dark greys, and a signature
+      type move that does most of the heavy lifting.</p>
+  </div>
+
+  <section>
+    <h2>Three <em>surfaces</em></h2>
+    <div class="grid">
+      <a class="card" href="ui_kits/portfolio/index.html">
+        <span class="num">№ 01 · UI KIT</span>
+        <h3>Portfolio</h3>
+        <p>Public landing. Hero, expanding project list, feature panels, notes, nav.</p>
+        <span class="arrow">OPEN →</span>
+      </a>
+      <a class="card" href="ui_kits/writing/index.html">
+        <span class="num">№ 02 · UI KIT</span>
+        <h3>Writing</h3>
+        <p>Long-form essay reader. Drop cap, pull quote, scroll progress, related posts.</p>
+        <span class="arrow">OPEN →</span>
+      </a>
+      <a class="card" href="ui_kits/brand/index.html">
+        <span class="num">№ 03 · UI KIT</span>
+        <h3>Brand kit</h3>
+        <p>Business cards, social banner, avatars, email signature, stickers.</p>
+        <span class="arrow">OPEN →</span>
+      </a>
+    </div>
+  </section>
+
+  <section>
+    <div class="signature-panel">
+      <span class="sparkle">✦</span>
+      <span class="eye">SIGNATURE MOVE</span>
+      <h3>Crimson headline<br>with a <em>quiet</em> serif accent.</h3>
+      <div class="sub">CHUNER DISPLAY · SILKIGFINED ACCENT · ONE POP OF COLOR</div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Token <em>quicklook</em></h2>
+    <div class="tokens">
+      <div class="tok" style="background:var(--brand-red-500);color:#fff"><div class="name">red/500</div>#C01414</div>
+      <div class="tok" style="background:var(--brand-red-700);color:#fff"><div class="name">red/700</div>#7A0707</div>
+      <div class="tok" style="background:var(--neutral-900);color:#fff"><div class="name">n/900</div>#0A0B0E</div>
+      <div class="tok" style="background:var(--neutral-500);color:#fff"><div class="name">n/500</div>#555A63</div>
+      <div class="tok" style="background:var(--accent-citrus);color:var(--neutral-900)"><div class="name">citrus</div>#D7FF3A</div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Design <em>docs</em></h2>
+    <div class="grid">
+      <a class="card" href="README.md">
+        <span class="num">A · HUMAN README</span>
+        <h3>README</h3>
+        <p>Full human-facing overview. Context, philosophy, type, color, index.</p>
+        <span class="arrow">READ →</span>
+      </a>
+      <a class="card" href="SKILL.md">
+        <span class="num">B · FOR CLAUDE</span>
+        <h3>SKILL.md</h3>
+        <p>Instructions Claude reads to re-use this system in future projects.</p>
+        <span class="arrow">READ →</span>
+      </a>
+      <a class="card" href="colors_and_type.css">
+        <span class="num">C · SOURCE</span>
+        <h3>Tokens <em>CSS</em></h3>
+        <p>All design tokens. Import this and use the variables. Don't hardcode hex.</p>
+        <span class="arrow">OPEN →</span>
+      </a>
+    </div>
+  </section>
+
+  <footer>
+    <span>AJITH · DESIGN SYSTEM · V 1.0</span>
+    <span>✦ QUIET TOOLS · LOUD COLORS</span>
+  </footer>
+</div>
+</body></html>

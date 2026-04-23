@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="_card.css">
+<style>
+  body { background: var(--neutral-50); padding: 24px 28px; }
+  .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+  .chip { border-radius: var(--r-lg); border: 1px solid var(--border); overflow: hidden; background: #fff; }
+  .sw { height: 96px; position: relative; }
+  .sw::after {
+    content: attr(data-hex);
+    position: absolute; right: 8px; bottom: 8px;
+    font-family: var(--font-mono); font-size: 9px;
+    color: rgba(255,255,255,0.82); letter-spacing: 0.06em;
+  }
+  .chip.on-light .sw::after { color: rgba(0,0,0,0.55); }
+  .meta { padding: 8px 12px; display: flex; flex-direction: column; gap: 2px; }
+  .meta .name { font-family: var(--font-sans); font-weight: 700; font-size: 13px; color: var(--fg); }
+  .meta .role { font-family: var(--font-mono); font-size: 10px; color: var(--fg-muted); text-transform: uppercase; letter-spacing: 0.1em; }
+</style>
+</head><body class="card-shell">
+<div class="card-eyebrow"><span class="dot"></span>BOLD ACCENTS · ONE AT A TIME</div>
+<div class="grid">
+  <div class="chip"><div class="sw" data-hex="#D7FF3A" style="background:#D7FF3A"></div><div class="meta"><span class="name">Citrus</span><span class="role">accent · acid pop</span></div></div>
+  <div class="chip"><div class="sw" data-hex="#FF4D2E" style="background:#FF4D2E"></div><div class="meta"><span class="name">Flare</span><span class="role">accent · crimson</span></div></div>
+  <div class="chip on-light"><div class="sw" data-hex="#F3EBDA" style="background:#F3EBDA"></div><div class="meta"><span class="name">Cream</span><span class="role">accent · warm paper</span></div></div>
+  <div class="chip"><div class="sw" data-hex="#5DD4FF" style="background:#5DD4FF"></div><div class="meta"><span class="name">Sky</span><span class="role">accent · electric</span></div></div>
+</div>
+</body></html>

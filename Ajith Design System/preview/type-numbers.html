@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="_card.css">
+<style>
+  body { background: var(--neutral-50); padding: 24px 28px; display: flex; flex-direction: column; gap: 16px; }
+  .row { display: flex; gap: 16px; align-items: baseline; padding-bottom: 12px; border-bottom: 1px dashed var(--border); }
+  .row:last-of-type { border: 0; }
+  .label { font-family: var(--font-mono); font-size: 10px; color: var(--fg-muted); letter-spacing: 0.1em; text-transform: uppercase; width: 90px; flex: 0 0 90px; }
+  .big-num { font-family: var(--font-mono); font-weight: 500; font-size: 56px; line-height: 1; letter-spacing: -0.02em; color: var(--neutral-900); font-variant-numeric: tabular-nums lining-nums; }
+  .row-sample { font-family: var(--font-sans); font-size: 22px; color: var(--neutral-900); font-weight: 700; letter-spacing: -0.01em; }
+  .row-sample .num { font-family: var(--font-mono); font-weight: 500; letter-spacing: 0.02em; color: var(--brand-red-500); font-variant-numeric: tabular-nums; }
+  .meta { font-family: var(--font-mono); font-size: 10px; color: var(--fg-subtle); letter-spacing: 0.08em; margin-left: auto; text-transform: uppercase; }
+</style>
+</head><body class="card-shell">
+<div class="card-eyebrow"><span class="dot"></span>NUMBERS · ALWAYS MONO</div>
+<div class="row">
+  <div class="label">stat</div>
+  <div class="big-num">42</div>
+  <span class="meta">shipped projects</span>
+</div>
+<div class="row">
+  <div class="label">stat</div>
+  <div class="big-num">7 yrs</div>
+  <span class="meta">design + engineering</span>
+</div>
+<div class="row">
+  <div class="label">inline</div>
+  <div class="row-sample">Updated <span class="num">2026-01-14</span> · v<span class="num">1.0.2</span></div>
+</div>
+<div class="row">
+  <div class="label">index</div>
+  <div class="row-sample"><span class="num">№ 07</span> · featured · shipped</div>
+</div>
+</body></html>

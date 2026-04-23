@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="_card.css">
+<style>
+  body { background: var(--neutral-50); padding: 24px 28px; display: flex; flex-direction: column; gap: 18px; }
+  .row { display: flex; gap: 18px; align-items: center; }
+  .label { font-family: var(--font-mono); font-size: 10px; color: var(--fg-muted); letter-spacing: 0.1em; text-transform: uppercase; width: 84px; flex: 0 0 84px; }
+  .demo { flex: 1; }
+  .btn { font-family: var(--font-sans); font-weight: 600; font-size: 14px; padding: 10px 18px; border-radius: 10px; border: 0; cursor: pointer; display: inline-block; background: var(--brand-violet-500); color: #fff; transition: all 160ms cubic-bezier(0.25,1,0.5,1); }
+  .btn.hover { background: var(--brand-violet-600); transform: translateY(-1px); box-shadow: 0 6px 18px -4px rgba(12,3,64,0.2); }
+  .btn.press { transform: scale(0.97); background: var(--brand-violet-700); transition-duration: 80ms; }
+  .link { font-family: var(--font-sans); font-size: 15px; color: var(--brand-violet-500); text-decoration: underline; text-underline-offset: 0.18em; text-decoration-thickness: 1px; }
+  .link.hover { color: var(--brand-violet-700); text-decoration-thickness: 2px; }
+  .note { font-family: var(--font-mono); font-size: 10px; color: var(--fg-subtle); }
+</style>
+</head><body class="card-shell">
+<div class="card-eyebrow"><span class="dot"></span>STATES · HOVER &amp; PRESS</div>
+<div class="row"><span class="label">default</span><div class="demo"><button class="btn">Start a project</button></div><span class="note">160ms · ease-out-quart</span></div>
+<div class="row"><span class="label">hover</span><div class="demo"><button class="btn hover">Start a project</button></div><span class="note">translateY(-1px) + deepen</span></div>
+<div class="row"><span class="label">press</span><div class="demo"><button class="btn press">Start a project</button></div><span class="note">scale(0.97) · 80ms</span></div>
+<div class="row"><span class="label">link</span><div class="demo"><a class="link">read more</a> &nbsp;&nbsp; <a class="link hover">read more (hover)</a></div><span class="note">underline thickens</span></div>
+</body></html>

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="_card.css">
+<style>
+  body { background: var(--neutral-50); padding: 22px 28px; display: flex; flex-direction: column; gap: 12px; }
+  .row { display: flex; gap: 14px; align-items: baseline; padding-bottom: 10px; border-bottom: 1px dashed var(--border); }
+  .row:last-of-type { border: 0; }
+  .label { font-family: var(--font-mono); font-size: 10px; color: var(--fg-muted); letter-spacing: 0.1em; text-transform: uppercase; width: 80px; flex: 0 0 80px; }
+  .sample { color: var(--fg); flex: 1; }
+  .meta { font-family: var(--font-mono); font-size: 9.5px; color: var(--fg-subtle); letter-spacing: 0.08em; flex: 0 0 auto; text-transform: uppercase; }
+
+  .pop-light   { font-family: "Poppins", var(--font-sans); font-weight: 300; font-size: 36px; letter-spacing: -0.02em; line-height: 1; }
+  .pop-regular { font-family: "Poppins", var(--font-sans); font-weight: 400; font-size: 36px; letter-spacing: -0.02em; line-height: 1; }
+  .pop-semi    { font-family: "Poppins", var(--font-sans); font-weight: 600; font-size: 36px; letter-spacing: -0.02em; line-height: 1; }
+  .pop-bold    { font-family: "Poppins", var(--font-sans); font-weight: 700; font-size: 36px; letter-spacing: -0.025em; line-height: 1; }
+  .pop-black   { font-family: "Poppins", var(--font-sans); font-weight: 900; font-size: 36px; letter-spacing: -0.025em; line-height: 1; }
+  .chunk { font-family: var(--font-chunk); font-size: 50px; line-height: 1; letter-spacing: 0.01em; color: var(--neutral-900); text-transform: uppercase; }
+  .edit  { font-family: var(--font-edit);  font-size: 46px; line-height: 1; letter-spacing: -0.01em; color: var(--brand-red-500); }
+  .mono  { font-family: var(--font-mono);  font-size: 18px; color: var(--neutral-900); }
+  .note { font-family: var(--font-mono); font-size: 10px; color: var(--fg-subtle); text-transform: uppercase; letter-spacing: 0.1em; margin-top: 4px; }
+</style>
+</head><body class="card-shell">
+<div class="card-eyebrow"><span class="dot"></span>TYPE · FAMILIES IN PLAY</div>
+
+<div class="row"><div class="label">Pop · 300</div><div class="sample pop-light">Poppins Light</div><span class="meta">sans · 300</span></div>
+<div class="row"><div class="label">Pop · 400</div><div class="sample pop-regular">Poppins Regular</div><span class="meta">sans · 400 · body</span></div>
+<div class="row"><div class="label">Pop · 600</div><div class="sample pop-semi">Poppins SemiBold</div><span class="meta">sans · 600</span></div>
+<div class="row"><div class="label">Pop · 700</div><div class="sample pop-bold">Poppins Bold</div><span class="meta">sans · 700</span></div>
+<div class="row"><div class="label">Pop · 900</div><div class="sample pop-black">Poppins Black</div><span class="meta">sans · 900</span></div>
+
+<div class="row"><div class="label">Chunk</div><div class="sample chunk">FJALLA ONE — LOUD</div><span class="meta">display · hero only</span></div>
+<div class="row"><div class="label">Edit</div><div class="sample edit">DM Serif · accent</div><span class="meta">editorial accent</span></div>
+<div class="row"><div class="label">Mono</div><div class="sample mono">№ 07 · glyph_studio.ts</div><span class="meta">JetBrains mono</span></div>
+
+<div class="note">poppins · dm serif display · fjalla one · jetbrains mono</div>
+</body></html>

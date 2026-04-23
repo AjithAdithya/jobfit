@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="_card.css">
+<style>
+  body { background: var(--neutral-50); padding: 24px 28px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .b { font-family: var(--font-mono); font-size: 11px; padding: 4px 10px; border-radius: 999px; letter-spacing: 0.08em; text-transform: uppercase; display: inline-flex; gap: 5px; align-items: center; border: 1px solid transparent; }
+  .b::before { content: ''; width: 5px; height: 5px; border-radius: 50%; }
+  .b-default { background: var(--neutral-100); color: var(--fg); border-color: var(--border); }
+  .b-default::before { background: var(--fg-muted); }
+  .b-brand { background: var(--brand-violet-50); color: var(--brand-violet-700); }
+  .b-brand::before { background: var(--brand-violet-500); }
+  .b-success { background: #E7F5EC; color: #0B5F2F; }
+  .b-success::before { background: #1E9D5A; }
+  .b-danger { background: #FFE6DF; color: #8A2207; }
+  .b-danger::before { background: var(--accent-flare); }
+  .b-citrus { background: var(--accent-citrus); color: var(--neutral-900); }
+  .b-citrus::before { background: var(--neutral-900); }
+  .b-ink { background: var(--neutral-900); color: #fff; }
+  .b-ink::before { background: var(--accent-citrus); }
+</style>
+</head><body class="card-shell">
+<div class="card-eyebrow" style="width:100%"><span class="dot"></span>BADGES &amp; STATUS</div>
+<span class="b b-default">Draft</span>
+<span class="b b-brand">In progress</span>
+<span class="b b-success">Shipped</span>
+<span class="b b-danger">Archived</span>
+<span class="b b-citrus">New</span>
+<span class="b b-ink">№ 07</span>
+</body></html>
