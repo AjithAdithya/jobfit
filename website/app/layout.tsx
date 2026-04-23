@@ -2,20 +2,20 @@ import type { Metadata } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'JobFit AI — AI-Powered Resume Tailoring',
-  description: 'Analyze job descriptions, identify gaps, and generate tailored resumes in seconds. Your data stays yours — bring your own API keys.',
+  title: 'JobFit — tailor resumes that fit the job',
+  description: 'A quiet Chrome extension that analyzes any job posting, scores your alignment across ten levels, and generates a tailored resume. Your keys, your data.',
   metadataBase: new URL('https://jobfit.vercel.app'),
   openGraph: {
-    title: 'JobFit AI',
-    description: 'AI-powered resume tailoring for serious job seekers.',
+    title: 'JobFit',
+    description: 'Tailor resumes that fit the job.',
     type: 'website',
   },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className="dark">
-      <body className="bg-slate-950 text-slate-100 antialiased">
+    <html lang="en">
+      <body className="bg-cream text-ink-900 antialiased font-sans">
         {children}
       </body>
     </html>

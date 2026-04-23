@@ -18,7 +18,6 @@ interface ModelStats {
 const Settings: React.FC = () => {
   const { user, signOut } = useAuth();
 
-  // API Keys state
   const [anthropicKey, setAnthropicKey] = useState('');
   const [voyageKey, setVoyageKey] = useState('');
   const [showAnthropicKey, setShowAnthropicKey] = useState(false);
@@ -27,19 +26,16 @@ const Settings: React.FC = () => {
   const [apiStatus, setApiStatus] = useState<'valid' | 'missing' | 'checking'>('checking');
   const [showKeys, setShowKeys] = useState(false);
 
-  // AI Usage state
   const [modelStats, setModelStats] = useState<ModelStats[]>([]);
   const [totalCalls, setTotalCalls] = useState(0);
   const [totalCost, setTotalCost] = useState(0);
   const [showUsage, setShowUsage] = useState(false);
 
-  // Privacy state
   const [showPrivacy, setShowPrivacy] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
   const [loading, setLoading] = useState(true);
 
-  // Load stored keys and resolve api status
   useEffect(() => {
     chrome.storage.local.get(['jobfit_anthropic_key', 'jobfit_voyage_key'], (result) => {
       const storedAnthropic = (result.jobfit_anthropic_key as string) || '';
@@ -53,7 +49,6 @@ const Settings: React.FC = () => {
     });
   }, []);
 
-  // Fetch usage stats from Supabase
   useEffect(() => {
     if (!user) return;
 
@@ -118,45 +113,47 @@ const Settings: React.FC = () => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
-      className="space-y-4"
+      className="space-y-5 pb-10"
     >
-      <h2 className="text-xl font-bold">Settings</h2>
+      {/* Header */}
+      <div>
+        <p className="eyebrow mb-2">№ 04 — account</p>
+        <h2 className="font-chunk text-[28px] leading-none tracking-tight text-ink-900">Settings</h2>
+      </div>
 
       {/* Profile */}
-      <div className="p-4 bg-slate-900 border border-slate-800 rounded-3xl">
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-2xl bg-blue-600 flex items-center justify-center font-bold text-white text-xl">
-            {user?.email?.charAt(0).toUpperCase()}
-          </div>
-          <div className="flex-1 min-w-0">
-            <h3 className="text-sm font-bold truncate">{user?.email}</h3>
-            <div className="flex items-center gap-1.5 text-[10px] text-slate-500 font-bold uppercase tracking-wider mt-0.5">
-              <Mail className="w-3 h-3" />
-              {loading ? <Loader2 className="w-3 h-3 animate-spin" /> : 'Developer Plan'}
-            </div>
+      <div className="p-5 bg-ink-900 border border-ink-900 flex items-center gap-4">
+        <div className="w-12 h-12 bg-crimson-500 flex items-center justify-center font-chunk text-cream text-xl shrink-0">
+          {user?.email?.charAt(0).toUpperCase()}
+        </div>
+        <div className="flex-1 min-w-0">
+          <h3 className="text-sm font-bold text-cream truncate">{user?.email}</h3>
+          <div className="flex items-center gap-1.5 eyebrow text-ink-400 mt-1">
+            <Mail className="w-3 h-3" />
+            {loading ? <Loader2 className="w-3 h-3 animate-spin" /> : 'Developer Plan'}
           </div>
         </div>
       </div>
 
       {/* API Keys */}
-      <div className="bg-slate-900/50 border border-slate-800 rounded-2xl overflow-hidden">
+      <div className="bg-white border border-ink-200 overflow-hidden">
         <button
           onClick={() => setShowKeys(v => !v)}
-          className="w-full flex items-center gap-4 p-4"
+          className="w-full flex items-center gap-4 p-4 hover:bg-ink-50 transition-colors"
         >
-          <div className="p-2 bg-slate-800 rounded-xl shrink-0">
-            <Key className="w-5 h-5 text-slate-400" />
+          <div className="p-2 bg-ink-100 shrink-0">
+            <Key className="w-4 h-4 text-ink-500" />
           </div>
           <div className="flex-1 text-left min-w-0">
-            <p className="text-sm font-bold">API Keys</p>
-            <p className="text-[10px] text-slate-500 truncate">
+            <p className="text-sm font-bold text-ink-900">API Keys</p>
+            <p className="eyebrow text-ink-400 mt-0.5 normal-case tracking-normal text-[10px]">
               {apiStatus === 'valid' ? 'Anthropic + Voyage configured' : 'Missing keys — add them below'}
             </p>
           </div>
-          <span className={`text-xs font-black shrink-0 ${apiStatus === 'valid' ? 'text-emerald-400' : 'text-red-400'}`}>
+          <span className={`eyebrow shrink-0 ${apiStatus === 'valid' ? 'text-ink-700' : 'text-flare'}`}>
             {apiStatus === 'checking' ? '...' : apiStatus === 'valid' ? 'Active' : 'Missing'}
           </span>
-          <ChevronDown className={`w-4 h-4 text-slate-500 transition-transform shrink-0 ${showKeys ? 'rotate-180' : ''}`} />
+          <ChevronDown className={`w-4 h-4 text-ink-400 transition-transform shrink-0 ${showKeys ? 'rotate-180' : ''}`} />
         </button>
         <AnimatePresence initial={false}>
           {showKeys && (
@@ -167,25 +164,25 @@ const Settings: React.FC = () => {
               transition={{ duration: 0.2 }}
               className="overflow-hidden"
             >
-              <div className="px-4 pb-4 space-y-3 border-t border-slate-800">
-                <p className="text-[10px] text-slate-500 pt-3 font-medium">
+              <div className="px-4 pb-4 space-y-3 border-t border-ink-100">
+                <p className="text-[10px] text-ink-500 pt-3">
                   Keys are saved locally in your browser and never sent to our servers.
                 </p>
 
                 {/* Anthropic */}
                 <div className="space-y-1">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Anthropic</label>
+                  <label className="eyebrow">Anthropic</label>
                   <div className="flex items-center gap-2">
                     <input
                       type={showAnthropicKey ? 'text' : 'password'}
                       value={anthropicKey}
                       onChange={e => setAnthropicKey(e.target.value)}
                       placeholder="sk-ant-api03-..."
-                      className="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-slate-500"
+                      className="flex-1 bg-ink-50 border border-ink-200 px-3 py-2 text-xs text-ink-900 placeholder-ink-400 focus:outline-none focus:border-crimson-500"
                     />
                     <button
                       onClick={() => setShowAnthropicKey(v => !v)}
-                      className="p-2 text-slate-500 hover:text-slate-300 transition-colors"
+                      className="p-2 text-ink-400 hover:text-ink-700 transition-colors"
                     >
                       {showAnthropicKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
@@ -194,18 +191,18 @@ const Settings: React.FC = () => {
 
                 {/* Voyage */}
                 <div className="space-y-1">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Voyage</label>
+                  <label className="eyebrow">Voyage</label>
                   <div className="flex items-center gap-2">
                     <input
                       type={showVoyageKey ? 'text' : 'password'}
                       value={voyageKey}
                       onChange={e => setVoyageKey(e.target.value)}
                       placeholder="pa-..."
-                      className="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-slate-500"
+                      className="flex-1 bg-ink-50 border border-ink-200 px-3 py-2 text-xs text-ink-900 placeholder-ink-400 focus:outline-none focus:border-crimson-500"
                     />
                     <button
                       onClick={() => setShowVoyageKey(v => !v)}
-                      className="p-2 text-slate-500 hover:text-slate-300 transition-colors"
+                      className="p-2 text-ink-400 hover:text-ink-700 transition-colors"
                     >
                       {showVoyageKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
@@ -214,9 +211,9 @@ const Settings: React.FC = () => {
 
                 <button
                   onClick={handleSaveKeys}
-                  className="w-full flex items-center justify-center gap-2 p-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-black uppercase tracking-widest text-[10px] transition-all active:scale-95"
+                  className="w-full flex items-center justify-center gap-2 p-3 bg-crimson-500 hover:bg-crimson-600 text-cream font-bold uppercase tracking-widest text-[10px] transition-all active:scale-95"
                 >
-                  {keysSaved ? <Check className="w-3 h-3 text-emerald-300" /> : <Key className="w-3 h-3" />}
+                  {keysSaved ? <Check className="w-3 h-3 text-citrus" /> : <Key className="w-3 h-3" />}
                   {keysSaved ? 'Saved!' : 'Save Keys'}
                 </button>
               </div>
@@ -226,24 +223,24 @@ const Settings: React.FC = () => {
       </div>
 
       {/* AI Usage */}
-      <div className="bg-slate-900/50 border border-slate-800 rounded-2xl overflow-hidden">
+      <div className="bg-white border border-ink-200 overflow-hidden">
         <button
           onClick={() => setShowUsage(v => !v)}
-          className="w-full flex items-center gap-4 p-4"
+          className="w-full flex items-center gap-4 p-4 hover:bg-ink-50 transition-colors"
         >
-          <div className="p-2 bg-slate-800 rounded-xl shrink-0">
-            <Zap className="w-5 h-5 text-slate-400" />
+          <div className="p-2 bg-ink-100 shrink-0">
+            <Zap className="w-4 h-4 text-ink-500" />
           </div>
           <div className="flex-1 text-left min-w-0">
-            <p className="text-sm font-bold">AI Usage</p>
-            <p className="text-[10px] text-slate-500 truncate">
+            <p className="text-sm font-bold text-ink-900">AI Usage</p>
+            <p className="eyebrow text-ink-400 mt-0.5 normal-case tracking-normal text-[10px]">
               {loading ? 'Loading...' : `${totalCalls} generations · $${totalCost.toFixed(4)} spent`}
             </p>
           </div>
-          <span className="text-xs font-black shrink-0 text-amber-400">
+          <span className="eyebrow shrink-0 text-ink-700 num">
             {loading ? '...' : `${totalCalls} calls`}
           </span>
-          <ChevronDown className={`w-4 h-4 text-slate-500 transition-transform shrink-0 ${showUsage ? 'rotate-180' : ''}`} />
+          <ChevronDown className={`w-4 h-4 text-ink-400 transition-transform shrink-0 ${showUsage ? 'rotate-180' : ''}`} />
         </button>
         <AnimatePresence initial={false}>
           {showUsage && (
@@ -254,28 +251,28 @@ const Settings: React.FC = () => {
               transition={{ duration: 0.2 }}
               className="overflow-hidden"
             >
-              <div className="px-4 pb-4 border-t border-slate-800">
+              <div className="px-4 pb-4 border-t border-ink-100">
                 {modelStats.length === 0 ? (
-                  <p className="text-[10px] text-slate-500 pt-3">No AI calls recorded yet.</p>
+                  <p className="text-[10px] text-ink-500 pt-3 italic font-serif">No AI calls recorded yet.</p>
                 ) : (
                   <div className="space-y-3 pt-3">
                     {modelStats.map(s => (
                       <div key={s.model} className="space-y-0.5">
                         <div className="flex items-center justify-between">
-                          <span className="text-xs font-bold text-slate-300">{s.model}</span>
-                          <span className="text-xs font-black text-amber-400">${s.cost.toFixed(4)}</span>
+                          <span className="text-xs font-bold text-ink-700">{s.model}</span>
+                          <span className="num text-xs text-crimson-500">${s.cost.toFixed(4)}</span>
                         </div>
                         <div className="flex items-center justify-between">
-                          <span className="text-[10px] text-slate-500">
-                            {formatTokens(s.inputTokens)} in / {formatTokens(s.outputTokens)} out tokens
+                          <span className="num text-[10px] text-ink-500">
+                            {formatTokens(s.inputTokens)} in / {formatTokens(s.outputTokens)} out
                           </span>
-                          <span className="text-[10px] text-slate-500">{s.calls} calls</span>
+                          <span className="num text-[10px] text-ink-500">{s.calls} calls</span>
                         </div>
                       </div>
                     ))}
-                    <div className="pt-2 border-t border-slate-800 flex items-center justify-between">
-                      <span className="text-xs font-black text-slate-300">Total</span>
-                      <span className="text-xs font-black text-amber-400">{totalCalls} calls · ${totalCost.toFixed(4)}</span>
+                    <div className="pt-2 border-t border-ink-100 flex items-center justify-between">
+                      <span className="text-xs font-bold text-ink-900">Total</span>
+                      <span className="num text-xs text-crimson-500">{totalCalls} calls · ${totalCost.toFixed(4)}</span>
                     </div>
                   </div>
                 )}
@@ -286,20 +283,20 @@ const Settings: React.FC = () => {
       </div>
 
       {/* Privacy & Security */}
-      <div className="bg-slate-900/50 border border-slate-800 rounded-2xl overflow-hidden">
+      <div className="bg-white border border-ink-200 overflow-hidden">
         <button
           onClick={() => setShowPrivacy(v => !v)}
-          className="w-full flex items-center gap-4 p-4"
+          className="w-full flex items-center gap-4 p-4 hover:bg-ink-50 transition-colors"
         >
-          <div className="p-2 bg-slate-800 rounded-xl shrink-0">
-            <Shield className="w-5 h-5 text-slate-400" />
+          <div className="p-2 bg-ink-100 shrink-0">
+            <Shield className="w-4 h-4 text-ink-500" />
           </div>
           <div className="flex-1 text-left min-w-0">
-            <p className="text-sm font-bold">Privacy & Security</p>
-            <p className="text-[10px] text-slate-500 truncate">Guardrails active · Data encrypted at rest</p>
+            <p className="text-sm font-bold text-ink-900">Privacy &amp; Security</p>
+            <p className="eyebrow text-ink-400 mt-0.5 normal-case tracking-normal text-[10px]">Guardrails active · Data encrypted at rest</p>
           </div>
-          <span className="text-xs font-black shrink-0 text-emerald-400">Protected</span>
-          <ChevronDown className={`w-4 h-4 text-slate-500 transition-transform shrink-0 ${showPrivacy ? 'rotate-180' : ''}`} />
+          <span className="eyebrow shrink-0 text-ink-700">Protected</span>
+          <ChevronDown className={`w-4 h-4 text-ink-400 transition-transform shrink-0 ${showPrivacy ? 'rotate-180' : ''}`} />
         </button>
         <AnimatePresence initial={false}>
           {showPrivacy && (
@@ -310,7 +307,7 @@ const Settings: React.FC = () => {
               transition={{ duration: 0.2 }}
               className="overflow-hidden"
             >
-              <div className="px-4 pb-4 border-t border-slate-800 space-y-4">
+              <div className="px-4 pb-4 border-t border-ink-100 space-y-4">
                 <ul className="space-y-1.5 pt-3">
                   {[
                     'Guardrails active on all JD inputs',
@@ -319,19 +316,19 @@ const Settings: React.FC = () => {
                     'API keys stored locally in browser only',
                     'No raw JD text sent without sanitization',
                   ].map(item => (
-                    <li key={item} className="flex items-start gap-2 text-[11px] text-slate-400">
-                      <Check className="w-3 h-3 text-emerald-400 shrink-0 mt-0.5" />
+                    <li key={item} className="flex items-start gap-2 text-[11px] text-ink-700">
+                      <Check className="w-3 h-3 text-ink-700 shrink-0 mt-0.5" />
                       {item}
                     </li>
                   ))}
                 </ul>
 
                 <div>
-                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5">Data stored for your account</p>
+                  <p className="eyebrow mb-1.5">Data stored for your account</p>
                   <ul className="space-y-1">
                     {['Resume files + embedding chunks', 'Job analysis history', 'AI generation logs', 'Style presets'].map(item => (
-                      <li key={item} className="text-[11px] text-slate-500 flex items-center gap-2">
-                        <span className="w-1 h-1 rounded-full bg-slate-600 shrink-0" />
+                      <li key={item} className="text-[11px] text-ink-500 flex items-center gap-2">
+                        <span className="w-1 h-1 rounded-full bg-ink-400 shrink-0" />
                         {item}
                       </li>
                     ))}
@@ -341,7 +338,7 @@ const Settings: React.FC = () => {
                 <button
                   onClick={handleDeleteAllData}
                   disabled={deleting}
-                  className="w-full flex items-center justify-center gap-2 p-3 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 rounded-xl font-black uppercase tracking-widest text-[10px] transition-all active:scale-95 disabled:opacity-50"
+                  className="w-full flex items-center justify-center gap-2 p-3 bg-flare/10 hover:bg-flare/20 text-flare border border-flare/30 font-bold uppercase tracking-widest text-[10px] transition-all active:scale-95 disabled:opacity-50"
                 >
                   {deleting ? <Loader2 className="w-3 h-3 animate-spin" /> : <Trash2 className="w-3 h-3" />}
                   {deleting ? 'Deleting...' : 'Delete All My Data'}
@@ -353,10 +350,10 @@ const Settings: React.FC = () => {
       </div>
 
       {/* Sign Out */}
-      <div className="pt-2 border-t border-slate-800/50">
+      <div className="pt-2 border-t border-ink-200">
         <button
           onClick={signOut}
-          className="w-full flex items-center justify-center gap-2 p-4 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 rounded-2xl font-bold text-sm transition-all active:scale-[0.98]"
+          className="w-full flex items-center justify-center gap-2 p-4 bg-flare/10 hover:bg-flare/20 text-flare border border-flare/30 font-bold text-sm transition-all active:scale-[0.98]"
         >
           <LogOut className="w-4 h-4" />
           Sign Out

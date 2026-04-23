@@ -1,0 +1,26 @@
+/* Shared preview-card frame — each card is rendered on its own in the Design System tab */
+@import url('../colors_and_type.css');
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--accent-cream);
+  color: var(--fg);
+  font-family: var(--font-body);
+  overflow: hidden;
+}
+body.card-shell {
+  padding: 24px 28px;
+  box-sizing: border-box;
+  min-height: 100vh;
+}
+.card-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--fg-subtle);
+  margin-bottom: 14px;
+  display: flex; gap: 8px; align-items: center;
+}
+.card-eyebrow .dot { width: 4px; height: 4px; background: var(--brand-violet-500); border-radius: 50%; }

@@ -15,20 +15,20 @@ const MatchCircle: React.FC<MatchCircleProps> = ({ score }) => {
 
   return (
     <div className="relative w-24 h-24 flex items-center justify-center">
-      <svg className="w-full h-full transform -rotate-90">
+      <svg className="w-full h-full transform -rotate-90" viewBox="0 0 96 96">
         <circle
           cx="48" cy="48" r={radius}
-          stroke="currentColor" strokeWidth="6" fill="transparent"
-          className="text-slate-800"
+          stroke="currentColor" strokeWidth="4" fill="transparent"
+          className="text-ink-200"
         />
         <motion.circle
           cx="48" cy="48" r={radius}
           stroke={`url(#${gradientId})`}
-          strokeWidth="6"
+          strokeWidth="4"
           strokeDasharray={circumference}
           initial={{ strokeDashoffset: circumference }}
           animate={{ strokeDashoffset: offset }}
-          transition={{ duration: 1.5, ease: 'easeOut' }}
+          transition={{ duration: 1.4, ease: [0.16, 1, 0.3, 1] }}
           strokeLinecap="round"
           fill="transparent"
         />
@@ -40,8 +40,8 @@ const MatchCircle: React.FC<MatchCircleProps> = ({ score }) => {
         </defs>
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="text-2xl font-black text-white leading-none">{score}</span>
-        <span className="text-[8px] font-bold text-slate-500 uppercase tracking-tighter">Fit %</span>
+        <span className="num font-chunk text-[32px] leading-none tracking-tight text-ink-900">{score}</span>
+        <span className="font-mono text-[8px] font-medium text-ink-400 uppercase tracking-caps mt-0.5">fit%</span>
       </div>
     </div>
   );

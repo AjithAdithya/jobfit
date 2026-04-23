@@ -121,36 +121,39 @@ const ResumeManager: React.FC = () => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
-      className="space-y-5"
+      className="space-y-5 pb-10"
     >
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-bold">My Resumes</h2>
+        <div>
+          <p className="eyebrow mb-1">№ 03 — vault</p>
+          <h2 className="font-chunk text-[28px] leading-none tracking-tight text-ink-900">Resumes</h2>
+        </div>
         <div className="flex items-center gap-3">
           <input type="file" ref={fileInputRef} onChange={handleUpload} accept=".pdf" className="hidden" />
           <button
             onClick={() => fileInputRef.current?.click()}
             disabled={processing}
-            className="p-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white rounded-xl shadow-lg shadow-blue-500/20 transition-all active:scale-95"
+            className="p-2 bg-crimson-500 hover:bg-crimson-600 disabled:opacity-50 text-cream shadow-print-sm transition-all active:scale-95"
           >
             {processing ? <Loader2 className="w-5 h-5 animate-spin" /> : <Plus className="w-5 h-5" />}
           </button>
-          <span className="px-2 py-1 bg-slate-900 border border-slate-800 text-slate-400 text-[10px] font-bold uppercase rounded-lg">
+          <span className="px-2 py-1 bg-ink-100 border border-ink-200 text-ink-500 eyebrow">
             {tab === 'uploaded' ? resumes.length : generatedResumes.length}
           </span>
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 p-1 bg-slate-900 border border-slate-800 rounded-2xl">
+      <div className="flex gap-px bg-ink-200 border border-ink-200">
         {(['uploaded', 'generated'] as const).map(t => (
           <button
             key={t}
             onClick={() => setTab(t)}
-            className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
+            className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-[10px] font-bold uppercase tracking-widest transition-all ${
               tab === t
-                ? 'bg-slate-700 text-white shadow'
-                : 'text-slate-500 hover:text-slate-300'
+                ? 'bg-ink-900 text-cream'
+                : 'bg-white text-ink-500 hover:text-ink-900 hover:bg-ink-50'
             }`}
           >
             {t === 'uploaded' ? <Upload className="w-3 h-3" /> : <Sparkles className="w-3 h-3" />}
@@ -161,7 +164,7 @@ const ResumeManager: React.FC = () => {
 
       {/* Drive error banner */}
       {driveError && (
-        <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-2xl flex items-start gap-2 text-amber-400 text-xs">
+        <div className="p-3 bg-flare/10 border border-flare/30 flex items-start gap-2 text-flare text-xs">
           <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
           <p>{driveError}</p>
         </div>
@@ -171,7 +174,7 @@ const ResumeManager: React.FC = () => {
       {uploadError && (
         <motion.div
           initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}
-          className="p-4 bg-red-500/10 border border-red-500/20 rounded-2xl flex items-start gap-3 text-red-400 text-xs"
+          className="p-4 bg-flare/10 border border-flare/30 flex items-start gap-3 text-flare text-xs"
         >
           <AlertCircle className="w-4 h-4 shrink-0" />
           <p>{uploadError}</p>
@@ -180,43 +183,43 @@ const ResumeManager: React.FC = () => {
 
       {loading ? (
         <div className="flex items-center justify-center py-12">
-          <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+          <Loader2 className="w-8 h-8 animate-spin text-crimson-500" />
         </div>
       ) : tab === 'uploaded' ? (
         /* ── Uploaded tab ── */
-        <div className="space-y-3">
+        <div className="space-y-2 border-t border-ink-200">
           {resumes.map(resume => (
             <div
               key={resume.id}
               onClick={() => setActiveResume(resume.id, resume.file_name)}
-              className={`group relative p-4 rounded-2xl border transition-all cursor-pointer ${
+              className={`group relative border-b border-ink-200 transition-all cursor-pointer ${
                 activeResumeId === resume.id
-                  ? 'bg-blue-600/10 border-blue-500/50 shadow-lg shadow-blue-500/5'
-                  : 'bg-slate-900/50 border-slate-800 hover:border-slate-700'
+                  ? 'bg-crimson-500/5 border-l-2 border-l-crimson-500'
+                  : 'hover:bg-ink-50'
               }`}
             >
-              <div className="flex items-center gap-4">
-                <div className={`p-2 rounded-xl transition-colors ${activeResumeId === resume.id ? 'bg-blue-600' : 'bg-slate-800'}`}>
-                  <FileText className="w-5 h-5 text-white" />
+              <div className="flex items-center gap-3 p-4">
+                <div className={`p-2 shrink-0 transition-colors ${activeResumeId === resume.id ? 'bg-crimson-500' : 'bg-ink-100'}`}>
+                  <FileText className={`w-4 h-4 ${activeResumeId === resume.id ? 'text-cream' : 'text-ink-500'}`} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-sm font-bold truncate pr-8">{resume.file_name}</h3>
-                  <div className="flex items-center gap-2 mt-1 text-[10px] text-slate-500 font-medium">
+                  <h3 className="text-sm font-bold text-ink-900 truncate pr-8">{resume.file_name}</h3>
+                  <div className="flex items-center gap-2 mt-0.5 eyebrow text-ink-400 normal-case tracking-normal text-[10px]">
                     <Clock className="w-3 h-3" />
                     {new Date(resume.created_at).toLocaleDateString()}
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
                   {activeResumeId === resume.id && (
-                    <div className="bg-emerald-500 rounded-full p-1 shadow-lg shadow-emerald-500/50">
-                      <Check className="w-3 h-3 text-white" />
+                    <div className="bg-citrus border border-ink-900 p-1">
+                      <Check className="w-3 h-3 text-ink-900" />
                     </div>
                   )}
                   <button
                     onClick={e => handleDelete(resume.id, e)}
-                    className="p-2 hover:bg-red-500/10 rounded-xl transition-all opacity-0 group-hover:opacity-100"
+                    className="p-2 hover:bg-flare/10 transition-all opacity-0 group-hover:opacity-100"
                   >
-                    <Trash2 className="w-4 h-4 text-slate-500 hover:text-red-400" />
+                    <Trash2 className="w-4 h-4 text-ink-300 hover:text-flare" />
                   </button>
                 </div>
               </div>
@@ -224,15 +227,15 @@ const ResumeManager: React.FC = () => {
           ))}
 
           {resumes.length === 0 && !processing && (
-            <div className="text-center py-12 px-6 bg-slate-900/30 border border-dashed border-slate-800 rounded-3xl group">
-              <div className="w-16 h-16 bg-slate-900 border border-slate-800 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:border-blue-500/50 transition-all">
-                <Upload className="w-8 h-8 text-slate-700 group-hover:text-blue-500 transition-all" />
+            <div className="text-center py-12 px-6 border border-dashed border-ink-300 mt-4 group">
+              <div className="w-16 h-16 bg-ink-100 border border-ink-200 flex items-center justify-center mx-auto mb-4 group-hover:border-ink-900 transition-all">
+                <Upload className="w-8 h-8 text-ink-300 group-hover:text-crimson-500 transition-all" />
               </div>
-              <h3 className="text-sm font-bold text-white mb-1">No resumes yet</h3>
-              <p className="text-xs text-slate-500 mb-6 max-w-[200px] mx-auto">Upload your first resume to start matching with jobs.</p>
+              <h3 className="font-chunk text-lg text-ink-900 mb-1">No resumes yet</h3>
+              <p className="text-xs text-ink-500 mb-6 max-w-[200px] mx-auto">Upload your first resume to start matching with jobs.</p>
               <button
                 onClick={() => fileInputRef.current?.click()}
-                className="px-4 py-2 bg-blue-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-blue-500 transition-all shadow-xl shadow-blue-500/20"
+                className="px-4 py-2 bg-crimson-500 text-cream text-[10px] font-bold uppercase tracking-widest hover:bg-crimson-600 transition-all shadow-print-sm"
               >
                 Upload Resume
               </button>
@@ -240,29 +243,29 @@ const ResumeManager: React.FC = () => {
           )}
 
           {processing && (
-            <div className="p-4 rounded-2xl border border-blue-500/30 bg-blue-600/5 flex items-center gap-4 animate-pulse">
-              <div className="p-2 bg-blue-600 rounded-xl">
-                <Loader2 className="w-5 h-5 text-white animate-spin" />
+            <div className="p-4 border border-crimson-500/30 bg-crimson-500/5 flex items-center gap-4 animate-pulse mt-2">
+              <div className="p-2 bg-crimson-500">
+                <Loader2 className="w-5 h-5 text-cream animate-spin" />
               </div>
               <div className="flex-1">
-                <div className="h-3 w-24 bg-slate-800 rounded mb-2" />
-                <div className="h-2 w-16 bg-slate-800 rounded" />
+                <div className="h-3 w-24 bg-ink-200 mb-2" />
+                <div className="h-2 w-16 bg-ink-200" />
               </div>
             </div>
           )}
         </div>
       ) : (
         /* ── Generated tab ── */
-        <div className="space-y-3">
+        <div className="space-y-2 border-t border-ink-200">
           {generatedResumes.map(gr => (
-            <div key={gr.id} className="p-4 bg-slate-900/50 border border-slate-800 rounded-2xl space-y-3">
+            <div key={gr.id} className="p-4 bg-white border-b border-ink-200 space-y-3">
               <div className="flex items-start gap-3">
-                <div className="p-2 bg-purple-600/20 rounded-xl shrink-0">
-                  <Sparkles className="w-4 h-4 text-purple-400" />
+                <div className="p-2 bg-ink-100 shrink-0">
+                  <Sparkles className="w-4 h-4 text-ink-500" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-bold truncate">{gr.job_title}</p>
-                  <div className="flex items-center gap-1.5 text-[10px] text-slate-500 mt-0.5">
+                  <p className="text-sm font-bold text-ink-900 truncate">{gr.job_title}</p>
+                  <div className="flex items-center gap-1.5 eyebrow text-ink-400 mt-0.5 normal-case tracking-normal text-[10px]">
                     <Clock className="w-3 h-3" />
                     {new Date(gr.created_at).toLocaleDateString()}
                   </div>
@@ -271,14 +274,14 @@ const ResumeManager: React.FC = () => {
               <div className={`grid gap-2 ${driveConnected ? 'grid-cols-2' : 'grid-cols-1'}`}>
                 <button
                   onClick={() => downloadDocx(gr.generated_resume, gr.job_title)}
-                  className="flex items-center justify-center gap-2 p-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-black uppercase tracking-widest text-[10px] transition-all active:scale-95"
+                  className="flex items-center justify-center gap-2 p-2.5 bg-crimson-500 hover:bg-crimson-600 text-cream font-bold uppercase tracking-widest text-[10px] transition-all active:scale-95 shadow-print-sm"
                 >
                   <Download className="w-3 h-3" /> DOCX
                 </button>
                 {driveConnected && (
                   <button
                     onClick={() => handleOpenInDrive(gr.generated_resume, gr.job_title)}
-                    className="flex items-center justify-center gap-2 p-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-black uppercase tracking-widest text-[10px] transition-all active:scale-95"
+                    className="flex items-center justify-center gap-2 p-2.5 bg-sky hover:bg-sky/80 text-ink-900 font-bold uppercase tracking-widest text-[10px] transition-all active:scale-95"
                   >
                     <ExternalLink className="w-3 h-3" /> Edit in Drive
                   </button>
@@ -288,12 +291,12 @@ const ResumeManager: React.FC = () => {
           ))}
 
           {generatedResumes.length === 0 && (
-            <div className="text-center py-12 px-6 bg-slate-900/30 border border-dashed border-slate-800 rounded-3xl">
-              <div className="w-16 h-16 bg-slate-900 border border-slate-800 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <Sparkles className="w-8 h-8 text-slate-700" />
+            <div className="text-center py-12 px-6 border border-dashed border-ink-300 mt-4">
+              <div className="w-16 h-16 bg-ink-100 border border-ink-200 flex items-center justify-center mx-auto mb-4">
+                <Sparkles className="w-8 h-8 text-ink-300" />
               </div>
-              <h3 className="text-sm font-bold text-white mb-1">No generated resumes yet</h3>
-              <p className="text-xs text-slate-500 max-w-[200px] mx-auto">Analyze a job and generate a tailored resume to see it here.</p>
+              <h3 className="font-chunk text-lg text-ink-900 mb-1">No generated resumes yet</h3>
+              <p className="text-xs text-ink-500 max-w-[200px] mx-auto">Analyze a job and generate a tailored resume to see it here.</p>
             </div>
           )}
         </div>

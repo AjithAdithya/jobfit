@@ -129,19 +129,19 @@ const StylePresets: React.FC<StylePresetsProps> = ({ onStyleApplied }) => {
   const canGenerate = source === 'template' ? !!templateFile : !!instruction.trim();
 
   return (
-    <div className="p-5 bg-slate-900/50 border border-slate-800 rounded-[2rem] space-y-4">
-      <h3 className="flex items-center gap-2 text-sm font-black text-slate-300 uppercase tracking-widest">
-        <Palette className="w-4 h-4 text-purple-400" /> Style Options
+    <div className="p-4 bg-white border border-ink-200 space-y-4">
+      <h3 className="flex items-center gap-2 text-sm font-bold text-ink-700 uppercase tracking-widest">
+        <Palette className="w-4 h-4 text-ink-500" /> Style Options
       </h3>
 
       {/* Source tabs */}
-      <div className="flex gap-1 p-1 bg-slate-950 border border-slate-800 rounded-2xl">
+      <div className="flex gap-px bg-ink-200 border border-ink-200">
         {(['prompt', 'template'] as StyleSource[]).map(s => (
           <button
             key={s}
             onClick={() => { setSource(s); setError(null); }}
-            className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
-              source === s ? 'bg-purple-600 text-white shadow' : 'text-slate-500 hover:text-slate-300'
+            className={`flex-1 flex items-center justify-center gap-2 py-2 text-[10px] font-bold uppercase tracking-widest transition-all ${
+              source === s ? 'bg-ink-900 text-cream' : 'bg-white text-ink-500 hover:text-ink-900'
             }`}
           >
             {s === 'prompt' ? <Sparkles className="w-3 h-3" /> : <Upload className="w-3 h-3" />}
@@ -165,11 +165,10 @@ const StylePresets: React.FC<StylePresetsProps> = ({ onStyleApplied }) => {
               onChange={e => setInstruction(e.target.value)}
               placeholder={PLACEHOLDER_EXAMPLES[0]}
               rows={2}
-              className="w-full p-3 bg-slate-950 border border-slate-800 rounded-2xl text-xs text-slate-300 font-medium resize-none focus:outline-none focus:border-purple-500/50 placeholder:text-slate-600"
+              className="w-full p-3 bg-ink-50 border border-ink-200 text-xs text-ink-900 resize-none focus:outline-none focus:border-crimson-500 placeholder:text-ink-400"
             />
           </motion.div>
         ) : (
-          /* Template upload */
           <motion.div
             key="template"
             initial={{ opacity: 0, y: 6 }}
@@ -187,33 +186,33 @@ const StylePresets: React.FC<StylePresetsProps> = ({ onStyleApplied }) => {
             />
             <button
               onClick={() => fileInputRef.current?.click()}
-              className={`w-full flex items-center gap-3 p-4 border-2 border-dashed rounded-2xl transition-all group ${
+              className={`w-full flex items-center gap-3 p-4 border-2 border-dashed transition-all group ${
                 templateFile
-                  ? 'border-purple-500/40 bg-purple-600/5'
-                  : 'border-slate-700 hover:border-purple-500/40 bg-slate-950'
+                  ? 'border-crimson-500/40 bg-crimson-500/5'
+                  : 'border-ink-200 hover:border-ink-900 bg-ink-50'
               }`}
             >
-              <div className={`p-2 rounded-xl shrink-0 ${templateFile ? 'bg-purple-600/20' : 'bg-slate-800 group-hover:bg-purple-600/20'} transition-colors`}>
-                <FileText className={`w-4 h-4 ${templateFile ? 'text-purple-400' : 'text-slate-500 group-hover:text-purple-400'} transition-colors`} />
+              <div className={`p-2 shrink-0 transition-colors ${templateFile ? 'bg-crimson-500/10' : 'bg-ink-100 group-hover:bg-crimson-500/10'}`}>
+                <FileText className={`w-4 h-4 transition-colors ${templateFile ? 'text-crimson-500' : 'text-ink-500 group-hover:text-crimson-500'}`} />
               </div>
               <div className="flex-1 text-left min-w-0">
                 {templateFile ? (
                   <>
-                    <p className="text-xs font-bold text-purple-300 truncate">{templateFile.name}</p>
-                    <p className="text-[10px] text-slate-500">{(templateFile.size / 1024).toFixed(0)} KB · Click to change</p>
+                    <p className="text-xs font-bold text-crimson-500 truncate">{templateFile.name}</p>
+                    <p className="text-[10px] text-ink-500">{(templateFile.size / 1024).toFixed(0)} KB · Click to change</p>
                   </>
                 ) : (
                   <>
-                    <p className="text-xs font-bold text-slate-400">Upload any resume PDF</p>
-                    <p className="text-[10px] text-slate-600">We'll extract its fonts, sizes & spacing</p>
+                    <p className="text-xs font-bold text-ink-700">Upload any resume PDF</p>
+                    <p className="text-[10px] text-ink-400">We'll extract its fonts, sizes &amp; spacing</p>
                   </>
                 )}
               </div>
-              {templateFile && <Check className="w-4 h-4 text-purple-400 shrink-0" />}
+              {templateFile && <Check className="w-4 h-4 text-crimson-500 shrink-0" />}
             </button>
 
             {templateFile && (
-              <p className="text-[10px] text-slate-500 text-center">
+              <p className="text-[10px] text-ink-500 text-center">
                 The AI will match fonts, sizes, and spacing from your template.
               </p>
             )}
@@ -226,7 +225,7 @@ const StylePresets: React.FC<StylePresetsProps> = ({ onStyleApplied }) => {
         <button
           onClick={handleGenerate}
           disabled={!canGenerate || generating}
-          className="flex-1 flex items-center justify-center gap-2 p-3 bg-purple-600/80 hover:bg-purple-600 disabled:opacity-40 text-white rounded-xl font-black uppercase tracking-widest text-[10px] transition-all active:scale-95"
+          className="flex-1 flex items-center justify-center gap-2 p-3 bg-crimson-500 hover:bg-crimson-600 disabled:opacity-40 text-cream font-bold uppercase tracking-widest text-[10px] transition-all active:scale-95"
         >
           {generating ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
           {generating
@@ -238,7 +237,7 @@ const StylePresets: React.FC<StylePresetsProps> = ({ onStyleApplied }) => {
           <button
             onClick={handleSavePreset}
             disabled={saving}
-            className="flex items-center justify-center gap-2 p-3 bg-slate-800 hover:bg-slate-700 disabled:opacity-40 text-white rounded-xl font-black uppercase tracking-widest text-[10px] transition-all active:scale-95 border border-slate-700 px-4"
+            className="flex items-center justify-center gap-2 p-3 bg-ink-50 hover:bg-ink-100 disabled:opacity-40 text-ink-900 font-bold uppercase tracking-widest text-[10px] transition-all active:scale-95 border border-ink-200 px-4"
           >
             {saving ? <Loader2 className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />}
             Save
@@ -251,24 +250,24 @@ const StylePresets: React.FC<StylePresetsProps> = ({ onStyleApplied }) => {
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="p-3 bg-purple-600/10 border border-purple-500/20 rounded-xl flex items-center gap-3"
+          className="p-3 bg-ink-50 border border-ink-200 flex items-center gap-3"
         >
           <div
-            className="w-6 h-6 rounded-lg border-2 flex-shrink-0"
+            className="w-6 h-6 shrink-0 border-2"
             style={{ backgroundColor: previewStyle.colors.primary, borderColor: previewStyle.colors.primary }}
           />
           <div className="flex-1 min-w-0">
-            <p className="text-[10px] font-black text-purple-400 uppercase tracking-widest">Style Applied</p>
-            <p className="text-xs text-slate-400 truncate">
+            <p className="eyebrow text-ink-700">Style Applied</p>
+            <p className="text-xs text-ink-500 truncate">
               {previewStyle.fontFamily.body} · {previewStyle.fontSize.body}pt body · {previewStyle.columns}col
             </p>
           </div>
-          <Check className="w-4 h-4 text-purple-400 shrink-0" />
+          <Check className="w-4 h-4 text-ink-700 shrink-0" />
         </motion.div>
       )}
 
       {error && (
-        <div className="flex items-start gap-2 p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-xs">
+        <div className="flex items-start gap-2 p-3 bg-flare/10 border border-flare/30 text-flare text-xs">
           <AlertCircle className="w-3 h-3 shrink-0 mt-0.5" />
           <p>{error}</p>
         </div>
@@ -277,32 +276,32 @@ const StylePresets: React.FC<StylePresetsProps> = ({ onStyleApplied }) => {
       {/* Saved presets */}
       {presets.length > 0 && (
         <div className="space-y-2">
-          <p className="text-[10px] font-black text-slate-600 uppercase tracking-widest">Saved Presets</p>
-          <div className="space-y-2 max-h-40 overflow-y-auto custom-scrollbar">
+          <p className="eyebrow">Saved Presets</p>
+          <div className="space-y-1 max-h-40 overflow-y-auto custom-scrollbar border-t border-ink-100 pt-2">
             {presets.map(preset => (
               <button
                 key={preset.id}
                 onClick={() => handleLoadPreset(preset)}
-                className={`w-full flex items-center gap-3 p-3 rounded-xl border text-left transition-all group ${
+                className={`w-full flex items-center gap-3 p-3 border text-left transition-all group ${
                   appliedId === preset.id
-                    ? 'bg-purple-600/10 border-purple-500/30'
-                    : 'bg-slate-950/50 border-slate-800 hover:border-slate-700'
+                    ? 'bg-crimson-500/10 border-crimson-500/30'
+                    : 'bg-white border-ink-200 hover:border-ink-900'
                 }`}
               >
                 <div
-                  className="w-4 h-4 rounded flex-shrink-0 border"
+                  className="w-4 h-4 shrink-0 border"
                   style={{ backgroundColor: preset.style_json.colors?.primary || '#000', borderColor: 'transparent' }}
                 />
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs text-slate-300 font-medium truncate">{preset.name}</p>
-                  <p className="text-[10px] text-slate-600">
+                  <p className="text-xs text-ink-900 font-medium truncate">{preset.name}</p>
+                  <p className="text-[10px] text-ink-500">
                     {preset.style_json.fontFamily?.body} · {preset.style_json.fontSize?.body}pt
                     {preset.instruction.startsWith('[Template:') ? ' · from template' : ''}
                   </p>
                 </div>
                 <button
                   onClick={e => handleDeletePreset(preset.id, e)}
-                  className="opacity-0 group-hover:opacity-100 p-1 hover:text-red-400 text-slate-600 transition-all"
+                  className="opacity-0 group-hover:opacity-100 p-1 text-ink-300 hover:text-flare transition-all"
                 >
                   <Trash2 className="w-3 h-3" />
                 </button>

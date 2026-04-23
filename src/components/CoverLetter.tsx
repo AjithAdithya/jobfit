@@ -35,13 +35,10 @@ const TONE_OPTIONS: ToneOption[] = [
   { value: 'enthusiastic', label: 'Enthusiastic', description: 'Energetic & passionate' },
 ];
 
-// Extract company name heuristically from job title / site name
 function extractCompanyName(jobContext: JobContext): string {
   if (jobContext.siteName && jobContext.siteName !== 'Manual Input' && jobContext.siteName !== 'Unknown') {
-    // Site name is often company name on direct company pages (e.g. "Stripe Careers")
     return jobContext.siteName.replace(/\s*(careers?|jobs?|hiring)\s*$/i, '').trim();
   }
-  // Try to pull "at CompanyName" from the title
   const atMatch = jobContext.title.match(/\s+(?:at|-|\|)\s+(.+?)(?:\s*[-|·].*)?$/i);
   if (atMatch) return atMatch[1].trim();
   return 'the company';
@@ -62,13 +59,9 @@ const CoverLetter: React.FC<CoverLetterProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
-  // Fetch the most relevant resume chunks for the user's selections
-  // so the cover letter is grounded in actual resume content.
   const fetchPersonalizedContext = async (): Promise<string> => {
     setStage('Searching your resume for relevant experience...');
 
-    // Query terms: selected gaps + keywords (what the user wants to emphasize),
-    // plus the job title to pull relevant domain experience
     const queries = [
       jobContext.title,
       ...selectedGaps,
@@ -76,7 +69,6 @@ const CoverLetter: React.FC<CoverLetterProps> = ({
     ].filter(q => q && q.length > 2);
 
     if (queries.length === 0) {
-      // Fallback: pull all resume chunks for this resume
       if (activeResumeId) {
         const { data } = await supabase
           .from('resume_chunkies')
@@ -105,7 +97,6 @@ const CoverLetter: React.FC<CoverLetterProps> = ({
         }
       }
 
-      // Sort by similarity, take top 10, group by section for readability
       chunks.sort((a, b) => b.similarity - a.similarity);
       const top = chunks.slice(0, 10);
 
@@ -126,10 +117,8 @@ const CoverLetter: React.FC<CoverLetterProps> = ({
     setError(null);
 
     try {
-      // 1. Pull personalized context from user's resume via vector search
       const personalizedResumeContext = await fetchPersonalizedContext();
 
-      // 2. Build a rich JD summary from selections + analysis
       const jdSummary = [
         selectedGaps.length > 0 ? `Gaps to address: ${selectedGaps.join(', ')}` : '',
         selectedKeywords.length > 0 ? `Keywords to weave in: ${selectedKeywords.join(', ')}` : '',
@@ -155,7 +144,6 @@ const CoverLetter: React.FC<CoverLetterProps> = ({
         }
       );
 
-      // Persist to history
       useUIStore.getState().setCurrentCoverLetter(fullText);
       if (activeHistoryItem?.id) {
         await supabase.from('analysis_history').update({
@@ -181,7 +169,6 @@ const CoverLetter: React.FC<CoverLetterProps> = ({
 
   const handleDownloadDocx = () => {
     if (!streamedText) return;
-    // Convert plain text → paragraphs with styled inline formatting
     const paragraphs = streamedText
       .split(/\n{2,}/)
       .map(p => `<p style="margin: 0 0 12pt 0; font-family: Georgia, serif; font-size: 11pt; line-height: 1.5; color: #000;">${p.replace(/\n/g, '<br/>')}</p>`)
@@ -260,31 +247,31 @@ body { font-family: Georgia, serif; font-size: 11pt; line-height: 1.5; color: #0
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: -20 }}
-      className="space-y-6 pb-10"
+      className="space-y-5 pb-10"
     >
       {/* Header */}
       <div className="flex items-center justify-between">
         <button
           onClick={() => setView('analysis')}
-          className="text-xs font-black text-slate-500 hover:text-slate-300 uppercase tracking-widest flex items-center gap-2 transition-colors"
+          className="text-xs font-bold text-ink-500 hover:text-ink-900 uppercase tracking-widest flex items-center gap-2 transition-colors"
         >
           <ArrowRight className="w-4 h-4 rotate-180" /> Back
         </button>
-        <span className="px-3 py-1 bg-purple-600/10 text-purple-400 text-[10px] font-black uppercase tracking-[0.2em] rounded-full border border-purple-500/10">
+        <span className="px-3 py-1 bg-crimson-500/10 text-crimson-500 text-[10px] font-mono font-bold uppercase tracking-[0.2em] border border-crimson-500/30">
           Cover Letter
         </span>
       </div>
 
       {/* Job context */}
-      <div className="p-5 bg-gradient-to-br from-purple-600/10 to-transparent border border-purple-500/20 rounded-[2rem]">
+      <div className="p-4 bg-ink-50 border border-ink-200">
         <div className="flex items-center gap-2 mb-1">
-          <Mail className="w-4 h-4 text-purple-400" />
-          <span className="text-xs font-black text-purple-400 uppercase tracking-widest">Writing for</span>
+          <Mail className="w-4 h-4 text-crimson-500" />
+          <span className="eyebrow text-crimson-500">Writing for</span>
         </div>
-        <p className="text-sm font-bold text-white leading-snug">{jobContext.title}</p>
-        <p className="text-xs text-slate-500 mt-1">{extractCompanyName(jobContext)}</p>
+        <p className="text-sm font-bold text-ink-900 leading-snug">{jobContext.title}</p>
+        <p className="text-xs text-ink-500 mt-1">{extractCompanyName(jobContext)}</p>
         {(selectedGaps.length + selectedKeywords.length) > 0 && (
-          <p className="text-[10px] text-slate-600 mt-2 font-medium">
+          <p className="eyebrow text-ink-400 mt-2 normal-case tracking-normal text-[10px]">
             Personalizing around {selectedGaps.length + selectedKeywords.length} selection{selectedGaps.length + selectedKeywords.length !== 1 ? 's' : ''}
           </p>
         )}
@@ -292,22 +279,22 @@ body { font-family: Georgia, serif; font-size: 11pt; line-height: 1.5; color: #0
 
       {/* Tone selector */}
       <div className="space-y-3">
-        <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Choose Tone</p>
+        <p className="eyebrow">Choose Tone</p>
         <div className="grid grid-cols-2 gap-2">
           {TONE_OPTIONS.map(opt => (
             <button
               key={opt.value}
               onClick={() => setSelectedTone(opt.value)}
-              className={`p-3 rounded-2xl border text-left transition-all ${
+              className={`p-3 border text-left transition-all ${
                 selectedTone === opt.value
-                  ? 'bg-purple-600/20 border-purple-500/50 shadow-lg shadow-purple-500/10'
-                  : 'bg-slate-900/50 border-slate-800 hover:border-slate-700'
+                  ? 'bg-crimson-500/10 border-crimson-500/50'
+                  : 'bg-white border-ink-200 hover:border-ink-900'
               }`}
             >
-              <p className={`text-xs font-black ${selectedTone === opt.value ? 'text-purple-400' : 'text-slate-300'}`}>
+              <p className={`text-xs font-bold ${selectedTone === opt.value ? 'text-crimson-500' : 'text-ink-700'}`}>
                 {opt.label}
               </p>
-              <p className="text-[10px] text-slate-500 mt-0.5">{opt.description}</p>
+              <p className="text-[10px] text-ink-500 mt-0.5">{opt.description}</p>
             </button>
           ))}
         </div>
@@ -318,7 +305,7 @@ body { font-family: Georgia, serif; font-size: 11pt; line-height: 1.5; color: #0
         <button
           onClick={handleGenerate}
           disabled={generating}
-          className="w-full flex items-center justify-center gap-3 p-4 bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-white rounded-2xl font-black uppercase tracking-widest transition-all shadow-xl shadow-purple-500/20 active:scale-95"
+          className="w-full flex items-center justify-center gap-3 p-4 bg-crimson-500 hover:bg-crimson-600 disabled:opacity-50 text-cream font-bold uppercase tracking-widest transition-all shadow-print-sm active:scale-95 border border-crimson-600"
         >
           {generating ? <Loader2 className="w-5 h-5 animate-spin" /> : <Sparkles className="w-5 h-5" />}
           {generating ? (stage || 'Writing...') : 'Generate Cover Letter'}
@@ -326,7 +313,7 @@ body { font-family: Georgia, serif; font-size: 11pt; line-height: 1.5; color: #0
       )}
 
       {error && (
-        <div className="flex items-start gap-3 p-4 bg-red-500/10 border border-red-500/20 rounded-2xl text-red-400 text-xs">
+        <div className="flex items-start gap-3 p-4 bg-flare/10 border border-flare/30 text-flare text-xs">
           <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
           <p className="font-medium leading-relaxed">{error}</p>
         </div>
@@ -340,20 +327,20 @@ body { font-family: Georgia, serif; font-size: 11pt; line-height: 1.5; color: #0
           className="space-y-3"
         >
           {generating && stage && (
-            <div className="flex items-center gap-2 p-2 text-xs text-purple-400 font-medium">
+            <div className="flex items-center gap-2 p-2 text-xs text-crimson-500 font-medium">
               <Loader2 className="w-3 h-3 animate-spin" /> {stage}
             </div>
           )}
-          <div className="relative p-6 bg-slate-900 border border-slate-800 rounded-[2rem] min-h-[300px] max-h-[500px] overflow-y-auto custom-scrollbar">
-            <div className="text-sm text-slate-200 whitespace-pre-wrap leading-relaxed font-medium" style={{ fontFamily: 'Georgia, serif' }}>
+          <div className="relative p-5 bg-white border border-ink-200 min-h-[300px] max-h-[500px] overflow-y-auto custom-scrollbar">
+            <div className="text-sm text-ink-900 whitespace-pre-wrap leading-relaxed" style={{ fontFamily: 'Georgia, serif' }}>
               {streamedText}
               {generating && (
-                <span className="inline-block w-0.5 h-4 bg-purple-400 ml-0.5 animate-pulse" />
+                <span className="inline-block w-0.5 h-4 bg-crimson-500 ml-0.5 animate-pulse" />
               )}
             </div>
           </div>
           {streamedText && !generating && (
-            <p className="text-[10px] text-slate-600 text-right font-medium">
+            <p className="num text-[10px] text-ink-400 text-right">
               {streamedText.trim().split(/\s+/).length} words
             </p>
           )}
@@ -362,7 +349,7 @@ body { font-family: Georgia, serif; font-size: 11pt; line-height: 1.5; color: #0
           {!generating && streamedText && (
             <>
               {driveError && (
-                <div className="flex items-start gap-2 p-3 bg-amber-500/10 border border-amber-500/20 rounded-2xl text-amber-400 text-xs">
+                <div className="flex items-start gap-2 p-3 bg-flare/10 border border-flare/30 text-flare text-xs">
                   <AlertCircle className="w-3 h-3 shrink-0 mt-0.5" />
                   <p>{driveError}</p>
                 </div>
@@ -370,21 +357,21 @@ body { font-family: Georgia, serif; font-size: 11pt; line-height: 1.5; color: #0
               <div className={`grid gap-2 ${driveConnected ? 'grid-cols-4' : 'grid-cols-3'}`}>
                 <button
                   onClick={handleCopy}
-                  className="flex items-center justify-center gap-2 p-3 bg-slate-800 hover:bg-slate-700 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] border border-slate-700 transition-all active:scale-95"
+                  className="flex items-center justify-center gap-1.5 p-3 bg-ink-50 hover:bg-ink-100 text-ink-900 font-bold uppercase tracking-widest text-[10px] border border-ink-200 hover:border-ink-900 transition-all active:scale-95"
                 >
-                  {copied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
-                  {copied ? 'Copied' : 'Copy'}
+                  {copied ? <Check className="w-3 h-3 text-ink-700" /> : <Copy className="w-3 h-3" />}
+                  {copied ? 'Done' : 'Copy'}
                 </button>
                 <button
                   onClick={handleDownloadDocx}
-                  className="flex items-center justify-center gap-2 p-3 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all shadow-xl shadow-blue-500/20 active:scale-95"
+                  className="flex items-center justify-center gap-1.5 p-3 bg-crimson-500 hover:bg-crimson-600 text-cream font-bold uppercase tracking-widest text-[10px] shadow-print-sm transition-all active:scale-95"
                 >
                   <Download className="w-3 h-3" />
                   DOCX
                 </button>
                 <button
                   onClick={handleDownloadPdf}
-                  className="flex items-center justify-center gap-2 p-3 bg-rose-600 hover:bg-rose-500 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all shadow-xl shadow-rose-500/20 active:scale-95"
+                  className="flex items-center justify-center gap-1.5 p-3 bg-ink-900 hover:bg-ink-700 text-cream font-bold uppercase tracking-widest text-[10px] shadow-print-sm transition-all active:scale-95"
                 >
                   <Download className="w-3 h-3" />
                   PDF
@@ -392,7 +379,7 @@ body { font-family: Georgia, serif; font-size: 11pt; line-height: 1.5; color: #0
                 {driveConnected && (
                   <button
                     onClick={handleOpenInDrive}
-                    className="flex items-center justify-center gap-2 p-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all shadow-xl shadow-emerald-500/20 active:scale-95"
+                    className="flex items-center justify-center gap-1.5 p-3 bg-sky hover:bg-sky/80 text-ink-900 font-bold uppercase tracking-widest text-[10px] transition-all active:scale-95"
                   >
                     <ExternalLink className="w-3 h-3" />
                     Drive
@@ -406,7 +393,7 @@ body { font-family: Georgia, serif; font-size: 11pt; line-height: 1.5; color: #0
           {!generating && streamedText && (
             <button
               onClick={handleGenerate}
-              className="w-full text-xs font-bold text-slate-500 hover:text-slate-300 transition-colors py-1 flex items-center justify-center gap-2"
+              className="w-full text-xs font-bold text-ink-500 hover:text-ink-700 transition-colors py-1 flex items-center justify-center gap-2"
             >
               <Sparkles className="w-3 h-3" />
               Regenerate with same tone

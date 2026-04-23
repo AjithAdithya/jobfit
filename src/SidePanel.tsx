@@ -243,8 +243,6 @@ const SidePanel: React.FC = () => {
 
   const handleDownloadDocx = () => {
     if (!generatedResume) return
-    // Word-specific @page + WordSection1 controls page size and margins.
-    // All typography comes from the inline styles baked in by applyStyleToResumeHTML.
     const header = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
 <head>
 <meta charset='utf-8'>
@@ -268,9 +266,6 @@ div.WordSection1 { page: WordSection1; }
 
   const handleDownloadPdf = () => {
     if (!generatedResume) return
-    // Open in a new tab and auto-print. Only @page rules and print-scaling overrides
-    // are defined here — all typography (font, color, size) stays on the inline styles
-    // that applyStyleToResumeHTML baked into the HTML so the preview is preserved.
     const html = `<!DOCTYPE html>
 <html>
 <head>
@@ -279,12 +274,10 @@ div.WordSection1 { page: WordSection1; }
   <style>
     @page { size: letter; margin: 0.4in; }
     html, body { margin: 0; padding: 0; background: #fff; }
-    /* Shrink the preview container's enforced max-width for print so body margin controls layout */
     .jobfit-resume { max-width: 100% !important; padding: 0 !important; margin: 0 !important; }
     @media print {
       html, body { width: 7.7in; }
       .jobfit-resume { page-break-inside: avoid; }
-      /* Hide any content that overflows one page */
       .jobfit-resume > *:nth-child(n) { break-inside: avoid; }
     }
   </style>
@@ -337,42 +330,40 @@ div.WordSection1 { page: WordSection1; }
 
   if (authLoading) {
     return (
-      <div className="flex flex-col items-center justify-center h-screen bg-[#020617] text-slate-100">
-        <Loader2 className="w-8 h-8 animate-spin text-blue-500 mb-4" />
-        <p className="text-sm text-slate-400 animate-pulse font-medium">JobFit AI is warming up...</p>
+      <div className="flex flex-col items-center justify-center h-screen bg-cream text-ink-900">
+        <Loader2 className="w-8 h-8 animate-spin text-crimson-500 mb-4" />
+        <p className="text-sm text-ink-500 animate-pulse">JobFit AI is warming up...</p>
       </div>
     )
   }
 
   if (!user) {
     return (
-      <div className="flex flex-col h-screen bg-[#020617] text-slate-100 p-10">
+      <div className="flex flex-col h-screen bg-cream text-ink-900 p-10">
         <div className="flex-1 flex flex-col items-center justify-center text-center space-y-10">
           <motion.div
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="relative"
           >
-            <div className="absolute inset-0 bg-blue-600 blur-[80px] opacity-20 rounded-full"></div>
-            <div className="relative p-6 bg-gradient-to-br from-blue-600 to-blue-700 rounded-[2.5rem] shadow-2xl shadow-blue-500/20">
-              <Sparkles className="w-16 h-16 text-white" />
+            <div className="p-6 bg-crimson-500 inline-flex items-center justify-center shadow-print-sm">
+              <Sparkles className="w-14 h-14 text-cream" />
             </div>
           </motion.div>
 
           <div className="space-y-4">
-            <h1 className="text-5xl font-black tracking-tight leading-none">
-              JobFit <span className="bg-gradient-to-r from-blue-400 to-emerald-400 bg-clip-text text-transparent">AI</span>
+            <h1 className="font-chunk text-[52px] leading-none tracking-tight">
+              Job<span className="serif-accent text-crimson-500">Fit</span>
             </h1>
-            <p className="text-slate-400 max-w-[260px] mx-auto text-base font-medium leading-relaxed">
-              Your elite AI agent for job hunting. Tailor in seconds, match with precision.
+            <p className="text-ink-500 max-w-[260px] mx-auto text-sm leading-relaxed">
+              Your AI agent for job hunting. Tailor in seconds, match with precision.
             </p>
           </div>
 
           <button
             onClick={signInWithGoogle}
-            className="w-full max-w-[280px] flex items-center justify-center gap-3 bg-white text-black hover:bg-slate-100 py-4 px-6 rounded-2xl font-black transition-all transform active:scale-[0.98] shadow-2xl shadow-white/5"
+            className="w-full max-w-[280px] flex items-center justify-center gap-3 bg-ink-900 text-cream hover:bg-ink-700 py-4 px-6 font-bold transition-all active:scale-[0.98] shadow-print-sm border border-ink-900"
           >
-            <svg className="w-6 h-6" viewBox="0 0 24 24">
+            <svg className="w-5 h-5" viewBox="0 0 24 24">
               <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
               <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
               <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/>
@@ -386,16 +377,16 @@ div.WordSection1 { page: WordSection1; }
   }
 
   return (
-    <div className="flex flex-col h-screen bg-[#020617] text-slate-100 font-sans selection:bg-blue-500/30 overflow-hidden">
+    <div className="flex flex-col h-screen bg-cream text-ink-900 font-sans overflow-hidden">
       {/* Header */}
-      <header className="px-6 py-5 flex items-center justify-between z-20 glass border-none rounded-b-3xl">
+      <header className="px-5 py-4 flex items-center justify-between z-20 bg-cream border-b border-ink-200">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl shadow-lg shadow-blue-500/20">
-            <Sparkles className="w-5 h-5 text-white" />
+          <div className="p-2 bg-crimson-500 flex items-center justify-center">
+            <Sparkles className="w-4 h-4 text-cream" />
           </div>
           <div>
-            <h1 className="text-xl font-black tracking-tight leading-none uppercase italic text-white">JobFit</h1>
-            <p className="text-[10px] font-black text-blue-500 uppercase tracking-[0.2em] mt-1">Intelligence</p>
+            <h1 className="font-chunk text-lg leading-none text-ink-900">JobFit</h1>
+            <p className="eyebrow text-crimson-500 mt-0.5">Intelligence</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -403,22 +394,22 @@ div.WordSection1 { page: WordSection1; }
             <motion.div
               initial={{ scale: 0.5, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              className="bg-emerald-500/20 text-emerald-400 p-2 rounded-xl border border-emerald-500/20"
+              className="bg-citrus/40 text-ink-900 p-2 border border-ink-200"
             >
               <Check className="w-4 h-4" />
             </motion.div>
           )}
           <button
             onClick={() => setView(currentView === 'settings' ? 'dashboard' : 'settings')}
-            className={`p-2 rounded-xl transition-all ${currentView === 'settings' ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20' : 'bg-slate-900 border border-slate-800 text-slate-400'}`}
+            className={`p-2 transition-all border ${currentView === 'settings' ? 'bg-crimson-500 text-cream border-crimson-500' : 'bg-white border-ink-200 text-ink-500 hover:border-ink-900'}`}
           >
-            <SettingsIcon className="w-5 h-5" />
+            <SettingsIcon className="w-4 h-4" />
           </button>
         </div>
       </header>
 
       {/* Main Viewport */}
-      <main className="flex-1 overflow-y-auto px-6 py-6 custom-scrollbar relative">
+      <main className="flex-1 overflow-y-auto px-5 py-6 custom-scrollbar relative">
         <AnimatePresence mode="wait">
 
           {/* ── Dashboard ────────────────────────────────────────────── */}
@@ -428,34 +419,35 @@ div.WordSection1 { page: WordSection1; }
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 20 }}
-              className="space-y-6"
+              className="space-y-5"
             >
-              <div className="p-6 bg-gradient-to-br from-slate-900 to-slate-950 border border-slate-800 rounded-[2rem] relative overflow-hidden group">
-                <div className="absolute -top-10 -right-10 w-40 h-40 bg-blue-600 rounded-full blur-[60px] opacity-10 group-hover:opacity-20 transition-opacity"></div>
+              {/* Hero card — editorial inverted */}
+              <div className="p-6 bg-ink-900 border border-ink-900 relative overflow-hidden group">
+                <div className="absolute -top-10 -right-10 w-40 h-40 bg-crimson-500 rounded-full blur-[60px] opacity-10 group-hover:opacity-20 transition-opacity"></div>
                 <div className="relative z-10 space-y-4">
                   <div className="flex items-center justify-between">
-                    <div className="p-2 bg-emerald-500/10 rounded-lg">
-                      <Zap className="w-5 h-5 text-emerald-400" />
+                    <div className="p-2 bg-white/10">
+                      <Zap className="w-5 h-5 text-citrus" />
                     </div>
-                    <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest leading-none">Ready to Extract</span>
+                    <span className="eyebrow text-ink-400">Ready to Extract</span>
                   </div>
-                  <h2 className="text-2xl font-black leading-tight text-white">Match against any job in one click.</h2>
-                  <p className="text-xs text-slate-400 leading-relaxed font-medium">
+                  <h2 className="font-chunk text-2xl leading-tight text-cream">Match against any job in one click.</h2>
+                  <p className="text-xs text-ink-300 leading-relaxed">
                     Navigate to LinkedIn or Indeed and we'll automatically pull the requirements.
                   </p>
                 </div>
               </div>
 
               {!activeResumeId && (
-                <div className="flex items-center gap-3 p-4 bg-amber-500/10 border border-amber-500/20 rounded-2xl">
-                  <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />
+                <div className="flex items-center gap-3 p-4 bg-flare/10 border border-flare/30">
+                  <AlertTriangle className="w-4 h-4 text-flare shrink-0" />
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs font-bold text-amber-300">No resume uploaded</p>
-                    <p className="text-[10px] text-amber-400/70 mt-0.5">Upload a resume in the Vault before analyzing jobs.</p>
+                    <p className="text-xs font-bold text-flare">No resume uploaded</p>
+                    <p className="text-[10px] text-flare/70 mt-0.5">Upload a resume in the Vault before analyzing jobs.</p>
                   </div>
                   <button
                     onClick={() => setView('resumes')}
-                    className="shrink-0 px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-black text-[10px] font-black uppercase tracking-widest rounded-xl transition-all active:scale-95"
+                    className="shrink-0 px-3 py-1.5 bg-flare hover:bg-flare/80 text-cream text-[10px] font-bold uppercase tracking-widest transition-all active:scale-95"
                   >
                     Upload
                   </button>
@@ -465,25 +457,25 @@ div.WordSection1 { page: WordSection1; }
               <button
                 onClick={handleReadPage}
                 disabled={!activeResumeId || loading || resumeProcessing}
-                className="w-full flex items-center justify-between p-5 bg-blue-600 hover:bg-blue-500 disabled:opacity-40 disabled:cursor-not-allowed border border-white/10 rounded-3xl transition-all shadow-2xl shadow-blue-500/10 active:scale-95 group"
+                className="w-full flex items-center justify-between p-5 bg-crimson-500 hover:bg-crimson-600 disabled:opacity-40 disabled:cursor-not-allowed border border-crimson-600 transition-all shadow-print-sm active:scale-95 group"
               >
-                <div className="flex items-center gap-4 text-white">
-                  <div className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center">
-                    {loading ? <Loader2 className="w-6 h-6 animate-spin text-white" /> : <Brain className="w-6 h-6 text-white" />}
+                <div className="flex items-center gap-4 text-cream">
+                  <div className="w-12 h-12 bg-crimson-600/40 flex items-center justify-center">
+                    {loading ? <Loader2 className="w-6 h-6 animate-spin text-cream" /> : <Brain className="w-6 h-6 text-cream" />}
                   </div>
                   <div className="text-left">
-                    <p className="font-black text-white text-lg leading-tight">Analyze Page</p>
-                    <p className="text-[10px] text-blue-100 font-bold uppercase tracking-widest opacity-70">Semantic Extraction</p>
+                    <p className="font-chunk text-cream text-xl leading-tight">Analyze Page</p>
+                    <p className="eyebrow text-cream/60 mt-1">Semantic Extraction</p>
                   </div>
                 </div>
-                <ArrowRight className="w-6 h-6 text-white/50 group-hover:text-white transition-colors" />
+                <ArrowRight className="w-6 h-6 text-cream/50 group-hover:text-cream transition-colors" />
               </button>
 
               {/* Paste-box toggle */}
               <button
                 onClick={() => setPasteMode(!pasteMode)}
                 disabled={!activeResumeId}
-                className="w-full text-xs font-bold text-slate-500 hover:text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed transition-colors py-1 flex items-center justify-center gap-2"
+                className="w-full text-xs font-bold text-ink-500 hover:text-ink-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors py-1 flex items-center justify-center gap-2"
               >
                 <ClipboardPaste className="w-3 h-3" />
                 {pasteMode ? 'Hide paste box' : "Can't extract? Paste the JD here"}
@@ -501,12 +493,12 @@ div.WordSection1 { page: WordSection1; }
                       value={pastedJD}
                       onChange={e => setPastedJD(e.target.value)}
                       placeholder="Paste the full job description here..."
-                      className="w-full h-40 p-4 bg-slate-900 border border-slate-800 rounded-2xl text-xs text-slate-300 font-medium resize-none focus:outline-none focus:border-blue-500/50 placeholder:text-slate-600 custom-scrollbar"
+                      className="w-full h-40 p-4 bg-white border border-ink-200 text-xs text-ink-700 resize-none focus:outline-none focus:border-crimson-500 placeholder:text-ink-400 custom-scrollbar"
                     />
                     <button
                       onClick={handleAnalyzePastedJD}
                       disabled={!activeResumeId || !pastedJD.trim() || loading || resumeProcessing}
-                      className="w-full flex items-center justify-center gap-3 p-4 bg-blue-600/80 hover:bg-blue-600 disabled:opacity-40 text-white rounded-2xl font-black uppercase tracking-widest text-xs transition-all active:scale-95"
+                      className="w-full flex items-center justify-center gap-3 p-4 bg-crimson-500 hover:bg-crimson-600 disabled:opacity-40 text-cream font-bold uppercase tracking-widest text-xs transition-all active:scale-95"
                     >
                       <Brain className="w-4 h-4" />
                       Analyze Pasted JD
@@ -515,33 +507,33 @@ div.WordSection1 { page: WordSection1; }
                 )}
               </AnimatePresence>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-3">
                 <input type="file" ref={fileInputRef} onChange={handleResumeUpload} accept=".pdf" className="hidden" />
                 <button
                   onClick={() => fileInputRef.current?.click()}
                   disabled={resumeProcessing}
-                  className="p-5 bg-slate-900 border border-slate-800 rounded-3xl hover:border-slate-700 transition-all group flex flex-col items-center gap-3"
+                  className="p-5 bg-white border border-ink-200 hover:border-ink-900 transition-all group flex flex-col items-center gap-3"
                 >
-                  <div className="p-3 bg-slate-800 rounded-xl group-hover:bg-blue-600 transition-colors">
-                    {resumeProcessing ? <Loader2 className="w-5 h-5 animate-spin text-white" /> : <Upload className="w-5 h-5 text-slate-400 group-hover:text-white" />}
+                  <div className="p-3 bg-ink-100 group-hover:bg-crimson-500 transition-colors">
+                    {resumeProcessing ? <Loader2 className="w-5 h-5 animate-spin text-crimson-500 group-hover:text-cream" /> : <Upload className="w-5 h-5 text-ink-500 group-hover:text-cream" />}
                   </div>
-                  <span className="text-xs font-black text-slate-400 group-hover:text-white uppercase tracking-widest">Resumes</span>
+                  <span className="eyebrow text-ink-500 group-hover:text-ink-900 transition-colors">Resumes</span>
                 </button>
                 <button
                   onClick={() => setView('history')}
-                  className="p-5 bg-slate-900 border border-slate-800 rounded-3xl hover:border-slate-700 transition-all group flex flex-col items-center gap-3"
+                  className="p-5 bg-white border border-ink-200 hover:border-ink-900 transition-all group flex flex-col items-center gap-3"
                 >
-                  <div className="p-3 bg-slate-800 rounded-xl group-hover:bg-blue-600 transition-colors">
-                    <LayoutGrid className="w-5 h-5 text-slate-400 group-hover:text-white" />
+                  <div className="p-3 bg-ink-100 group-hover:bg-crimson-500 transition-colors">
+                    <LayoutGrid className="w-5 h-5 text-ink-500 group-hover:text-cream" />
                   </div>
-                  <span className="text-xs font-black text-slate-400 group-hover:text-white uppercase tracking-widest">History</span>
+                  <span className="eyebrow text-ink-500 group-hover:text-ink-900 transition-colors">History</span>
                 </button>
               </div>
 
               {error && (
                 <motion.div
                   initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-                  className="flex items-start gap-4 p-5 bg-red-500/10 border border-red-500/20 rounded-3xl text-red-400 text-sm"
+                  className="flex items-start gap-4 p-4 bg-flare/10 border border-flare/30 text-flare text-sm"
                 >
                   <AlertCircle className="w-5 h-5 shrink-0" />
                   <p className="font-medium leading-relaxed">{error}</p>
@@ -557,16 +549,16 @@ div.WordSection1 { page: WordSection1; }
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
-              className="space-y-6"
+              className="space-y-5"
             >
               <div className="flex items-center justify-between">
                 <button
                   onClick={() => setView('dashboard')}
-                  className="text-xs font-black text-slate-500 hover:text-slate-300 uppercase tracking-widest flex items-center gap-2 transition-colors"
+                  className="text-xs font-bold text-ink-500 hover:text-ink-900 uppercase tracking-widest flex items-center gap-2 transition-colors"
                 >
                   <ArrowRight className="w-4 h-4 rotate-180" /> Back
                 </button>
-                <span className="px-3 py-1 bg-blue-600/10 text-blue-400 text-[10px] font-black uppercase tracking-[0.2em] rounded-full border border-blue-500/10">
+                <span className="px-3 py-1 bg-crimson-500/10 text-crimson-500 text-[10px] font-mono font-bold uppercase tracking-[0.2em] border border-crimson-500/30">
                   AI Live
                 </span>
               </div>
@@ -574,7 +566,7 @@ div.WordSection1 { page: WordSection1; }
               {error && (
                 <motion.div
                   initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-                  className="flex items-start gap-4 p-5 bg-red-500/10 border border-red-500/20 rounded-[2rem] text-red-400 text-sm"
+                  className="flex items-start gap-4 p-4 bg-flare/10 border border-flare/30 text-flare text-sm"
                 >
                   <AlertCircle className="w-5 h-5 shrink-0" />
                   <p className="font-medium leading-relaxed">{error}</p>
@@ -584,7 +576,7 @@ div.WordSection1 { page: WordSection1; }
               {warning && (
                 <motion.div
                   initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-                  className="flex items-start gap-4 p-4 bg-amber-500/10 border border-amber-500/20 rounded-2xl text-amber-400 text-xs"
+                  className="flex items-start gap-4 p-4 bg-flare/10 border border-flare/30 text-flare text-xs"
                 >
                   <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
                   <p className="font-medium leading-relaxed">{warning}</p>
@@ -592,26 +584,26 @@ div.WordSection1 { page: WordSection1; }
               )}
 
               {analyzing ? (
-                <div className="py-20 flex flex-col items-center text-center space-y-8 animate-pulse text-white">
+                <div className="py-20 flex flex-col items-center text-center space-y-8">
                   <div className="relative">
-                    <div className="absolute inset-0 bg-blue-500 blur-[60px] opacity-20"></div>
-                    <Brain className="w-20 h-20 text-blue-500 animate-bounce" />
+                    <div className="absolute inset-0 bg-crimson-500 blur-[60px] opacity-20"></div>
+                    <Brain className="w-20 h-20 text-crimson-500 animate-bounce relative z-10" />
                   </div>
                   <div>
-                    <h3 className="text-2xl font-black mb-2">Analyzing Fit...</h3>
-                    <p className="text-slate-500 text-sm font-medium">Matching your elite segments to JD requirements.</p>
+                    <h3 className="font-chunk text-2xl mb-2 text-ink-900">Analyzing Fit...</h3>
+                    <p className="text-ink-500 text-sm">Matching your elite segments to JD requirements.</p>
                   </div>
                 </div>
               ) : analysis ? (
-                <div className="space-y-6 pb-10">
+                <div className="space-y-5 pb-10">
                   {jobContext && (
-                    <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-4 text-left">
-                      <div className="flex items-center gap-2 text-slate-400 mb-1">
+                    <div className="bg-ink-50 border border-ink-200 p-4 text-left">
+                      <div className="flex items-center gap-2 text-ink-500 mb-1">
                         <Briefcase className="w-4 h-4 shrink-0" />
-                        <span className="text-xs font-semibold truncate">{activeResumeName || 'Unknown Resume'}</span>
+                        <span className="text-xs truncate">{activeResumeName || 'Unknown Resume'}</span>
                       </div>
-                      <div className="flex items-start gap-2 text-white">
-                        <Target className="w-4 h-4 shrink-0 mt-0.5" />
+                      <div className="flex items-start gap-2 text-ink-900">
+                        <Target className="w-4 h-4 shrink-0 mt-0.5 text-crimson-500" />
                         <span className="text-sm font-bold leading-snug">{jobContext.title}</span>
                       </div>
                     </div>
@@ -620,35 +612,35 @@ div.WordSection1 { page: WordSection1; }
                   {(() => {
                     const level = getMatchLevel(analysis.score)
                     return (
-                      <div className={`p-8 bg-gradient-to-br ${level.cardBg} border ${level.cardBorder} rounded-[2.5rem] flex items-center justify-between shadow-2xl relative overflow-hidden`}>
+                      <div className={`p-6 ${level.cardBg} border ${level.cardBorder} flex items-center justify-between relative overflow-hidden`}>
                         <div className={`absolute -bottom-10 -left-10 w-40 h-40 ${level.glowClass} rounded-full blur-[80px] opacity-10`} />
-                        <div className="relative z-10 text-white">
-                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-1">Job Compatibility</p>
-                          <h2 className={`text-3xl font-black ${level.textClass}`}>{level.label}</h2>
-                          <p className="text-[11px] text-slate-500 mt-1 font-medium">{level.subtitle}</p>
+                        <div className="relative z-10">
+                          <p className="eyebrow mb-1">Job Compatibility</p>
+                          <h2 className={`font-chunk text-3xl ${level.textClass}`}>{level.label}</h2>
+                          <p className="text-xs text-ink-500 mt-1">{level.subtitle}</p>
                         </div>
                         <MatchCircle score={analysis.score} />
                       </div>
                     )
                   })()}
 
-                  <div className="space-y-4">
+                  <div className="space-y-3">
                     {/* Strengths — collapsible */}
-                    <div className="bg-slate-900/50 border border-slate-800 rounded-[2rem] overflow-hidden">
+                    <div className="bg-white border border-ink-200 overflow-hidden">
                       <button
                         onClick={() => toggleSection('matches')}
-                        className="w-full p-5 flex items-center justify-between hover:bg-slate-900/30 transition-colors"
+                        className="w-full p-4 flex items-center justify-between hover:bg-ink-50 transition-colors"
                       >
-                        <h3 className="flex items-center gap-3 text-sm font-black text-emerald-400 uppercase tracking-widest">
-                          <Target className="w-5 h-5" /> Matching Strengths
-                          <span className="text-slate-500 font-black">
-                            <span className="text-2xl text-emerald-400 leading-none">{(analysis?.matches || []).length}</span>
-                            <span className="text-xs text-slate-600 mx-1">/</span>
-                            <span className="text-base text-slate-500 leading-none">{(analysis?.matches || []).length + (analysis?.gaps || []).length}</span>
+                        <h3 className="flex items-center gap-3 text-sm font-bold text-ink-900 uppercase tracking-widest">
+                          <Target className="w-4 h-4 text-ink-500" /> Matching Strengths
+                          <span className="text-ink-500 font-mono text-xs">
+                            <span className="font-chunk text-xl text-ink-900 leading-none">{(analysis?.matches || []).length}</span>
+                            <span className="text-ink-400 mx-1">/</span>
+                            <span className="text-ink-400">{(analysis?.matches || []).length + (analysis?.gaps || []).length}</span>
                           </span>
                         </h3>
                         <ChevronDown
-                          className={`w-4 h-4 text-slate-500 transition-transform ${activeSection === 'matches' ? 'rotate-180' : ''}`}
+                          className={`w-4 h-4 text-ink-400 transition-transform ${activeSection === 'matches' ? 'rotate-180' : ''}`}
                         />
                       </button>
                       <AnimatePresence initial={false}>
@@ -659,11 +651,11 @@ div.WordSection1 { page: WordSection1; }
                             exit={{ height: 0, opacity: 0 }}
                             transition={{ duration: 0.2 }}
                           >
-                            <div className="px-5 pb-5 space-y-3">
+                            <div className="px-4 pb-4 space-y-2 border-t border-ink-100">
                               {(analysis?.matches || []).map((m, i) => (
-                                <div key={i} className="flex items-start gap-3 p-3 bg-slate-950/50 rounded-2xl border border-slate-800/50">
-                                  <CheckCircle2 className="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" />
-                                  <p className="text-xs text-slate-300 font-medium leading-relaxed">{m}</p>
+                                <div key={i} className="flex items-start gap-3 p-3 bg-ink-50 border border-ink-100 mt-2">
+                                  <CheckCircle2 className="w-4 h-4 text-ink-700 mt-0.5 shrink-0" />
+                                  <p className="text-xs text-ink-700 leading-relaxed">{m}</p>
                                 </div>
                               ))}
                             </div>
@@ -673,19 +665,19 @@ div.WordSection1 { page: WordSection1; }
                     </div>
 
                     {/* Gaps — collapsible */}
-                    <div className="bg-slate-900/50 border border-slate-800 rounded-[2rem] overflow-hidden">
+                    <div className="bg-white border border-ink-200 overflow-hidden">
                       <button
                         onClick={() => toggleSection('gaps')}
-                        className="w-full p-5 flex items-center justify-between hover:bg-slate-900/30 transition-colors"
+                        className="w-full p-4 flex items-center justify-between hover:bg-ink-50 transition-colors"
                       >
-                        <h3 className="flex items-center gap-3 text-sm font-black text-blue-400 uppercase tracking-widest">
-                          <Zap className="w-5 h-5" /> Recommended Gaps
-                          <span className="text-[10px] text-slate-500 font-bold">
+                        <h3 className="flex items-center gap-3 text-sm font-bold text-crimson-500 uppercase tracking-widest">
+                          <Zap className="w-4 h-4" /> Recommended Gaps
+                          <span className="text-[10px] text-ink-500 font-bold font-mono">
                             ({selectedGaps.length}/{(analysis?.gaps || []).length})
                           </span>
                         </h3>
                         <ChevronDown
-                          className={`w-4 h-4 text-slate-500 transition-transform ${activeSection === 'gaps' ? 'rotate-180' : ''}`}
+                          className={`w-4 h-4 text-ink-400 transition-transform ${activeSection === 'gaps' ? 'rotate-180' : ''}`}
                         />
                       </button>
                       <AnimatePresence initial={false}>
@@ -696,12 +688,12 @@ div.WordSection1 { page: WordSection1; }
                             exit={{ height: 0, opacity: 0 }}
                             transition={{ duration: 0.2 }}
                           >
-                            <div className="px-5 pb-5 space-y-3">
+                            <div className="px-4 pb-4 space-y-2 border-t border-ink-100">
                               {(analysis?.gaps || []).map((g, i) => (
-                                <label key={i} className="flex items-start gap-3 p-3 bg-slate-950/50 rounded-2xl border border-slate-800/50 cursor-pointer hover:bg-slate-900 transition-colors">
+                                <label key={i} className="flex items-start gap-3 p-3 bg-ink-50 border border-ink-100 mt-2 cursor-pointer hover:bg-white transition-colors">
                                   <input
                                     type="checkbox"
-                                    className="mt-1 w-4 h-4 rounded border-slate-700 text-blue-600 focus:ring-blue-500 bg-slate-900"
+                                    className="mt-1 w-4 h-4 border-ink-300 text-crimson-500 focus:ring-crimson-500 bg-white"
                                     checked={selectedGaps.includes(g)}
                                     onChange={async e => {
                                       const newGaps = e.target.checked
@@ -714,7 +706,7 @@ div.WordSection1 { page: WordSection1; }
                                       }
                                     }}
                                   />
-                                  <p className="text-xs text-slate-300 font-medium leading-relaxed">{g}</p>
+                                  <p className="text-xs text-ink-700 leading-relaxed">{g}</p>
                                 </label>
                               ))}
                             </div>
@@ -725,19 +717,19 @@ div.WordSection1 { page: WordSection1; }
 
                     {/* Keywords — collapsible */}
                     {(analysis?.keywords || []).length > 0 && (
-                      <div className="bg-slate-900/50 border border-slate-800 rounded-[2rem] overflow-hidden">
+                      <div className="bg-white border border-ink-200 overflow-hidden">
                         <button
                           onClick={() => toggleSection('keywords')}
-                          className="w-full p-5 flex items-center justify-between hover:bg-slate-900/30 transition-colors"
+                          className="w-full p-4 flex items-center justify-between hover:bg-ink-50 transition-colors"
                         >
-                          <h3 className="flex items-center gap-3 text-sm font-black text-amber-400 uppercase tracking-widest">
-                            <Sparkles className="w-5 h-5" /> Target Keywords
-                            <span className="text-[10px] text-slate-500 font-bold">
+                          <h3 className="flex items-center gap-3 text-sm font-bold text-ink-700 uppercase tracking-widest">
+                            <Sparkles className="w-4 h-4" /> Target Keywords
+                            <span className="text-[10px] text-ink-500 font-bold font-mono">
                               ({selectedKeywords.length}/{(analysis?.keywords || []).length})
                             </span>
                           </h3>
                           <ChevronDown
-                            className={`w-4 h-4 text-slate-500 transition-transform ${activeSection === 'keywords' ? 'rotate-180' : ''}`}
+                            className={`w-4 h-4 text-ink-400 transition-transform ${activeSection === 'keywords' ? 'rotate-180' : ''}`}
                           />
                         </button>
                         <AnimatePresence initial={false}>
@@ -748,7 +740,7 @@ div.WordSection1 { page: WordSection1; }
                               exit={{ height: 0, opacity: 0 }}
                               transition={{ duration: 0.2 }}
                             >
-                              <div className="px-5 pb-5 flex flex-wrap gap-2">
+                              <div className="px-4 pb-4 flex flex-wrap gap-2 border-t border-ink-100 pt-3">
                                 {(analysis?.keywords || []).map((k, i) => {
                                   const active = selectedKeywords.includes(k);
                                   return (
@@ -764,10 +756,10 @@ div.WordSection1 { page: WordSection1; }
                                           await supabase.from('analysis_history').update({ selected_keywords: newKw }).eq('id', h.id);
                                         }
                                       }}
-                                      className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-all active:scale-95 ${
+                                      className={`px-3 py-1.5 text-xs font-bold border transition-all active:scale-95 ${
                                         active
-                                          ? 'bg-amber-500/20 border-amber-500/50 text-amber-300'
-                                          : 'bg-slate-950 border-slate-700 text-slate-500 hover:border-amber-500/30 hover:text-slate-300'
+                                          ? 'bg-citrus border-ink-900 text-ink-900'
+                                          : 'bg-white border-ink-200 text-ink-500 hover:border-ink-900 hover:text-ink-900'
                                       }`}
                                     >
                                       {k}
@@ -786,7 +778,7 @@ div.WordSection1 { page: WordSection1; }
                   {!generatedResume && (selectedGaps.length > 0 || selectedKeywords.length > 0) && (
                     <button
                       onClick={() => setShowStylePresets(!showStylePresets)}
-                      className="w-full text-xs font-bold text-slate-500 hover:text-slate-300 transition-colors py-1 flex items-center justify-center gap-2"
+                      className="w-full text-xs font-bold text-ink-500 hover:text-ink-700 transition-colors py-1 flex items-center justify-center gap-2"
                     >
                       <Palette className="w-3 h-3" />
                       {showStylePresets ? 'Hide style options' : 'Customize resume style'}
@@ -812,7 +804,7 @@ div.WordSection1 { page: WordSection1; }
                       initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
                       onClick={handleGenerateResume}
                       disabled={generatingResume}
-                      className="w-full mt-6 flex items-center justify-center gap-3 p-4 bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-white rounded-2xl font-black uppercase tracking-widest transition-all shadow-xl shadow-purple-500/20 active:scale-95"
+                      className="w-full mt-4 flex items-center justify-center gap-3 p-4 bg-crimson-500 hover:bg-crimson-600 disabled:opacity-50 text-cream font-bold uppercase tracking-widest transition-all shadow-print-sm active:scale-95 border border-crimson-600"
                     >
                       {generatingResume ? <Loader2 className="w-5 h-5 animate-spin" /> : <Sparkles className="w-5 h-5" />}
                       Generate Tailored Resume
@@ -823,9 +815,9 @@ div.WordSection1 { page: WordSection1; }
                   {analysis && !generatingResume && (
                     <button
                       onClick={() => setView('cover_letter')}
-                      className="w-full flex items-center justify-center gap-3 p-4 bg-slate-800 hover:bg-slate-700 text-white rounded-2xl font-black uppercase tracking-widest text-xs border border-slate-700 transition-all active:scale-95"
+                      className="w-full flex items-center justify-center gap-3 p-4 bg-ink-900 hover:bg-ink-700 text-cream font-bold uppercase tracking-widest text-xs border border-ink-900 transition-all active:scale-95"
                     >
-                      <Mail className="w-5 h-5" />
+                      <Mail className="w-4 h-4" />
                       Write Cover Letter
                     </button>
                   )}
@@ -834,14 +826,14 @@ div.WordSection1 { page: WordSection1; }
                   {generatedResume && (
                     <motion.div
                       initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-                      className="mt-8 space-y-4"
+                      className="mt-6 space-y-4"
                     >
-                      <h3 className="text-lg font-black text-white flex items-center gap-2">
-                        <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+                      <h3 className="font-chunk text-xl text-ink-900 flex items-center gap-2">
+                        <CheckCircle2 className="w-5 h-5 text-ink-700" />
                         Tailored Resume Generated
                       </h3>
 
-                      <div className="bg-white rounded-xl shadow-inner max-h-[500px] overflow-y-auto">
+                      <div className="bg-white border border-ink-200 max-h-[500px] overflow-y-auto">
                         <div
                           className="html-resume-preview"
                           style={{ colorScheme: 'light' }}
@@ -850,32 +842,33 @@ div.WordSection1 { page: WordSection1; }
                       </div>
 
                       {driveError && (
-                        <div className="mt-3 p-3 bg-amber-500/10 border border-amber-500/20 rounded-2xl flex items-start gap-2 text-amber-400 text-xs">
+                        <div className="p-3 bg-flare/10 border border-flare/30 flex items-start gap-2 text-flare text-xs">
                           <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
                           <p>{driveError}</p>
                         </div>
                       )}
+
                       <div className={`grid gap-3 mt-4 ${driveConnected ? 'grid-cols-3' : 'grid-cols-2'}`}>
                         <button
                           onClick={handleDownloadDocx}
-                          className="flex items-center justify-center gap-2 p-4 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl font-black uppercase tracking-widest transition-all shadow-xl shadow-blue-500/20 active:scale-95"
+                          className="flex items-center justify-center gap-2 p-3 bg-crimson-500 hover:bg-crimson-600 text-cream font-bold uppercase tracking-widest text-xs transition-all shadow-print-sm active:scale-95 border border-crimson-600"
                         >
-                          <FileText className="w-5 h-5" />
+                          <FileText className="w-4 h-4" />
                           DOCX
                         </button>
                         <button
                           onClick={handleDownloadPdf}
-                          className="flex items-center justify-center gap-2 p-4 bg-rose-600 hover:bg-rose-500 text-white rounded-2xl font-black uppercase tracking-widest transition-all shadow-xl shadow-rose-500/20 active:scale-95"
+                          className="flex items-center justify-center gap-2 p-3 bg-ink-900 hover:bg-ink-700 text-cream font-bold uppercase tracking-widest text-xs transition-all shadow-print-sm active:scale-95 border border-ink-900"
                         >
-                          <Download className="w-5 h-5" />
+                          <Download className="w-4 h-4" />
                           PDF
                         </button>
                         {driveConnected && (
                           <button
                             onClick={handleOpenInDrive}
-                            className="flex items-center justify-center gap-2 p-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl font-black uppercase tracking-widest transition-all shadow-xl shadow-emerald-500/20 active:scale-95"
+                            className="flex items-center justify-center gap-2 p-3 bg-sky hover:bg-sky/80 text-ink-900 font-bold uppercase tracking-widest text-xs transition-all shadow-print-sm active:scale-95 border border-sky"
                           >
-                            <Mail className="w-5 h-5" />
+                            <Mail className="w-4 h-4" />
                             Drive
                           </button>
                         )}
@@ -883,7 +876,7 @@ div.WordSection1 { page: WordSection1; }
 
                       <button
                         onClick={handleGenerateResume}
-                        className="w-full text-xs font-bold text-slate-500 hover:text-slate-300 transition-colors py-1 flex items-center justify-center gap-2"
+                        className="w-full text-xs font-bold text-ink-500 hover:text-ink-700 transition-colors py-1 flex items-center justify-center gap-2"
                       >
                         <Sparkles className="w-3 h-3" />
                         Regenerate Tailored Resume
@@ -893,16 +886,16 @@ div.WordSection1 { page: WordSection1; }
                 </div>
               ) : !error && (
                 <div className="py-20 flex flex-col items-center text-center space-y-6">
-                  <div className="w-20 h-20 rounded-3xl bg-slate-900 border border-slate-800 flex items-center justify-center">
-                    <Target className="w-10 h-10 text-slate-700" />
+                  <div className="w-20 h-20 bg-cream border border-ink-200 flex items-center justify-center">
+                    <Target className="w-10 h-10 text-ink-900" />
                   </div>
                   <div className="space-y-2">
-                    <h3 className="text-xl font-black">No Analysis Yet</h3>
-                    <p className="text-slate-500 text-sm max-w-[200px] mx-auto font-medium">Go home and click "Analyze Page" on a job description to see results here.</p>
+                    <h3 className="font-chunk text-xl">No Analysis Yet</h3>
+                    <p className="text-ink-500 text-sm max-w-[200px] mx-auto">Go home and click "Analyze Page" on a job description to see results here.</p>
                   </div>
                   <button
                     onClick={() => setView('dashboard')}
-                    className="px-6 py-3 bg-blue-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-blue-500/20 active:scale-95 transition-all"
+                    className="px-6 py-3 bg-crimson-500 hover:bg-crimson-600 text-cream font-bold text-xs uppercase tracking-widest shadow-print-sm active:scale-95 transition-all border border-crimson-600"
                   >
                     Go Back Home
                   </button>
@@ -928,35 +921,35 @@ div.WordSection1 { page: WordSection1; }
       </main>
 
       {/* Bottom Nav */}
-      <nav className="p-4 bg-[#020617] border-t border-slate-800/50 z-20 shadow-[0_-10px_20px_rgba(2,6,23,0.8)]">
-        <div className="max-w-md mx-auto bg-slate-900 border border-white/5 rounded-3xl p-1.5 flex items-center justify-around shadow-2xl">
+      <nav className="p-3 bg-cream border-t border-ink-200 z-20">
+        <div className="bg-white border border-ink-200 p-1 flex items-center justify-around">
           <button
             onClick={() => setView('dashboard')}
-            className={`flex-1 flex flex-col items-center py-2.5 rounded-2xl transition-all ${currentView === 'dashboard' ? 'bg-blue-600 text-white shadow-xl shadow-blue-500/20' : 'text-slate-500 hover:text-slate-300'}`}
+            className={`flex-1 flex flex-col items-center py-2.5 transition-all ${currentView === 'dashboard' ? 'bg-crimson-500 text-cream shadow-print-sm' : 'text-ink-500 hover:text-ink-900'}`}
           >
             <Home className="w-5 h-5" />
-            <span className="text-[8px] font-black uppercase tracking-widest mt-1">Home</span>
+            <span className="eyebrow mt-1">Home</span>
           </button>
           <button
             onClick={() => setView('resumes')}
-            className={`flex-1 flex flex-col items-center py-2.5 rounded-2xl transition-all ${currentView === 'resumes' ? 'bg-blue-600 text-white shadow-xl shadow-blue-500/20' : 'text-slate-500 hover:text-slate-300'}`}
+            className={`flex-1 flex flex-col items-center py-2.5 transition-all ${currentView === 'resumes' ? 'bg-crimson-500 text-cream shadow-print-sm' : 'text-ink-500 hover:text-ink-900'}`}
           >
             <Briefcase className="w-5 h-5" />
-            <span className="text-[8px] font-black uppercase tracking-widest mt-1">Vault</span>
+            <span className="eyebrow mt-1">Vault</span>
           </button>
           <button
             onClick={() => { if (analysis || analyzing) setView('analysis') }}
-            className={`flex-1 flex flex-col items-center py-2.5 rounded-2xl transition-all ${currentView === 'analysis' ? 'bg-blue-600 text-white shadow-xl shadow-blue-500/20' : 'text-slate-500 hover:text-slate-300'} ${(!analysis && !analyzing) ? 'opacity-30 cursor-not-allowed' : ''}`}
+            className={`flex-1 flex flex-col items-center py-2.5 transition-all ${currentView === 'analysis' ? 'bg-crimson-500 text-cream shadow-print-sm' : 'text-ink-500 hover:text-ink-900'} ${(!analysis && !analyzing) ? 'opacity-30 cursor-not-allowed' : ''}`}
           >
             <Target className="w-5 h-5" />
-            <span className="text-[8px] font-black uppercase tracking-widest mt-1">Match</span>
+            <span className="eyebrow mt-1">Match</span>
           </button>
           <button
             onClick={() => { if (analysis) setView('cover_letter') }}
-            className={`flex-1 flex flex-col items-center py-2.5 rounded-2xl transition-all ${currentView === 'cover_letter' ? 'bg-blue-600 text-white shadow-xl shadow-blue-500/20' : 'text-slate-500 hover:text-slate-300'} ${!analysis ? 'opacity-30 cursor-not-allowed' : ''}`}
+            className={`flex-1 flex flex-col items-center py-2.5 transition-all ${currentView === 'cover_letter' ? 'bg-crimson-500 text-cream shadow-print-sm' : 'text-ink-500 hover:text-ink-900'} ${!analysis ? 'opacity-30 cursor-not-allowed' : ''}`}
           >
             <Mail className="w-5 h-5" />
-            <span className="text-[8px] font-black uppercase tracking-widest mt-1">Letter</span>
+            <span className="eyebrow mt-1">Letter</span>
           </button>
         </div>
       </nav>

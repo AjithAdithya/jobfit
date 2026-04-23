@@ -1,60 +1,166 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,700&family=DM+Serif+Display:ital@0;1&family=Fjalla+One&family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;1,400&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  --background: #020617;
-  --foreground: #f8fafc;
+  /* ---------- BRAND CORE — Crimson ---------- */
+  --brand-red-50:   #FDECEC;
+  --brand-red-100:  #F9D0D0;
+  --brand-red-200:  #F1A1A1;
+  --brand-red-300:  #E66B6B;
+  --brand-red-400:  #D63838;
+  --brand-red-500:  #C01414;
+  --brand-red-600:  #9C0A0A;
+  --brand-red-700:  #7A0707;
+  --brand-red-800:  #530303;
+  --brand-red-900:  #2E0202;
+  --brand-red-ink:  #1A0000;
+
+  /* ---------- BOLD ACCENTS ---------- */
+  --accent-citrus:  #D7FF3A;
+  --accent-flare:   #FF4D2E;
+  --accent-cream:   #EDE9E3;
+  --accent-sky:     #5DD4FF;
+
+  /* ---------- NEUTRALS ---------- */
+  --neutral-0:    #FFFFFF;
+  --neutral-50:   #F5F6F7;
+  --neutral-100:  #E9EBEE;
+  --neutral-200:  #D3D6DB;
+  --neutral-300:  #A9AEB6;
+  --neutral-400:  #7B8088;
+  --neutral-500:  #555A63;
+  --neutral-600:  #3A3E46;
+  --neutral-700:  #24272D;
+  --neutral-800:  #14161B;
+  --neutral-900:  #0A0B0E;
+
+  /* ---------- SEMANTIC ---------- */
+  --bg:         var(--accent-cream);
+  --bg-elev:    var(--neutral-0);
+  --bg-sunken:  var(--neutral-100);
+  --bg-invert:  var(--neutral-900);
+
+  --fg:         var(--neutral-900);
+  --fg-muted:   var(--neutral-500);
+  --fg-subtle:  var(--neutral-400);
+  --fg-invert:  var(--accent-cream);
+
+  --border:        var(--neutral-200);
+  --border-strong: var(--neutral-300);
+  --border-ink:    var(--neutral-900);
+
+  --accent:      var(--brand-red-500);
+  --accent-fg:   var(--neutral-0);
+  --accent-soft: var(--brand-red-50);
+
+  --link:        var(--brand-red-500);
+  --link-hover:  var(--brand-red-700);
+
+  /* ---------- TYPOGRAPHY ---------- */
+  --font-sans:   "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-serif:  "DM Serif Display", Georgia, serif;
+  --font-chunk:  "Fjalla One", "Poppins", sans-serif;
+  --font-mono:   "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+
+  /* ---------- MOTION ---------- */
+  --ease-out-expo:   cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-out-quart:  cubic-bezier(0.25, 1, 0.5, 1);
+  --ease-spring:     cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* ---------- SHADOWS ---------- */
+  --shadow-sm:   0 1px 2px rgba(12,3,64,0.06), 0 1px 0 rgba(12,3,64,0.03);
+  --shadow-md:   0 6px 18px -4px rgba(12,3,64,0.10), 0 2px 4px rgba(12,3,64,0.04);
+  --shadow-lg:   0 22px 48px -16px rgba(12,3,64,0.22), 0 8px 16px -8px rgba(12,3,64,0.08);
+  --shadow-xl:   0 40px 80px -24px rgba(12,3,64,0.35), 0 16px 32px -16px rgba(12,3,64,0.12);
+  --shadow-glow: 0 0 0 1px rgba(192,20,20,0.2), 0 10px 40px -8px rgba(192,20,20,0.55);
 }
 
-* {
-  box-sizing: border-box;
-}
+* { box-sizing: border-box; }
+
+html { font-size: 16px; }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: var(--font-sans);
+  font-weight: 400;
+  line-height: 1.55;
+  color: var(--fg);
+  background: var(--bg);
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: "ss01", "cv11";
 }
 
-::-webkit-scrollbar {
-  width: 6px;
-}
-::-webkit-scrollbar-track {
-  background: #0f172a;
-}
-::-webkit-scrollbar-thumb {
-  background: #334155;
-  border-radius: 9999px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: #475569;
+/* --- Type primitives --- */
+.display-chunk {
+  font-family: var(--font-chunk);
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  line-height: 1.02;
 }
 
-.gradient-text {
-  background: linear-gradient(135deg, #60a5fa, #a78bfa, #34d399);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+.display-serif, .serif-accent {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-style: italic;
+  letter-spacing: -0.01em;
 }
 
-.gradient-text-blue {
-  background: linear-gradient(135deg, #60a5fa, #818cf8);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--fg-muted);
+  font-weight: 500;
 }
 
-.glow-blue {
-  box-shadow: 0 0 40px rgba(59, 130, 246, 0.15);
+.num {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums lining-nums;
+  letter-spacing: 0.01em;
 }
 
-.glow-purple {
-  box-shadow: 0 0 40px rgba(139, 92, 246, 0.15);
+.ink { color: var(--neutral-900); }
+.cream-bg { background: var(--accent-cream); }
+
+/* --- Selection --- */
+::selection { background: var(--brand-red-500); color: var(--neutral-0); }
+
+/* --- Scrollbar --- */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--neutral-200); border-radius: 9999px; }
+::-webkit-scrollbar-thumb:hover { background: var(--neutral-300); }
+
+/* --- Sparkle marker --- */
+.sparkle::before {
+  content: "✦";
+  color: var(--brand-red-500);
+  margin-right: 0.4em;
+  font-family: var(--font-sans);
 }
 
-.noise-bg {
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+/* --- Hover shift utility (from design system) --- */
+.hover-shift {
+  transition: transform 160ms var(--ease-out-quart), box-shadow 160ms var(--ease-out-quart), border-color 160ms var(--ease-out-quart);
+}
+.hover-shift:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+/* --- Editorial card (ink border, square, cream) --- */
+.card-editorial {
+  background: var(--accent-cream);
+  border: 1px solid var(--neutral-900);
+  border-radius: 0;
+}
+
+/* --- UI card (white, rounded, soft border) --- */
+.card-ui {
+  background: var(--neutral-0);
+  border: 1px solid var(--border);
+  border-radius: 14px;
 }

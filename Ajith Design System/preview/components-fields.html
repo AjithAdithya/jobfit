@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="_card.css">
+<style>
+  body { background: var(--neutral-50); padding: 24px 28px; display: flex; flex-direction: column; gap: 12px; }
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .label { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--fg-muted); }
+  .input { font-family: var(--font-sans); font-size: 15px; background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 11px 14px; color: var(--fg); outline: none; transition: all 160ms; }
+  .input:focus, .input.focused { border-color: var(--brand-violet-500); box-shadow: 0 0 0 3px rgba(91,47,230,0.15); }
+  .row { display: flex; gap: 10px; }
+  .row .field { flex: 1; }
+  .chip { display: inline-flex; gap: 6px; }
+  .tag { font-family: var(--font-mono); font-size: 11px; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--border); color: var(--fg-muted); letter-spacing: 0.08em; text-transform: uppercase; }
+  .tag.active { background: var(--neutral-900); color: #fff; border-color: var(--neutral-900); }
+</style>
+</head><body class="card-shell">
+<div class="card-eyebrow"><span class="dot"></span>FORM FIELDS</div>
+<div class="row">
+  <div class="field"><span class="label">name</span><input class="input" value="Ajith"></div>
+  <div class="field"><span class="label">email · focused</span><input class="input focused" value="hello@ajith.xyz"></div>
+</div>
+<div class="field">
+  <span class="label">tags</span>
+  <div class="chip">
+    <span class="tag active">design</span>
+    <span class="tag active">engineering</span>
+    <span class="tag">writing</span>
+    <span class="tag">type</span>
+  </div>
+</div>
+</body></html>

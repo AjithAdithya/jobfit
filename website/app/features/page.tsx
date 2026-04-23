@@ -1,201 +1,301 @@
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
-import { Target, Zap, FileText, Palette, History, Shield, CheckCircle2, Sparkles, Download, Brain, ChevronRight } from 'lucide-react'
 import Link from 'next/link'
+import { ALL_LEVELS } from '@/lib/matchLevel'
+import { ArrowRight, Check } from 'lucide-react'
 
-const MATCH_LEVELS = [
-  { score: '95+', label: 'Elite Match', color: 'text-cyan-300', bg: 'bg-cyan-500/10 border-cyan-500/20', bar: 'bg-cyan-400' },
-  { score: '85+', label: 'Excellent Match', color: 'text-emerald-300', bg: 'bg-emerald-500/10 border-emerald-500/20', bar: 'bg-emerald-400' },
-  { score: '75+', label: 'Great Match', color: 'text-green-300', bg: 'bg-green-500/10 border-green-500/20', bar: 'bg-green-400' },
-  { score: '65+', label: 'Strong Fit', color: 'text-lime-300', bg: 'bg-lime-500/10 border-lime-500/20', bar: 'bg-lime-400' },
-  { score: '55+', label: 'Decent Fit', color: 'text-yellow-300', bg: 'bg-yellow-500/10 border-yellow-500/20', bar: 'bg-yellow-400' },
-  { score: '45+', label: 'Partial Match', color: 'text-amber-300', bg: 'bg-amber-500/10 border-amber-500/20', bar: 'bg-amber-400' },
-  { score: '35+', label: 'Developing', color: 'text-orange-300', bg: 'bg-orange-500/10 border-orange-500/20', bar: 'bg-orange-400' },
-  { score: '25+', label: 'Weak Fit', color: 'text-red-300', bg: 'bg-red-500/10 border-red-500/20', bar: 'bg-red-400' },
-  { score: '10+', label: 'Long Shot', color: 'text-rose-300', bg: 'bg-rose-500/10 border-rose-500/20', bar: 'bg-rose-400' },
-  { score: '0+', label: 'No Match', color: 'text-slate-400', bg: 'bg-slate-500/10 border-slate-700/30', bar: 'bg-slate-500' },
-]
-
-function SectionHeader({ label, title, description }: { label: string; title: string; description?: string }) {
+function SectionLabel({ num, label }: { num: string; label: string }) {
   return (
-    <div className="space-y-3 mb-12">
-      <p className="text-xs font-black text-blue-400 uppercase tracking-widest">{label}</p>
-      <h2 className="text-3xl font-black text-white">{title}</h2>
-      {description && <p className="text-slate-400 max-w-2xl">{description}</p>}
+    <div className="flex items-center gap-3 mb-6">
+      <span className="font-mono text-[11px] text-crimson-500 tracking-caps uppercase">№ {num}</span>
+      <span className="h-px bg-ink-300 flex-1 max-w-[80px]" />
+      <span className="font-mono text-[11px] text-ink-500 tracking-caps uppercase">{label}</span>
     </div>
   )
 }
 
 export default function FeaturesPage() {
   return (
-    <div className="min-h-screen bg-slate-950">
+    <div className="min-h-screen bg-cream">
       <Navbar />
 
-      <div className="pt-24 pb-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center pt-12 pb-16 space-y-4">
-            <p className="text-xs font-black text-purple-400 uppercase tracking-widest">Features</p>
-            <h1 className="text-5xl font-black text-white">Every tool you need<br /><span className="gradient-text">to get the job</span></h1>
-            <p className="text-lg text-slate-400 max-w-2xl mx-auto">From smart scoring to AI-tailored resumes, JobFit gives you the edge on every application.</p>
+      {/* ── Hero ── */}
+      <section className="pt-32 pb-16 lg:pt-40 lg:pb-20">
+        <div className="max-w-[1280px] mx-auto px-6 lg:px-10">
+          <SectionLabel num="01" label="features" />
+          <h1 className="font-chunk text-[clamp(3rem,8vw,7.5rem)] leading-[0.98] tracking-tightest text-ink-900 max-w-5xl">
+            every tool
+            <br />
+            you need to <span className="serif-accent text-crimson-500">fit</span>
+            <br />
+            the job.
+          </h1>
+          <p className="mt-8 max-w-2xl text-[18px] leading-relaxed text-ink-600">
+            Six features, each designed to compress the path from "found a job" to "submitted a tailored application." No bloat, no upsells, no gatekeeping.
+          </p>
+        </div>
+      </section>
+
+      {/* ── Match scoring — 10 levels ── */}
+      <section className="py-20 lg:py-24 border-t border-ink-900">
+        <div className="max-w-[1280px] mx-auto px-6 lg:px-10">
+          <div className="grid lg:grid-cols-12 gap-8 mb-12">
+            <div className="lg:col-span-5">
+              <SectionLabel num="01" label="scoring engine" />
+              <h2 className="font-chunk text-big text-ink-900">
+                ten <span className="serif-accent text-crimson-500">named</span> levels.
+              </h2>
+            </div>
+            <div className="lg:col-span-6 lg:col-start-7 pt-4">
+              <p className="text-[17px] text-ink-600 leading-relaxed">
+                A compatibility score without context is just trivia. Every JobFit score maps to a named level with a one-line subtitle — so you know exactly what the number means before you apply.
+              </p>
+            </div>
           </div>
 
-          {/* ── 10 Match Levels ── */}
-          <section className="py-16 border-t border-slate-800/60">
-            <SectionHeader label="Scoring engine" title="10-Level compatibility scoring" description="Not just a number — a named level with actionable context. Know exactly how competitive you are before you apply." />
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-              {MATCH_LEVELS.map(lvl => (
-                <div key={lvl.label} className={`p-4 border rounded-2xl ${lvl.bg}`}>
-                  <div className={`text-lg font-black ${lvl.color} mb-1`}>{lvl.score}</div>
-                  <div className={`text-sm font-black ${lvl.color}`}>{lvl.label}</div>
-                  <div className="mt-2 h-1 bg-slate-800 rounded-full overflow-hidden">
-                    <div className={`h-full ${lvl.bar} rounded-full`} style={{ width: `${parseInt(lvl.score) || 5}%` }} />
-                  </div>
+          {/* Levels table */}
+          <div className="border-t border-ink-900">
+            {ALL_LEVELS.map(level => (
+              <div key={level.label} className="grid grid-cols-12 gap-4 py-5 border-b border-ink-200 items-center hover:bg-ink-50 transition-colors px-4 -mx-4">
+                <div className="col-span-2 num text-[22px] font-medium text-ink-900">
+                  {level.min}+
                 </div>
-              ))}
-            </div>
-          </section>
-
-          {/* ── Gap Analysis ── */}
-          <section className="py-16 border-t border-slate-800/60">
-            <div className="grid lg:grid-cols-2 gap-16 items-center">
-              <div>
-                <SectionHeader label="Gap analysis" title="See exactly what's missing" description="JobFit compares your resume against the job description and surfaces the specific skills, experience, and keywords you need to address." />
-                <ul className="space-y-3">
-                  {['Semantic matching via pgvector embeddings', 'Checkbox-based gap selection for your resume', 'Persistent selection saved to your history', 'Integrated into resume generation context'].map(item => (
-                    <li key={item} className="flex items-center gap-3 text-sm text-slate-300">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-                      {item}
-                    </li>
-                  ))}
-                </ul>
+                <div className="col-span-4 font-chunk text-[22px] tracking-tight text-ink-900">
+                  {level.label}
+                </div>
+                <div className="col-span-5 text-[14px] text-ink-500 italic font-serif">
+                  {level.subtitle}
+                </div>
+                <div className="col-span-1 flex justify-end">
+                  <div
+                    className="w-4 h-4 rounded-full"
+                    style={{ background: `linear-gradient(135deg, ${level.gradientFrom}, ${level.gradientTo})` }}
+                  />
+                </div>
               </div>
-              {/* Gap mockup */}
-              <div className="p-5 bg-slate-900 border border-slate-800 rounded-3xl space-y-3">
-                <div className="flex items-center gap-2 mb-4">
-                  <Zap className="w-4 h-4 text-blue-400" />
-                  <span className="text-xs font-black text-blue-400 uppercase tracking-widest">Recommended Gaps</span>
-                  <span className="text-xs text-slate-500">2/4 selected</span>
-                </div>
-                {[
-                  { text: 'GraphQL API design experience', checked: true },
-                  { text: 'Kubernetes / container orchestration', checked: true },
-                  { text: 'System design for distributed systems', checked: false },
-                  { text: 'Team leadership experience (3+ reports)', checked: false },
-                ].map((gap, i) => (
-                  <div key={i} className={`flex items-start gap-3 p-3 rounded-2xl border transition-colors ${gap.checked ? 'bg-blue-500/5 border-blue-500/20' : 'bg-slate-950/50 border-slate-800/50'}`}>
-                    <div className={`w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 mt-0.5 ${gap.checked ? 'bg-blue-600 border-blue-600' : 'border-slate-700 bg-slate-900'}`}>
-                      {gap.checked && <CheckCircle2 className="w-3 h-3 text-white" />}
-                    </div>
-                    <p className="text-xs text-slate-300 font-medium">{gap.text}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </section>
-
-          {/* ── Resume Generation ── */}
-          <section className="py-16 border-t border-slate-800/60">
-            <div className="grid lg:grid-cols-2 gap-16 items-center">
-              {/* Resume output mockup */}
-              <div className="p-6 bg-white rounded-2xl shadow-2xl font-serif text-sm leading-relaxed text-slate-800 order-2 lg:order-1">
-                <h1 className="text-xl font-bold text-center mb-0.5">Alex Johnson</h1>
-                <p className="text-center text-xs text-slate-500 mb-3">alex@example.com · github.com/alexj · San Francisco, CA</p>
-                <hr className="border-slate-200 mb-3" />
-                <h2 className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">Experience</h2>
-                <div className="space-y-2">
-                  <div>
-                    <div className="flex justify-between text-xs font-bold">
-                      <span>Senior Frontend Engineer</span>
-                      <span className="text-slate-400">2021 – Present</span>
-                    </div>
-                    <p className="text-[10px] text-slate-500 font-medium">Acme Corp</p>
-                    <ul className="list-disc list-inside text-[10px] text-slate-600 mt-1 space-y-0.5">
-                      <li>Built <strong>React</strong> + <strong>TypeScript</strong> dashboard serving 50k DAU</li>
-                      <li>Reduced bundle size 40% via code splitting and tree shaking</li>
-                      <li>Led <strong>GraphQL</strong> migration from REST, cutting over-fetching by 60%</li>
-                    </ul>
-                  </div>
-                </div>
-                <div className="mt-3 pt-2 border-t border-slate-100">
-                  <h2 className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-1.5">Skills</h2>
-                  <p className="text-[10px] text-slate-600">React · TypeScript · GraphQL · CI/CD · Node.js · AWS · Docker · Kubernetes</p>
-                </div>
-                <div className="mt-1.5 text-[9px] text-center text-slate-300 italic">AI-tailored for: Senior Frontend Engineer at Stripe</div>
-              </div>
-
-              <div className="order-1 lg:order-2">
-                <SectionHeader label="Resume generation" title="Tailored to each role, automatically" description="Claude AI rewrites your resume to highlight the most relevant experience for the specific job. Not a generic rewrite — a targeted one." />
-                <ul className="space-y-3">
-                  {['Analyzes both your resume and the job description together', 'Emphasizes matching keywords and skills', 'Fills in gap context you\'ve selected', 'One-click download as Word document (.docx)', 'A4 one-page enforcement with style fitting'].map(item => (
-                    <li key={item} className="flex items-center gap-3 text-sm text-slate-300">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-                      {item}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          </section>
-
-          {/* ── Style Presets ── */}
-          <section className="py-16 border-t border-slate-800/60">
-            <SectionHeader label="Style engine" title="Professional formatting, your way" description="Describe a style in plain English or upload any resume PDF — JobFit extracts fonts, spacing, and layout to match it exactly." />
-            <div className="grid md:grid-cols-3 gap-6">
-              {[
-                { style: 'Modern', font: 'Inter', size: '10pt', cols: '1', color: '#3b82f6', desc: 'Clean single-column with blue headings' },
-                { style: 'Classic', font: 'Georgia', size: '11pt', cols: '1', color: '#1e293b', desc: 'Serif font, traditional single-column' },
-                { style: 'Bold Two-Column', font: 'Helvetica', size: '10pt', cols: '2', color: '#7c3aed', desc: 'Purple accents, two-column layout' },
-              ].map(p => (
-                <div key={p.style} className="p-5 bg-slate-900 border border-slate-800 rounded-3xl space-y-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-xl border-2 flex-shrink-0" style={{ backgroundColor: p.color, borderColor: p.color }} />
-                    <div>
-                      <p className="font-black text-white text-sm">{p.style}</p>
-                      <p className="text-xs text-slate-500">{p.font} · {p.size} · {p.cols}col</p>
-                    </div>
-                  </div>
-                  <p className="text-xs text-slate-400">{p.desc}</p>
-                  <div className="h-px bg-slate-800" />
-                  <p className="text-[10px] text-slate-600 uppercase tracking-widest font-black">A4 enforced · DOCX export</p>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          {/* ── Activity Log ── */}
-          <section className="py-16 border-t border-slate-800/60">
-            <SectionHeader label="Activity log" title="Track your entire job search" />
-            <div className="grid md:grid-cols-2 gap-6">
-              {[
-                { title: 'Senior Frontend Engineer', company: 'Stripe', score: 85, status: 'Interviewing', statusColor: 'bg-purple-500/10 text-purple-400 border-purple-500/20', date: 'Jan 12' },
-                { title: 'Staff Engineer', company: 'Linear', score: 72, status: 'Applied', statusColor: 'bg-blue-500/10 text-blue-400 border-blue-500/20', date: 'Jan 10' },
-                { title: 'Frontend Lead', company: 'Vercel', score: 91, status: 'Offer', statusColor: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20', date: 'Jan 8' },
-                { title: 'Senior SWE', company: 'Notion', score: 48, status: 'Rejected', statusColor: 'bg-rose-500/10 text-rose-400 border-rose-500/20', date: 'Jan 5' },
-              ].map(job => (
-                <div key={job.title} className="flex items-center gap-4 p-4 bg-slate-900 border border-slate-800 rounded-2xl">
-                  <div className="w-12 h-12 rounded-2xl bg-slate-800 flex items-center justify-center flex-shrink-0">
-                    <span className="text-sm font-black text-white">{job.score}</span>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-black text-white text-sm">{job.title}</p>
-                    <p className="text-xs text-slate-500">{job.company} · {job.date}</p>
-                  </div>
-                  <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${job.statusColor}`}>
-                    {job.status}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          {/* CTA */}
-          <div className="py-12 text-center">
-            <Link href="/how-it-works" className="inline-flex items-center gap-2 text-blue-400 hover:text-blue-300 font-bold transition-colors">
-              See how it all works under the hood <ChevronRight className="w-4 h-4" />
-            </Link>
+            ))}
           </div>
         </div>
-      </div>
+      </section>
+
+      {/* ── Gap Analysis ── */}
+      <section className="py-20 lg:py-24 border-t border-ink-900">
+        <div className="max-w-[1280px] mx-auto px-6 lg:px-10">
+          <div className="grid lg:grid-cols-12 gap-12 items-start">
+            <div className="lg:col-span-6">
+              <SectionLabel num="02" label="gap analysis" />
+              <h2 className="font-chunk text-big text-ink-900 mb-6">
+                see exactly what's <span className="serif-accent text-crimson-500">missing</span>.
+              </h2>
+              <p className="text-[17px] text-ink-600 leading-relaxed mb-8">
+                Your resume is compared semantically to the job description using Voyage AI embeddings. Not keyword matching — vector similarity. What surfaces are the actual gaps, ranked.
+              </p>
+              <ul className="space-y-3">
+                {[
+                  'Semantic matching via pgvector',
+                  'Checkbox-based gap selection',
+                  'Persists to your history',
+                  'Feeds resume generation context',
+                ].map((item, i) => (
+                  <li key={item} className="flex items-center gap-4 text-[15px] text-ink-900">
+                    <span className="font-mono text-[10px] text-ink-400 num tracking-caps">0{i+1}</span>
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Mockup */}
+            <div className="lg:col-span-6">
+              <div className="border border-ink-900 bg-cream p-6">
+                <p className="font-mono text-[10px] text-ink-500 tracking-caps uppercase mb-4">recommended gaps · 2/4 addressed</p>
+                <ul className="space-y-2">
+                  {[
+                    { text: 'GraphQL API design experience', on: true },
+                    { text: 'Kubernetes / container orchestration', on: true },
+                    { text: 'System design for distributed systems', on: false },
+                    { text: 'Team leadership experience (3+ reports)', on: false },
+                  ].map((g, i) => (
+                    <li key={i} className={`flex items-start gap-3 p-3 border ${g.on ? 'border-ink-900 bg-ink-900 text-cream' : 'border-ink-200'}`}>
+                      <div className={`w-4 h-4 border flex items-center justify-center flex-shrink-0 mt-0.5 ${g.on ? 'bg-citrus border-citrus' : 'border-ink-400'}`}>
+                        {g.on && <Check className="w-3 h-3 text-ink-900 stroke-[3]" />}
+                      </div>
+                      <span className="text-[13px]">{g.text}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Resume Generation ── */}
+      <section className="py-20 lg:py-24 border-t border-ink-900">
+        <div className="max-w-[1280px] mx-auto px-6 lg:px-10">
+          <div className="grid lg:grid-cols-12 gap-12 items-start">
+            {/* Resume mockup */}
+            <div className="lg:col-span-6 order-2 lg:order-1">
+              <div className="bg-white border border-ink-900 p-8 shadow-print-lg font-serif text-sm text-ink-900">
+                <h1 className="text-xl font-bold text-center mb-1" style={{fontFamily:'Georgia, serif'}}>Alex Johnson</h1>
+                <p className="text-center text-[10px] text-ink-500 mb-3">alex@example.com · github.com/alexj · San Francisco, CA</p>
+                <hr className="border-ink-200 mb-3" />
+                <h2 className="text-[10px] font-bold uppercase tracking-caps text-ink-500 mb-2 font-mono">Experience</h2>
+                <div>
+                  <div className="flex justify-between text-[12px] font-bold">
+                    <span>Senior Frontend Engineer</span>
+                    <span className="text-ink-500 font-mono num">2021 – Present</span>
+                  </div>
+                  <p className="text-[10px] text-ink-500 italic">Acme Corp</p>
+                  <ul className="list-disc list-inside text-[10px] text-ink-600 mt-1 space-y-0.5">
+                    <li>Built <span className="font-bold bg-citrus/40">React</span> + <span className="font-bold bg-citrus/40">TypeScript</span> dashboard serving 50k DAU</li>
+                    <li>Reduced bundle size 40% via code splitting and tree shaking</li>
+                    <li>Led <span className="font-bold bg-citrus/40">GraphQL</span> migration from REST, cutting over-fetching 60%</li>
+                  </ul>
+                </div>
+                <div className="mt-4 pt-2 border-t border-ink-100">
+                  <h2 className="text-[10px] font-bold uppercase tracking-caps text-ink-500 mb-1 font-mono">Skills</h2>
+                  <p className="text-[10px] text-ink-600">
+                    <span className="font-bold bg-citrus/40">React</span> · <span className="font-bold bg-citrus/40">TypeScript</span> · <span className="font-bold bg-citrus/40">GraphQL</span> · <span className="font-bold bg-citrus/40">CI/CD</span> · Node.js · AWS · Docker · Kubernetes
+                  </p>
+                </div>
+                <div className="mt-3 text-[9px] text-center text-ink-300 italic font-mono">[AI-tailored for: Senior Frontend Engineer at Stripe]</div>
+              </div>
+            </div>
+
+            <div className="lg:col-span-6 order-1 lg:order-2">
+              <SectionLabel num="03" label="resume generation" />
+              <h2 className="font-chunk text-big text-ink-900 mb-6">
+                tailored, <span className="serif-accent text-crimson-500">not</span> generic.
+              </h2>
+              <p className="text-[17px] text-ink-600 leading-relaxed mb-8">
+                Claude Sonnet reads both your master resume and the job description together. It emphasizes matching experience, weaves in the keywords you've selected, and addresses gaps with your existing language.
+              </p>
+              <ul className="space-y-3">
+                {[
+                  'Full context of resume + job description',
+                  'Selected gaps treated as requirements',
+                  'Keywords highlighted in output',
+                  'One-click export to .docx',
+                  'A4 one-page enforcement via iterative fitting',
+                ].map((item, i) => (
+                  <li key={item} className="flex items-center gap-4 text-[15px] text-ink-900">
+                    <span className="font-mono text-[10px] text-ink-400 num tracking-caps">0{i+1}</span>
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Style Presets ── */}
+      <section className="py-20 lg:py-24 border-t border-ink-900">
+        <div className="max-w-[1280px] mx-auto px-6 lg:px-10">
+          <div className="mb-12">
+            <SectionLabel num="04" label="style engine" />
+            <h2 className="font-chunk text-big text-ink-900 max-w-3xl">
+              professional formatting, <span className="serif-accent text-crimson-500">your</span> way.
+            </h2>
+          </div>
+
+          <div className="grid md:grid-cols-3 border-t border-l border-ink-900">
+            {[
+              { style: 'modern', font: 'Inter', size: '10pt', cols: '1col', color: '#C01414', desc: 'Clean single-column with crimson headings.' },
+              { style: 'classic', font: 'Georgia', size: '11pt', cols: '1col', color: '#0A0B0E', desc: 'Serif font, traditional single-column.' },
+              { style: 'two-column', font: 'Helvetica', size: '10pt', cols: '2col', color: '#FF4D2E', desc: 'Flare accents, two-column density.' },
+            ].map(p => (
+              <div key={p.style} className="border-r border-b border-ink-900 p-8 bg-cream">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-10 h-10 border-2 flex-shrink-0" style={{ background: p.color, borderColor: p.color }} />
+                  <div>
+                    <p className="font-chunk text-[22px] tracking-tight text-ink-900">{p.style}</p>
+                    <p className="font-mono text-[10px] text-ink-500 tracking-caps uppercase">{p.font} · {p.size} · {p.cols}</p>
+                  </div>
+                </div>
+                <p className="text-[14px] text-ink-600 leading-relaxed mb-4">{p.desc}</p>
+                <div className="flex items-center gap-3 pt-4 border-t border-ink-200">
+                  <span className="font-mono text-[10px] text-ink-500 tracking-caps uppercase">A4 enforced</span>
+                  <span className="text-ink-300">·</span>
+                  <span className="font-mono text-[10px] text-ink-500 tracking-caps uppercase">.docx</span>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <p className="mt-8 text-[14px] text-ink-500 italic font-serif">
+            Or describe a style in plain English — "modern, Inter, crimson headers, tight spacing" — and the stylist agent returns a complete style object.
+          </p>
+        </div>
+      </section>
+
+      {/* ── Activity log ── */}
+      <section className="py-20 lg:py-24 border-t border-ink-900">
+        <div className="max-w-[1280px] mx-auto px-6 lg:px-10">
+          <div className="mb-12">
+            <SectionLabel num="05" label="activity log" />
+            <h2 className="font-chunk text-big text-ink-900 max-w-3xl">
+              the whole <span className="serif-accent text-crimson-500">pipeline</span>, visible.
+            </h2>
+          </div>
+
+          {/* Pipeline badges */}
+          <div className="flex flex-wrap gap-3 mb-8">
+            {[
+              { label: 'evaluating', color: 'border-ink-300 text-ink-500' },
+              { label: 'applied', color: 'border-sky text-sky bg-sky/5' },
+              { label: 'interviewing', color: 'border-ink-900 text-ink-900 bg-ink-900/5' },
+              { label: 'offer', color: 'border-citrus text-ink-900 bg-citrus' },
+              { label: 'rejected', color: 'border-flare text-flare bg-flare/5' },
+            ].map(s => (
+              <span key={s.label} className={`font-mono text-[11px] tracking-caps uppercase px-4 py-2 border ${s.color}`}>
+                {s.label}
+              </span>
+            ))}
+          </div>
+
+          {/* Sample rows */}
+          <div className="border-t border-ink-900">
+            {[
+              { score: 91, title: 'Frontend Lead', company: 'Vercel', status: 'offer', date: 'Jan 08' },
+              { score: 85, title: 'Senior Frontend Engineer', company: 'Stripe', status: 'interviewing', date: 'Jan 12' },
+              { score: 72, title: 'Staff Engineer', company: 'Linear', status: 'applied', date: 'Jan 10' },
+              { score: 48, title: 'Senior SWE', company: 'Notion', status: 'rejected', date: 'Jan 05' },
+            ].map(job => (
+              <div key={job.title} className="grid grid-cols-12 gap-4 items-center py-5 border-b border-ink-200 px-4 -mx-4 hover:bg-ink-50 transition-colors">
+                <div className="col-span-1 num text-[28px] font-chunk text-ink-900">{job.score}</div>
+                <div className="col-span-5">
+                  <p className="font-chunk text-[18px] tracking-tight text-ink-900">{job.title}</p>
+                  <p className="text-[13px] text-ink-500">{job.company}</p>
+                </div>
+                <div className="col-span-3 font-mono text-[11px] text-ink-400 tracking-caps uppercase">{job.date}</div>
+                <div className="col-span-3 flex justify-end">
+                  <span className="font-mono text-[10px] tracking-caps uppercase px-3 py-1 border border-ink-900">{job.status}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── CTA ── */}
+      <section className="py-24 border-t border-ink-900 bg-ink-900 text-cream">
+        <div className="max-w-[1280px] mx-auto px-6 lg:px-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-8">
+          <div>
+            <p className="font-mono text-[11px] text-citrus tracking-caps uppercase mb-3">№ 06</p>
+            <h3 className="font-chunk text-[clamp(2rem,4vw,3.5rem)] leading-tight">
+              see <span className="serif-accent text-citrus">how</span> it all works.
+            </h3>
+          </div>
+          <Link
+            href="/how-it-works"
+            className="inline-flex items-center gap-3 px-8 py-4 bg-citrus text-ink-900 font-medium text-[16px] rounded-md hover:bg-cream transition-colors whitespace-nowrap"
+          >
+            read the architecture <ArrowRight className="w-5 h-5" />
+          </Link>
+        </div>
+      </section>
 
       <Footer />
     </div>

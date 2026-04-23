@@ -1,162 +1,182 @@
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
-import { Shield, Key, Database, Lock, Trash2, Eye, EyeOff, CheckCircle2, AlertCircle } from 'lucide-react'
+import { Check, X } from 'lucide-react'
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function SectionLabel({ num, label }: { num: string; label: string }) {
   return (
-    <section className="py-12 border-t border-slate-800/60">
-      <h2 className="text-2xl font-black text-white mb-6">{title}</h2>
-      {children}
-    </section>
+    <div className="flex items-center gap-3 mb-6">
+      <span className="font-mono text-[11px] text-crimson-500 tracking-caps uppercase">№ {num}</span>
+      <span className="h-px bg-ink-300 flex-1 max-w-[80px]" />
+      <span className="font-mono text-[11px] text-ink-500 tracking-caps uppercase">{label}</span>
+    </div>
   )
 }
 
 function DataRow({ stored, item, location }: { stored: boolean; item: string; location: string }) {
   return (
-    <div className="flex items-center gap-4 py-3 border-b border-slate-800/40 last:border-0">
-      <div className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 ${stored ? 'bg-blue-500/20' : 'bg-slate-800'}`}>
-        {stored ? <CheckCircle2 className="w-3 h-3 text-blue-400" /> : <EyeOff className="w-3 h-3 text-slate-600" />}
+    <div className="grid grid-cols-12 gap-4 py-4 border-b border-ink-200 items-center">
+      <div className="col-span-1">
+        {stored ? (
+          <div className="w-5 h-5 rounded-full bg-citrus flex items-center justify-center">
+            <Check className="w-3 h-3 text-ink-900 stroke-[3]" />
+          </div>
+        ) : (
+          <div className="w-5 h-5 rounded-full border border-ink-300 flex items-center justify-center">
+            <X className="w-3 h-3 text-ink-400" />
+          </div>
+        )}
       </div>
-      <span className="text-sm text-slate-300 flex-1">{item}</span>
-      <span className={`text-xs font-bold ${stored ? 'text-blue-400' : 'text-slate-600'}`}>{location}</span>
+      <div className="col-span-6 text-[15px] text-ink-900">{item}</div>
+      <div className="col-span-5 font-mono text-[11px] text-ink-500 tracking-caps uppercase text-right">{location}</div>
     </div>
   )
 }
 
 export default function PrivacyPage() {
   return (
-    <div className="min-h-screen bg-slate-950">
+    <div className="min-h-screen bg-cream">
       <Navbar />
 
-      <div className="pt-32 pb-24">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+      {/* Hero */}
+      <section className="pt-32 pb-16 lg:pt-40 lg:pb-20">
+        <div className="max-w-[1100px] mx-auto px-6 lg:px-10">
+          <SectionLabel num="01" label="privacy" />
+          <h1 className="font-chunk text-[clamp(3rem,8vw,7rem)] leading-[0.98] tracking-tightest text-ink-900">
+            your data.<br />
+            <span className="serif-accent text-crimson-500">your</span> control.
+          </h1>
+          <p className="mt-8 max-w-2xl text-[18px] leading-relaxed text-ink-600">
+            JobFit is designed from the ground up to give you full ownership of your data. Here's exactly what gets stored, where it lives, and — more importantly — what we don't collect.
+          </p>
+        </div>
+      </section>
 
-          {/* Header */}
-          <div className="text-center mb-16 space-y-4">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-500/10 border border-emerald-500/20 rounded-full">
-              <Shield className="w-4 h-4 text-emerald-400" />
-              <span className="text-xs font-black text-emerald-400 uppercase tracking-widest">Privacy First</span>
-            </div>
-            <h1 className="text-5xl font-black text-white">Your data. Your control.</h1>
-            <p className="text-lg text-slate-400 max-w-2xl mx-auto">JobFit AI is designed from the ground up to give you full ownership and control of your data. Here's exactly what we collect, store, and — more importantly — what we don't.</p>
+      {/* BYOK editorial callout */}
+      <section className="py-16 border-t border-ink-900">
+        <div className="max-w-[1100px] mx-auto px-6 lg:px-10">
+          <div className="border border-ink-900 bg-ink-900 text-cream p-10 lg:p-14">
+            <p className="font-mono text-[11px] text-citrus tracking-caps uppercase mb-6">the principle · BYOK</p>
+            <h2 className="font-chunk text-[clamp(2rem,5vw,4rem)] leading-[1.05] tracking-tight mb-6">
+              bring your own<br />
+              <span className="serif-accent text-citrus">keys</span>. always.
+            </h2>
+            <p className="text-[17px] text-cream/80 leading-relaxed max-w-2xl">
+              JobFit operates on a Bring Your Own Keys model. You provide your own Anthropic Claude and Voyage AI API keys. They are stored only in your browser's <span className="font-mono text-citrus bg-cream/10 px-1.5 py-0.5 rounded-sm text-[14px]">chrome.storage.local</span> — never sent to our servers, never logged, never shared. When AI calls are made, they go from your browser directly to the API provider. We are never in the loop.
+            </p>
           </div>
+        </div>
+      </section>
 
-          {/* BYOK hero callout */}
-          <div className="p-8 bg-gradient-to-br from-amber-600/5 to-orange-600/5 border border-amber-500/15 rounded-[2rem] mb-12">
-            <div className="flex gap-4">
-              <Key className="w-8 h-8 text-amber-400 flex-shrink-0 mt-1" />
-              <div>
-                <h2 className="text-xl font-black text-white mb-2">Bring Your Own Keys (BYOK)</h2>
-                <p className="text-slate-400 leading-relaxed">
-                  JobFit operates on a Bring Your Own Keys model. You provide your own Anthropic Claude API key and Voyage AI API key. These keys are stored <strong className="text-white">only in your browser's <code className="text-amber-300">chrome.storage.local</code></strong> — they are never sent to our servers, never logged, and never shared. When AI calls are made, they go directly from your browser to the API provider. We are never in the loop.
-                </p>
-              </div>
+      {/* Data inventory */}
+      <section className="py-20 lg:py-24 border-t border-ink-900">
+        <div className="max-w-[1100px] mx-auto px-6 lg:px-10">
+          <SectionLabel num="02" label="data inventory" />
+          <h2 className="font-chunk text-big text-ink-900 mb-10 max-w-3xl">
+            what's <span className="serif-accent text-crimson-500">stored</span>.<br />
+            and where.
+          </h2>
+
+          <div className="border-t border-ink-900">
+            <div className="grid grid-cols-12 gap-4 py-3 border-b border-ink-900">
+              <div className="col-span-1" />
+              <div className="col-span-6 font-mono text-[10px] text-ink-500 tracking-caps uppercase">data</div>
+              <div className="col-span-5 font-mono text-[10px] text-ink-500 tracking-caps uppercase text-right">location</div>
             </div>
+            <DataRow stored item="Anthropic API key" location="browser only" />
+            <DataRow stored item="Voyage AI key" location="browser only" />
+            <DataRow stored item="Resume text & chunks" location="your supabase" />
+            <DataRow stored item="Resume embeddings (vectors)" location="your supabase · pgvector" />
+            <DataRow stored item="Job analysis history" location="your supabase" />
+            <DataRow stored item="Generated resumes" location="your supabase" />
+            <DataRow stored item="Style presets" location="your supabase" />
+            <DataRow stored item="AI token usage" location="your supabase" />
+            <DataRow stored={false} item="API keys" location="never on our servers" />
+            <DataRow stored={false} item="Resume or job content" location="never on our servers" />
+            <DataRow stored={false} item="Usage analytics / telemetry" location="never collected" />
+            <DataRow stored={false} item="Third-party trackers" location="none installed" />
           </div>
+        </div>
+      </section>
 
-          {/* Data inventory */}
-          <Section title="What's stored and where">
-            <div className="p-6 bg-slate-900/50 border border-slate-800 rounded-3xl">
-              <div className="grid grid-cols-3 gap-2 pb-3 mb-3 border-b border-slate-800">
-                <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Data</span>
-                <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest col-span-2">Location</span>
-              </div>
-              <DataRow stored item="Anthropic API key" location="Browser only (chrome.storage.local)" />
-              <DataRow stored item="Voyage AI key" location="Browser only (chrome.storage.local)" />
-              <DataRow stored item="Resume text & chunks" location="Your Supabase project (resumes table)" />
-              <DataRow stored item="Resume embeddings (vectors)" location="Your Supabase project (pgvector)" />
-              <DataRow stored item="Job analysis history" location="Your Supabase project (analysis_history)" />
-              <DataRow stored item="Generated resumes" location="Your Supabase project (analysis_history)" />
-              <DataRow stored item="Style presets" location="Your Supabase project (style_presets)" />
-              <DataRow stored item="AI token usage" location="Your Supabase project (generations)" />
-              <DataRow stored={false} item="API keys" location="Never on our servers" />
-              <DataRow stored={false} item="Resume or job content" location="Never on our servers" />
-              <DataRow stored={false} item="Analytics or usage telemetry" location="Never collected" />
-              <DataRow stored={false} item="Third-party trackers" location="None installed" />
-            </div>
-          </Section>
-
-          {/* Supabase project */}
-          <Section title="Your Supabase project">
-            <div className="space-y-4">
-              <p className="text-slate-400 leading-relaxed">
-                JobFit connects to a Supabase project. The credentials used (<code className="text-blue-300 text-sm bg-slate-800 px-1.5 py-0.5 rounded">SUPABASE_URL</code> and <code className="text-blue-300 text-sm bg-slate-800 px-1.5 py-0.5 rounded">SUPABASE_ANON_KEY</code>) are the standard public credentials — they enforce Row Level Security (RLS), so each user's data is isolated and only accessible to them when authenticated.
+      {/* Supabase */}
+      <section className="py-20 lg:py-24 border-t border-ink-900">
+        <div className="max-w-[1100px] mx-auto px-6 lg:px-10">
+          <SectionLabel num="03" label="your supabase project" />
+          <div className="grid lg:grid-cols-12 gap-10">
+            <div className="lg:col-span-6">
+              <h2 className="font-chunk text-big text-ink-900 mb-6">
+                data namespaced to <span className="serif-accent text-crimson-500">you</span>.
+              </h2>
+              <p className="text-[16px] text-ink-600 leading-relaxed">
+                JobFit connects to a Supabase project via the standard public credentials (<span className="font-mono text-[13px] bg-ink-100 px-1.5 py-0.5 rounded-sm">SUPABASE_URL</span> and <span className="font-mono text-[13px] bg-ink-100 px-1.5 py-0.5 rounded-sm">ANON_KEY</span>). These enforce Row Level Security — each user's data is isolated and inaccessible to anyone else, including us.
               </p>
-              <div className="grid sm:grid-cols-3 gap-4">
-                {[
-                  { icon: Lock, title: 'Row Level Security', desc: 'Every table has RLS policies. Your data is inaccessible to other users.' },
-                  { icon: Database, title: 'Your namespace', desc: 'All data is namespaced to your user_id. Only you can read or write your records.' },
-                  { icon: Trash2, title: 'Delete anytime', desc: 'The Settings page includes a one-click "Delete All Data" that wipes all 5 tables.' },
-                ].map(({ icon: Icon, title, desc }) => (
-                  <div key={title} className="p-4 bg-slate-900 border border-slate-800 rounded-2xl space-y-2">
-                    <Icon className="w-5 h-5 text-blue-400" />
-                    <p className="font-black text-white text-sm">{title}</p>
-                    <p className="text-xs text-slate-400 leading-relaxed">{desc}</p>
-                  </div>
-                ))}
-              </div>
             </div>
-          </Section>
-
-          {/* AI API calls */}
-          <Section title="AI API calls">
-            <div className="space-y-4">
-              <p className="text-slate-400 leading-relaxed">
-                All AI API calls (to Anthropic Claude and Voyage AI) are made directly from your browser using your API keys. The extension uses the <code className="text-purple-300 text-sm bg-slate-800 px-1.5 py-0.5 rounded">anthropic-dangerous-direct-browser-access: true</code> header which Anthropic provides for extensions. This means:
-              </p>
-              <div className="space-y-3">
-                {[
-                  { icon: CheckCircle2, color: 'text-emerald-400', text: 'AI calls go: Your Browser → Anthropic/Voyage directly' },
-                  { icon: CheckCircle2, color: 'text-emerald-400', text: 'We never proxy, log, or intercept AI requests' },
-                  { icon: CheckCircle2, color: 'text-emerald-400', text: 'Your resume content is sent only to the AI provider you choose' },
-                  { icon: AlertCircle, color: 'text-amber-400', text: 'AI providers (Anthropic, Voyage) have their own privacy policies for API data' },
-                ].map(({ icon: Icon, color, text }, i) => (
-                  <div key={i} className="flex items-start gap-3 text-sm text-slate-300">
-                    <Icon className={`w-4 h-4 ${color} shrink-0 mt-0.5`} />
-                    {text}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </Section>
-
-          {/* Chrome extension permissions */}
-          <Section title="Chrome extension permissions">
-            <div className="space-y-3">
+            <div className="lg:col-span-6 space-y-4">
               {[
-                { perm: 'activeTab', reason: 'Read the current tab\'s URL and job description text when you click Analyze.' },
-                { perm: 'storage', reason: 'Store your API keys and session data locally in your browser. Nothing leaves your device.' },
-                { perm: 'sidePanel', reason: 'Display the JobFit UI in Chrome\'s built-in side panel.' },
-                { perm: 'identity', reason: 'Used for Google OAuth sign-in via Supabase.' },
-              ].map(({ perm, reason }) => (
-                <div key={perm} className="flex gap-4 p-4 bg-slate-900 border border-slate-800 rounded-2xl">
-                  <code className="text-xs font-bold text-amber-300 bg-amber-500/10 px-2 py-0.5 rounded flex-shrink-0 h-fit">{perm}</code>
-                  <p className="text-sm text-slate-400">{reason}</p>
+                { title: 'row level security', desc: 'Every table has RLS policies. Your data is inaccessible to other users.' },
+                { title: 'your namespace', desc: 'All data is namespaced to your user_id. Only you can read or write your records.' },
+                { title: 'delete anytime', desc: 'Settings → Privacy → Delete All Data wipes all five tables in one click.' },
+              ].map(card => (
+                <div key={card.title} className="border border-ink-900 p-5 hover-shift bg-cream">
+                  <h3 className="font-chunk text-[20px] tracking-tight text-ink-900 mb-2">{card.title}</h3>
+                  <p className="text-[14px] text-ink-600 leading-relaxed">{card.desc}</p>
                 </div>
               ))}
             </div>
-          </Section>
-
-          {/* Delete data */}
-          <Section title="Deleting your data">
-            <div className="p-6 bg-rose-500/5 border border-rose-500/15 rounded-3xl space-y-3">
-              <Trash2 className="w-6 h-6 text-rose-400" />
-              <p className="font-black text-white">Full data deletion is one click away</p>
-              <p className="text-sm text-slate-400 leading-relaxed">
-                In the extension's Settings → Privacy section, the "Delete All Data" button permanently removes all records from <code className="text-slate-300 bg-slate-800 px-1 rounded">resumes</code>, <code className="text-slate-300 bg-slate-800 px-1 rounded">resume_chunkies</code>, <code className="text-slate-300 bg-slate-800 px-1 rounded">analysis_history</code>, <code className="text-slate-300 bg-slate-800 px-1 rounded">style_presets</code>, and <code className="text-slate-300 bg-slate-800 px-1 rounded">generations</code> — then signs you out and clears local storage.
-              </p>
-            </div>
-          </Section>
-
-          {/* Contact */}
-          <Section title="Questions?">
-            <p className="text-slate-400">This is an open-source project. You can inspect exactly how data is handled by reading the source code. Have a concern or question? Open an issue on GitHub.</p>
-          </Section>
-
-          <p className="text-xs text-slate-600 text-center pt-8">Last updated: {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
-
+          </div>
         </div>
-      </div>
+      </section>
+
+      {/* Permissions */}
+      <section className="py-20 lg:py-24 border-t border-ink-900">
+        <div className="max-w-[1100px] mx-auto px-6 lg:px-10">
+          <SectionLabel num="04" label="chrome permissions" />
+          <h2 className="font-chunk text-big text-ink-900 mb-10 max-w-3xl">
+            minimal permissions, <span className="serif-accent text-crimson-500">justified</span>.
+          </h2>
+
+          <div className="space-y-3">
+            {[
+              { perm: 'activeTab', reason: 'Read the current tab\'s URL and job description when you click Analyze.' },
+              { perm: 'storage', reason: 'Store your API keys and session data locally. Nothing leaves your device.' },
+              { perm: 'sidePanel', reason: 'Display the JobFit UI in Chrome\'s built-in side panel.' },
+              { perm: 'identity', reason: 'Used for Google OAuth sign-in via Supabase.' },
+            ].map(p => (
+              <div key={p.perm} className="grid grid-cols-12 gap-4 py-4 border-b border-ink-200 items-start">
+                <div className="col-span-3">
+                  <code className="font-mono text-[13px] text-crimson-500 bg-crimson-50 px-2 py-1 rounded-sm">{p.perm}</code>
+                </div>
+                <div className="col-span-9 text-[15px] text-ink-700">{p.reason}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Delete */}
+      <section className="py-20 lg:py-24 border-t border-ink-900 bg-ink-900 text-cream">
+        <div className="max-w-[1100px] mx-auto px-6 lg:px-10">
+          <div className="flex items-center gap-3 mb-6">
+            <span className="font-mono text-[11px] text-citrus tracking-caps uppercase">№ 05</span>
+            <span className="h-px bg-cream/30 flex-1 max-w-[80px]" />
+            <span className="font-mono text-[11px] text-cream/60 tracking-caps uppercase">the exit</span>
+          </div>
+          <h2 className="font-chunk text-big text-cream mb-6 max-w-3xl">
+            delete it all. <span className="serif-accent text-citrus">one click</span>.
+          </h2>
+          <p className="max-w-2xl text-[17px] text-cream/80 leading-relaxed">
+            Settings → Privacy → <span className="font-mono text-citrus">Delete All Data</span> permanently removes every record from <code className="font-mono text-[13px] bg-cream/10 px-1 rounded-sm">resumes</code>, <code className="font-mono text-[13px] bg-cream/10 px-1 rounded-sm">resume_chunkies</code>, <code className="font-mono text-[13px] bg-cream/10 px-1 rounded-sm">analysis_history</code>, <code className="font-mono text-[13px] bg-cream/10 px-1 rounded-sm">style_presets</code>, and <code className="font-mono text-[13px] bg-cream/10 px-1 rounded-sm">generations</code> — then signs you out and clears local storage. No tickets, no appeals, no retention.
+          </p>
+        </div>
+      </section>
+
+      <section className="py-16">
+        <div className="max-w-[1100px] mx-auto px-6 lg:px-10 text-center">
+          <p className="font-mono text-[10px] text-ink-400 tracking-caps uppercase">
+            last updated · {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+          </p>
+        </div>
+      </section>
 
       <Footer />
     </div>
