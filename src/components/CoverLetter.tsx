@@ -279,7 +279,7 @@ body { font-family: Georgia, serif; font-size: 11pt; line-height: 1.5; color: #0
 
       {/* Tone selector */}
       <div className="space-y-3">
-        <p className="eyebrow">Choose Tone</p>
+        <p className="eyebrow text-ink-500">Choose Tone</p>
         <div className="grid grid-cols-2 gap-2">
           {TONE_OPTIONS.map(opt => (
             <button

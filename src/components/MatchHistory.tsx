@@ -155,7 +155,7 @@ const MatchHistory: React.FC = () => {
     return (
       <div className="py-20 flex flex-col items-center text-center gap-3">
         <Loader2 className="w-6 h-6 animate-spin text-crimson-500" />
-        <p className="eyebrow">loading your journey…</p>
+        <p className="eyebrow text-ink-500">loading your journey…</p>
       </div>
     );
   }
@@ -168,7 +168,7 @@ const MatchHistory: React.FC = () => {
     >
       {/* Header */}
       <div>
-        <p className="eyebrow mb-3">№ 02 — activity log</p>
+        <p className="eyebrow text-ink-500 mb-3">№ 02 — activity log</p>
         <div className="flex items-end justify-between">
           <h2 className="font-chunk text-[36px] leading-none tracking-tight text-ink-900">
             your <span className="serif-accent text-crimson-500">journey</span>
@@ -181,14 +181,14 @@ const MatchHistory: React.FC = () => {
       {history.length > 0 && (
         <div className="grid grid-cols-2 gap-px bg-ink-900 border border-ink-900">
           <div className="p-5 bg-cream">
-            <p className="eyebrow mb-4">avg match</p>
+            <p className="eyebrow text-ink-500 mb-4">avg match</p>
             <div className="flex items-baseline gap-1">
               <span className="num font-chunk text-[52px] leading-none tracking-tight text-ink-900">{avgScore}</span>
               <span className="num text-[13px] text-ink-400">/100</span>
             </div>
           </div>
           <div className="p-5 bg-cream row-span-2">
-            <p className="eyebrow mb-4">frequent gaps</p>
+            <p className="eyebrow text-ink-500 mb-4">frequent gaps</p>
             <div className="space-y-2.5">
               {topGaps.map((gap, i) => (
                 <div key={i} className="space-y-1">
@@ -208,7 +208,7 @@ const MatchHistory: React.FC = () => {
             </div>
           </div>
           <div className="p-5 bg-cream">
-            <p className="eyebrow mb-4">total tracked</p>
+            <p className="eyebrow text-ink-500 mb-4">total tracked</p>
             <span className="num font-chunk text-[52px] leading-none tracking-tight text-ink-900">{String(history.length).padStart(2, '0')}</span>
           </div>
         </div>
