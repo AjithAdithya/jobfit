@@ -1,10 +1,10 @@
-import React, { useState, useRef } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Sparkles, Settings as SettingsIcon, Loader2, ArrowRight,
   CheckCircle2, AlertCircle, LayoutGrid, Upload, Check,
   Brain, Target, Zap, Home, Briefcase, Download, FileText,
-  Mail, Palette, AlertTriangle, ClipboardPaste, ChevronDown,
+  Mail, Palette, AlertTriangle, ClipboardPaste, ChevronDown, X,
 } from 'lucide-react'
 import { useAuth } from './hooks/useAuth'
 import { useResumes } from './hooks/useResumes'
@@ -28,6 +28,46 @@ import MatchHistory from './components/MatchHistory'
 import CoverLetter from './components/CoverLetter'
 import StylePresets from './components/StylePresets'
 import { hasDriveAccess, createGoogleDoc, DriveAuthError } from './lib/gdrive'
+
+const Alert: React.FC<{
+  message: string
+  icon?: React.ReactNode
+  onDismiss: () => void
+}> = ({ message, icon, onDismiss }) => {
+  useEffect(() => {
+    const t = setTimeout(onDismiss, 10000)
+    return () => clearTimeout(t)
+  }, [message, onDismiss])
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -6 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -6 }}
+      className="relative overflow-hidden border border-flare/30 bg-flare/10"
+    >
+      <div className="flex items-start gap-2.5 p-3 pr-8">
+        <span className="shrink-0 mt-0.5 text-flare">{icon ?? <AlertCircle className="w-3.5 h-3.5" />}</span>
+        <p className="text-[11px] text-flare leading-snug line-clamp-3 font-medium">{message}</p>
+      </div>
+      <button
+        onClick={onDismiss}
+        className="absolute top-2 right-2 text-flare/50 hover:text-flare transition-colors"
+        aria-label="Dismiss"
+      >
+        <X className="w-3.5 h-3.5" />
+      </button>
+      <div className="absolute bottom-0 left-0 h-[2px] w-full bg-flare/15">
+        <motion.div
+          className="h-full bg-flare/50"
+          initial={{ width: '100%' }}
+          animate={{ width: '0%' }}
+          transition={{ duration: 10, ease: 'linear' }}
+        />
+      </div>
+    </motion.div>
+  )
+}
 
 const SidePanel: React.FC = () => {
   const { user, loading: authLoading, signInWithGoogle } = useAuth()
@@ -530,15 +570,9 @@ div.WordSection1 { page: WordSection1; }
                 </button>
               </div>
 
-              {error && (
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-                  className="flex items-start gap-4 p-4 bg-flare/10 border border-flare/30 text-flare text-sm"
-                >
-                  <AlertCircle className="w-5 h-5 shrink-0" />
-                  <p className="font-medium leading-relaxed">{error}</p>
-                </motion.div>
-              )}
+              <AnimatePresence>
+                {error && <Alert message={error} onDismiss={() => setError(null)} />}
+              </AnimatePresence>
             </motion.div>
           )}
 
@@ -563,25 +597,18 @@ div.WordSection1 { page: WordSection1; }
                 </span>
               </div>
 
-              {error && (
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-                  className="flex items-start gap-4 p-4 bg-flare/10 border border-flare/30 text-flare text-sm"
-                >
-                  <AlertCircle className="w-5 h-5 shrink-0" />
-                  <p className="font-medium leading-relaxed">{error}</p>
-                </motion.div>
-              )}
-
-              {warning && (
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-                  className="flex items-start gap-4 p-4 bg-flare/10 border border-flare/30 text-flare text-xs"
-                >
-                  <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
-                  <p className="font-medium leading-relaxed">{warning}</p>
-                </motion.div>
-              )}
+              <AnimatePresence>
+                {error && <Alert message={error} onDismiss={() => setError(null)} />}
+              </AnimatePresence>
+              <AnimatePresence>
+                {warning && (
+                  <Alert
+                    message={warning}
+                    icon={<AlertTriangle className="w-3.5 h-3.5" />}
+                    onDismiss={() => setWarning(null)}
+                  />
+                )}
+              </AnimatePresence>
 
               {analyzing ? (
                 <div className="py-20 flex flex-col items-center text-center space-y-8">
@@ -612,13 +639,7 @@ div.WordSection1 { page: WordSection1; }
                   {(() => {
                     const level = getMatchLevel(analysis.score)
                     return (
-                      <div className={`p-6 ${level.cardBg} border ${level.cardBorder} flex items-center justify-between relative overflow-hidden`}>
-                        <div className={`absolute -bottom-10 -left-10 w-40 h-40 ${level.glowClass} rounded-full blur-[80px] opacity-10`} />
-                        <div className="relative z-10">
-                          <p className="eyebrow mb-1">Job Compatibility</p>
-                          <h2 className={`font-chunk text-3xl ${level.textClass}`}>{level.label}</h2>
-                          <p className="text-xs text-ink-500 mt-1">{level.subtitle}</p>
-                        </div>
+                      <div className={`p-6 ${level.cardBg} border ${level.cardBorder}`}>
                         <MatchCircle score={analysis.score} />
                       </div>
                     )
@@ -841,12 +862,15 @@ div.WordSection1 { page: WordSection1; }
                         />
                       </div>
 
-                      {driveError && (
-                        <div className="p-3 bg-flare/10 border border-flare/30 flex items-start gap-2 text-flare text-xs">
-                          <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
-                          <p>{driveError}</p>
-                        </div>
-                      )}
+                      <AnimatePresence>
+                        {driveError && (
+                          <Alert
+                            message={driveError}
+                            icon={<AlertTriangle className="w-3.5 h-3.5" />}
+                            onDismiss={() => setDriveError(null)}
+                          />
+                        )}
+                      </AnimatePresence>
 
                       <div className={`grid gap-3 mt-4 ${driveConnected ? 'grid-cols-3' : 'grid-cols-2'}`}>
                         <button

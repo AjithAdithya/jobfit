@@ -126,7 +126,7 @@ const ResumeManager: React.FC = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <p className="eyebrow mb-1">№ 03 — vault</p>
+          <p className="eyebrow text-ink-500 mb-1">№ 03 — vault</p>
           <h2 className="font-chunk text-[28px] leading-none tracking-tight text-ink-900">Resumes</h2>
         </div>
         <div className="flex items-center gap-3">

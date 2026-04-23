@@ -276,7 +276,7 @@ const StylePresets: React.FC<StylePresetsProps> = ({ onStyleApplied }) => {
       {/* Saved presets */}
       {presets.length > 0 && (
         <div className="space-y-2">
-          <p className="eyebrow">Saved Presets</p>
+          <p className="eyebrow text-ink-500">Saved Presets</p>
           <div className="space-y-1 max-h-40 overflow-y-auto custom-scrollbar border-t border-ink-100 pt-2">
             {presets.map(preset => (
               <button

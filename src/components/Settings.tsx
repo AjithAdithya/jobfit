@@ -117,7 +117,7 @@ const Settings: React.FC = () => {
     >
       {/* Header */}
       <div>
-        <p className="eyebrow mb-2">№ 04 — account</p>
+        <p className="eyebrow text-ink-500 mb-2">№ 04 — account</p>
         <h2 className="font-chunk text-[28px] leading-none tracking-tight text-ink-900">Settings</h2>
       </div>
 
@@ -171,7 +171,7 @@ const Settings: React.FC = () => {
 
                 {/* Anthropic */}
                 <div className="space-y-1">
-                  <label className="eyebrow">Anthropic</label>
+                  <label className="eyebrow text-ink-500">Anthropic</label>
                   <div className="flex items-center gap-2">
                     <input
                       type={showAnthropicKey ? 'text' : 'password'}
@@ -191,7 +191,7 @@ const Settings: React.FC = () => {
 
                 {/* Voyage */}
                 <div className="space-y-1">
-                  <label className="eyebrow">Voyage</label>
+                  <label className="eyebrow text-ink-500">Voyage</label>
                   <div className="flex items-center gap-2">
                     <input
                       type={showVoyageKey ? 'text' : 'password'}
@@ -324,7 +324,7 @@ const Settings: React.FC = () => {
                 </ul>
 
                 <div>
-                  <p className="eyebrow mb-1.5">Data stored for your account</p>
+                  <p className="eyebrow text-ink-500 mb-1.5">Data stored for your account</p>
                   <ul className="space-y-1">
                     {['Resume files + embedding chunks', 'Job analysis history', 'AI generation logs', 'Style presets'].map(item => (
                       <li key={item} className="text-[11px] text-ink-500 flex items-center gap-2">
