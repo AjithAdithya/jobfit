@@ -10,7 +10,7 @@ import { useAuth } from './hooks/useAuth'
 import { useResumes } from './hooks/useResumes'
 import {
   runJobMatchAnalysis, generateTailoredResume,
-  runPlannerSync, NotJobDescriptionError,
+  runPlannerSync,
 } from './lib/agents'
 import { applyStyleAndFitA4 } from './lib/styleUtils'
 import { getMatchLevel } from './lib/matchLevel'
@@ -202,7 +202,9 @@ const SidePanel: React.FC = () => {
       const result = await runJobMatchAnalysis(content)
       setAnalysis(result)
 
-      if (result.guardrailResult?.truncated) {
+      if (result.notJDWarning) {
+        setWarning(`This page may not be a job description — ${result.notJDWarning}`)
+      } else if (result.guardrailResult?.truncated) {
         setWarning('Job description exceeded 20,000 characters and was trimmed. Core content is preserved.')
       } else if (result.guardrailResult?.flagged) {
         setWarning(`Security notice: ${result.guardrailResult.flagReasons.slice(0, 2).join('; ')}`)
@@ -229,11 +231,6 @@ const SidePanel: React.FC = () => {
       }
       return true
     } catch (err: any) {
-      if (err instanceof NotJobDescriptionError) {
-        const r = err.reason.length > 100 ? err.reason.slice(0, 97) + '…' : err.reason;
-        setError(`This page doesn't look like a job description — ${r} Navigate to a job posting and try again.`)
-        return false
-      }
       console.error('Analysis error:', err)
       setError('Analysis failed: ' + (err.message || 'Check your API keys'))
       return false
