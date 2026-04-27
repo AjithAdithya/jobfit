@@ -60,10 +60,18 @@ export default async function HistoryDetailPage({ params }: { params: { id: stri
             )}
           </div>
         </div>
-        <div className="lg:col-span-4 flex justify-start lg:justify-end">
+        <div className="lg:col-span-4 flex flex-col items-start lg:items-end gap-3">
           <span className={`font-mono text-[11px] tracking-caps uppercase px-4 py-2 border ${STATUS_STYLE[item.status] || STATUS_STYLE.Evaluating}`}>
             {item.status.toLowerCase()}
           </span>
+          {item.generated_resume && (
+            <Link
+              href={`/dashboard/history/${item.id}/edit`}
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-ink-900 text-cream font-medium text-[13px] rounded-md hover:bg-crimson-500 transition-colors"
+            >
+              <Pencil className="w-3.5 h-3.5" /> open resume editor
+            </Link>
+          )}
         </div>
       </div>
 
