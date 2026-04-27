@@ -2,14 +2,13 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { Resend } from 'resend'
 
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
-
-const resend = new Resend(process.env.RESEND_API_KEY!)
-
 export async function POST(req: NextRequest) {
+  const supabaseAdmin = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
+  const resend = new Resend(process.env.RESEND_API_KEY!)
+
   try {
     const body = await req.json()
     const { name, email, role, linkedin_url, use_case, frequency } = body
@@ -32,7 +31,7 @@ export async function POST(req: NextRequest) {
     await resend.emails.send({
       from: 'JobFit <noreply@jobfit.ai>',
       to: email,
-      subject: 'You\'re on the JobFit beta list',
+      subject: "You're on the JobFit beta list",
       html: `
         <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px 24px;color:#1c1917">
           <div style="font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:#78716c;margin-bottom:24px">jobfit ai · beta access</div>
