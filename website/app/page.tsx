@@ -1,7 +1,8 @@
 import Link from 'next/link'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
-import { ArrowUpRight, ArrowRight, Check } from 'lucide-react'
+import BetaButton from '@/components/BetaButton'
+import { ArrowUpRight, ArrowRight } from 'lucide-react'
 
 /* ============================================================
    EXTENSION MOCKUP — editorial, Ajith-styled
@@ -137,15 +138,10 @@ export default function HomePage() {
 
               {/* CTAs */}
               <div className="mt-10 flex flex-col sm:flex-row gap-3">
-                <a
-                  href="https://chrome.google.com/webstore"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-ink-900 text-cream font-medium text-[15px] rounded-md hover:bg-crimson-500 transition-colors"
-                >
-                  add to chrome
+                <BetaButton className="group inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-ink-900 text-cream font-medium text-[15px] rounded-md hover:bg-crimson-500 transition-colors">
+                  join the beta
                   <ArrowUpRight className="w-4 h-4 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
-                </a>
+                </BetaButton>
                 <Link
                   href="/how-it-works"
                   className="inline-flex items-center justify-center gap-2 px-6 py-3.5 border border-ink-900 text-ink-900 font-medium text-[15px] rounded-md hover:bg-ink-900 hover:text-cream transition-colors"
@@ -321,15 +317,10 @@ export default function HomePage() {
               </h2>
             </div>
             <div className="lg:col-span-5 flex flex-col gap-3">
-              <a
-                href="https://chrome.google.com/webstore"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center justify-between gap-2 px-8 py-5 bg-crimson-500 text-cream font-medium text-[16px] rounded-md hover:bg-crimson-600 transition-colors group"
-              >
-                add to chrome — free
-                <ArrowUpRight className="w-5 h-5 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
-              </a>
+              <BetaButton className="inline-flex items-center justify-between gap-2 px-8 py-5 bg-crimson-500 text-cream font-medium text-[16px] rounded-md hover:bg-crimson-600 transition-colors group">
+                request early access
+                <ArrowUpRight className="w-5 h-5" />
+              </BetaButton>
               <Link
                 href="/features"
                 className="inline-flex items-center justify-between gap-2 px-8 py-5 bg-cream border border-ink-900 text-ink-900 font-medium text-[16px] rounded-md hover:bg-ink-900 hover:text-cream transition-colors"

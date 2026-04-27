@@ -1,12 +1,20 @@
 export interface ClaudeCallOptions {
   model?: string;
   maxTokens?: number;
+  temperature?: number;
+}
+
+export class MissingApiKeyError extends Error {
+  constructor() {
+    super('MISSING_API_KEY');
+    this.name = 'MissingApiKeyError';
+  }
 }
 
 async function resolveAnthropicKey(): Promise<string> {
   return new Promise(resolve => {
     chrome.storage.local.get('jobfit_anthropic_key', (result) => {
-      resolve(result.jobfit_anthropic_key || import.meta.env.VITE_ANTHROPIC_API_KEY || '');
+      resolve((result.jobfit_anthropic_key as string) || '');
     });
   });
 }
@@ -24,9 +32,7 @@ export async function callClaude(
   options?: ClaudeCallOptions
 ): Promise<string> {
   const apiKey = await resolveAnthropicKey();
-  if (!apiKey) {
-    throw new Error('Anthropic API key is missing. Add it in Settings or your .env file.');
-  }
+  if (!apiKey) throw new MissingApiKeyError();
 
   const maxTokens = options?.maxTokens ?? 4096;
   const models = options?.model ? [options.model] : FALLBACK_MODELS;
@@ -47,6 +53,7 @@ export async function callClaude(
         body: JSON.stringify({
           model,
           max_tokens: maxTokens,
+          ...(options?.temperature !== undefined && { temperature: options.temperature }),
           system,
           messages: [{ role: "user", content: prompt }],
         }),
@@ -88,9 +95,7 @@ export async function callClaudeStream(
   options?: ClaudeCallOptions
 ): Promise<void> {
   const apiKey = await resolveAnthropicKey();
-  if (!apiKey) {
-    throw new Error('Anthropic API key is missing. Add it in Settings or your .env file.');
-  }
+  if (!apiKey) throw new MissingApiKeyError();
 
   const model = options?.model ?? 'claude-opus-4-7';
   const maxTokens = options?.maxTokens ?? 4096;

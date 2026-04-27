@@ -90,7 +90,7 @@ Format your response as valid JSON:
 export async function runJobMatchAnalysis(
   jobDescription: string,
   options?: { skipGuardrails?: boolean }
-): Promise<AnalysisResult & { guardrailResult?: SanitizationResult }> {
+): Promise<AnalysisResult & { guardrailResult?: SanitizationResult; notJDWarning?: string }> {
   // Layer 1-3: sanitize + XML wrap + Haiku pre-filter
   let wrappedJD = jobDescription;
   let guardrailResult: SanitizationResult | undefined;
@@ -104,25 +104,25 @@ export async function runJobMatchAnalysis(
     }
   }
 
-  // 1. Analyze content — validates it's a JD and extracts requirements
+  // 1. Analyze content — detects whether it's a JD and extracts requirements
   const analyzerRaw = await callClaude(
     ANALYZER_SYSTEM_PROMPT,
-    `Analyze this content:\n\n${wrappedJD}`
+    `Analyze this content:\n\n${wrappedJD}`,
+    { temperature: 0 }
   );
 
   let requirements: string[];
+  let notJDWarning: string | undefined;
   try {
     const parsed = extractJSON(analyzerRaw);
     if (parsed.isJobDescription === false) {
-      throw new NotJobDescriptionError(
-        parsed.reason || 'The content does not appear to be a job description.'
-      );
+      // Don't block — run analysis anyway and surface the reason as a warning
+      notJDWarning = parsed.reason || 'This page may not be a job description.';
     }
     requirements = Array.isArray(parsed.requirements) && parsed.requirements.length > 0
       ? parsed.requirements
       : [analyzerRaw.slice(0, 300)];
-  } catch (err) {
-    if (err instanceof NotJobDescriptionError) throw err;
+  } catch {
     // JSON parse failed — treat as valid JD and recover requirements via line-split
     requirements = analyzerRaw.split('\n')
       .map(l => l.replace(/^[0-9.-]+\s*/, '').trim())
@@ -142,7 +142,8 @@ export async function runJobMatchAnalysis(
   // 3. Synthesize final analysis
   const finalAnalysisText = await callClaude(
     SYNTHESIZER_SYSTEM_PROMPT,
-    `JOB REQUIREMENTS:\n${requirements.join('\n')}\n\nUSER RESUME CONTEXT:\n${matchContexts.join('\n\n')}\n\nProvide a JSON analysis of the fit.`
+    `JOB REQUIREMENTS:\n${requirements.join('\n')}\n\nUSER RESUME CONTEXT:\n${matchContexts.join('\n\n')}\n\nProvide a JSON analysis of the fit.`,
+    { temperature: 0 }
   );
 
   try {
@@ -153,6 +154,7 @@ export async function runJobMatchAnalysis(
       gaps: parsed.gaps ?? [],
       keywords: parsed.keywords ?? [],
       guardrailResult,
+      notJDWarning,
     };
   } catch {
     console.error('Failed to parse final analysis:', finalAnalysisText);
