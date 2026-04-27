@@ -28,6 +28,7 @@ import MatchHistory from './components/MatchHistory'
 import CoverLetter from './components/CoverLetter'
 import StylePresets from './components/StylePresets'
 import { hasDriveAccess, createGoogleDoc, DriveAuthError } from './lib/gdrive'
+import { MissingApiKeyError } from './lib/anthropic'
 
 const Alert: React.FC<{
   message: string
@@ -193,6 +194,11 @@ const SidePanel: React.FC = () => {
     setLoading(false)
   }
 
+  const goToSettings = () => {
+    setView('settings')
+    setWarning('Add your Anthropic API key in Settings to get started.')
+  }
+
   const performAnalysis = async (content: string): Promise<boolean> => {
     setAnalyzing(true)
     setGeneratedResume(null)
@@ -210,9 +216,9 @@ const SidePanel: React.FC = () => {
         setWarning(`Security notice: ${result.guardrailResult.flagReasons.slice(0, 2).join('; ')}`)
       }
 
-      // Auto-save to history
+      // Auto-save to history — upsert on URL so each job gets one row (latest wins)
       if (user && activeResumeId && jobContext) {
-        const { data, error } = await supabase.from('analysis_history').insert({
+        const payload = {
           user_id: user.id,
           resume_id: activeResumeId,
           job_title: jobContext.title,
@@ -224,13 +230,50 @@ const SidePanel: React.FC = () => {
           keywords: result.keywords,
           jd_text: content,
           status: 'Evaluating',
-        }).select().single()
-        if (!error && data) {
-          useUIStore.getState().setActiveHistory(data)
         }
+
+        let saved: any = null
+        const isRealUrl = jobContext.url && jobContext.url !== 'manual'
+
+        if (isRealUrl) {
+          // Check for an existing row for this user + URL
+          const { data: existing } = await supabase
+            .from('analysis_history')
+            .select('id, status')
+            .eq('user_id', user.id)
+            .eq('job_url', jobContext.url)
+            .maybeSingle()
+
+          if (existing) {
+            const { data } = await supabase
+              .from('analysis_history')
+              .update({ ...payload, status: existing.status ?? 'Evaluating' })
+              .eq('id', existing.id)
+              .select()
+              .single()
+            saved = data
+          } else {
+            const { data } = await supabase
+              .from('analysis_history')
+              .insert(payload)
+              .select()
+              .single()
+            saved = data
+          }
+        } else {
+          const { data } = await supabase
+            .from('analysis_history')
+            .insert(payload)
+            .select()
+            .single()
+          saved = data
+        }
+
+        if (saved) useUIStore.getState().setActiveHistory(saved)
       }
       return true
     } catch (err: any) {
+      if (err instanceof MissingApiKeyError) { goToSettings(); return false }
       console.error('Analysis error:', err)
       setError('Analysis failed: ' + (err.message || 'Check your API keys'))
       return false
@@ -283,6 +326,7 @@ const SidePanel: React.FC = () => {
         }).eq('id', histItem.id)
       }
     } catch (err: any) {
+      if (err instanceof MissingApiKeyError) { goToSettings(); return }
       console.error('Generation error:', err)
       setError('Failed to generate resume: ' + (err.message || String(err)))
     } finally {
@@ -394,9 +438,7 @@ div.WordSection1 { page: WordSection1; }
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
           >
-            <div className="p-6 bg-crimson-500 inline-flex items-center justify-center shadow-print-sm">
-              <Sparkles className="w-14 h-14 text-cream" />
-            </div>
+            <img src="/icon128.png" alt="JobFit" className="w-20 h-20" />
           </motion.div>
 
           <div className="space-y-4">
@@ -464,9 +506,7 @@ div.WordSection1 { page: WordSection1; }
       {/* Header */}
       <header className="px-5 py-4 flex items-center justify-between z-20 bg-cream border-b border-ink-200">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-crimson-500 flex items-center justify-center">
-            <Sparkles className="w-4 h-4 text-cream" />
-          </div>
+          <img src="/icon48.png" alt="JobFit" className="w-8 h-8" />
           <div>
             <h1 className="font-chunk text-lg leading-none text-ink-900">JobFit</h1>
             <p className="eyebrow text-crimson-500 mt-0.5">Intelligence</p>

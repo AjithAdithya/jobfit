@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Menu, X } from 'lucide-react'
 import type { User as SupabaseUser } from '@supabase/supabase-js'
+import BetaSignupModal from './BetaSignupModal'
 
 const NAV_LINKS = [
   { href: '/features', label: 'features', num: '01' },
@@ -27,6 +28,7 @@ export default function Navbar() {
   const [user, setUser] = useState<SupabaseUser | null>(null)
   const [menuOpen, setMenuOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
+  const [betaOpen, setBetaOpen] = useState(false)
 
   useEffect(() => {
     const supabase = createClient()
@@ -50,6 +52,7 @@ export default function Navbar() {
   }
 
   return (
+    <>
     <header
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-160 ${scrolled ? 'border-b border-ink-200/60' : ''}`}
       style={{
@@ -100,14 +103,12 @@ export default function Navbar() {
                 <Link href="/login" className="text-[15px] text-ink-500 hover:text-ink-900 transition-colors">
                   sign in
                 </Link>
-                <a
-                  href="https://chrome.google.com/webstore"
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <button
+                  onClick={() => setBetaOpen(true)}
                   className="inline-flex items-center gap-2 px-5 py-2.5 bg-ink-900 text-cream font-medium text-[14px] rounded-md hover:bg-crimson-500 transition-colors"
                 >
-                  add to chrome <span>→</span>
-                </a>
+                  join the beta <span>→</span>
+                </button>
               </>
             )}
           </div>
@@ -141,12 +142,14 @@ export default function Navbar() {
             ) : (
               <>
                 <Link href="/login" onClick={() => setMenuOpen(false)} className="py-3 text-[15px] text-ink-900">sign in</Link>
-                <a href="https://chrome.google.com/webstore" target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center gap-2 px-5 py-3 bg-ink-900 text-cream rounded-md">add to chrome →</a>
+                <button onClick={() => { setBetaOpen(true); setMenuOpen(false); }} className="inline-flex items-center justify-center gap-2 px-5 py-3 bg-ink-900 text-cream rounded-md">join the beta →</button>
               </>
             )}
           </div>
         </div>
       )}
     </header>
+    {betaOpen && <BetaSignupModal onClose={() => setBetaOpen(false)} />}
+  </>
   )
 }

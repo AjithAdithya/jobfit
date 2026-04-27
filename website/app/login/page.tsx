@@ -79,8 +79,8 @@ export default function LoginPage() {
 
         <p className="font-mono text-[10px] text-ink-400 tracking-caps uppercase">
           don't have the extension yet?{' '}
-          <a href="https://chrome.google.com/webstore" target="_blank" rel="noopener noreferrer" className="text-crimson-500 hover:underline">
-            add to chrome →
+          <a href="/" className="text-crimson-500 hover:underline">
+            join the beta →
           </a>
         </p>
       </div>

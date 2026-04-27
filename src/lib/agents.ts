@@ -107,7 +107,8 @@ export async function runJobMatchAnalysis(
   // 1. Analyze content — detects whether it's a JD and extracts requirements
   const analyzerRaw = await callClaude(
     ANALYZER_SYSTEM_PROMPT,
-    `Analyze this content:\n\n${wrappedJD}`
+    `Analyze this content:\n\n${wrappedJD}`,
+    { temperature: 0 }
   );
 
   let requirements: string[];
@@ -141,7 +142,8 @@ export async function runJobMatchAnalysis(
   // 3. Synthesize final analysis
   const finalAnalysisText = await callClaude(
     SYNTHESIZER_SYSTEM_PROMPT,
-    `JOB REQUIREMENTS:\n${requirements.join('\n')}\n\nUSER RESUME CONTEXT:\n${matchContexts.join('\n\n')}\n\nProvide a JSON analysis of the fit.`
+    `JOB REQUIREMENTS:\n${requirements.join('\n')}\n\nUSER RESUME CONTEXT:\n${matchContexts.join('\n\n')}\n\nProvide a JSON analysis of the fit.`,
+    { temperature: 0 }
   );
 
   try {

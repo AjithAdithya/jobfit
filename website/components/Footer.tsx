@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import BetaButton from './BetaButton'
 
 export default function Footer() {
   return (
@@ -22,7 +23,6 @@ export default function Footer() {
                 { label: 'features', href: '/features' },
                 { label: 'how it works', href: '/how-it-works' },
                 { label: 'privacy', href: '/privacy' },
-                { label: 'add to chrome', href: 'https://chrome.google.com/webstore' },
               ].map(link => (
                 <li key={link.label}>
                   <Link href={link.href} className="text-[15px] text-ink-900 hover:text-crimson-500 transition-colors underline decoration-1 underline-offset-[0.2em]">
@@ -30,6 +30,11 @@ export default function Footer() {
                   </Link>
                 </li>
               ))}
+              <li>
+                <BetaButton className="text-[15px] text-ink-900 hover:text-crimson-500 transition-colors underline decoration-1 underline-offset-[0.2em]">
+                  join the beta
+                </BetaButton>
+              </li>
             </ul>
           </div>
 
