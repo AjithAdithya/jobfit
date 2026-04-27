@@ -33,8 +33,8 @@ export default function BetaSignupModal({ onClose }: Props) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),
       })
-      const json = await res.json()
-      if (!res.ok) throw new Error(json.error || 'Something went wrong')
+      const json = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(json.error || `Server error ${res.status}`)
       setDone(true)
     } catch (err: any) {
       setError(err.message)

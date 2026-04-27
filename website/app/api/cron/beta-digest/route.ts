@@ -10,9 +10,12 @@ export async function GET(req: NextRequest) {
 
   const supabaseAdmin = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
+    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   )
-  const resend = new Resend(process.env.RESEND_API_KEY!)
+  if (!process.env.RESEND_API_KEY) {
+    return NextResponse.json({ error: 'RESEND_API_KEY not configured' }, { status: 500 })
+  }
+  const resend = new Resend(process.env.RESEND_API_KEY)
 
   const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
 

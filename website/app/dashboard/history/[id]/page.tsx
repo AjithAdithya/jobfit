@@ -2,7 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getMatchLevel } from '@/lib/matchLevel'
 import { notFound, redirect } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, ArrowUpRight, Check } from 'lucide-react'
+import { ArrowLeft, ArrowUpRight, Check, Pencil } from 'lucide-react'
 
 const STATUS_STYLE: Record<string, string> = {
   Evaluating:   'border-ink-300 text-ink-500',
@@ -60,10 +60,18 @@ export default async function HistoryDetailPage({ params }: { params: { id: stri
             )}
           </div>
         </div>
-        <div className="lg:col-span-4 flex justify-start lg:justify-end">
+        <div className="lg:col-span-4 flex flex-col items-start lg:items-end gap-3">
           <span className={`font-mono text-[11px] tracking-caps uppercase px-4 py-2 border ${STATUS_STYLE[item.status] || STATUS_STYLE.Evaluating}`}>
             {item.status.toLowerCase()}
           </span>
+          {item.generated_resume && (
+            <Link
+              href={`/dashboard/history/${item.id}/edit`}
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-ink-900 text-cream font-medium text-[13px] rounded-md hover:bg-crimson-500 transition-colors"
+            >
+              <Pencil className="w-3.5 h-3.5" /> open resume editor
+            </Link>
+          )}
         </div>
       </div>
 
@@ -177,7 +185,15 @@ export default async function HistoryDetailPage({ params }: { params: { id: stri
         <div className="mb-16">
           <div className="flex items-baseline justify-between border-b border-ink-900 pb-3 mb-5">
             <p className="font-mono text-[10px] text-crimson-500 tracking-caps uppercase">generated resume</p>
-            <span className="font-mono text-[10px] text-ink-500 tracking-caps uppercase bg-citrus text-ink-900 px-2 py-0.5">available</span>
+            <div className="flex items-center gap-3">
+              <Link
+                href={`/dashboard/history/${item.id}/edit`}
+                className="inline-flex items-center gap-1.5 font-mono text-[10px] tracking-caps uppercase px-3 py-1 bg-ink-900 text-cream rounded-sm hover:bg-crimson-500 transition-colors"
+              >
+                <Pencil className="w-3 h-3" /> edit
+              </Link>
+              <span className="font-mono text-[10px] text-ink-500 tracking-caps uppercase bg-citrus text-ink-900 px-2 py-0.5">available</span>
+            </div>
           </div>
           <div className="relative p-6 bg-white border border-ink-200">
             <div

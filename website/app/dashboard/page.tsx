@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { getMatchLevel } from '@/lib/matchLevel'
 import Link from 'next/link'
-import { ArrowUpRight } from 'lucide-react'
+import { ArrowUpRight, Pencil } from 'lucide-react'
 
 const STATUS_STYLE: Record<string, string> = {
   Evaluating:   'border-ink-300 text-ink-500',
@@ -151,6 +151,14 @@ export default async function DashboardPage() {
 
                   {/* Status */}
                   <div className="col-span-2 flex items-center justify-end gap-2">
+                    {item.generated_resume && (
+                      <span
+                        title="Has tailored resume — click row to open and edit"
+                        className="inline-flex items-center gap-1 px-2 py-1 bg-citrus/30 text-ink-900 font-mono text-[9px] tracking-caps uppercase rounded-sm"
+                      >
+                        <Pencil className="w-3 h-3" /> resume
+                      </span>
+                    )}
                     <span className={`font-mono text-[10px] tracking-caps uppercase px-3 py-1 border ${STATUS_STYLE[item.status] || STATUS_STYLE.Evaluating}`}>
                       {item.status.toLowerCase()}
                     </span>
