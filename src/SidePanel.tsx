@@ -10,7 +10,7 @@ import { useAuth } from './hooks/useAuth'
 import { useResumes } from './hooks/useResumes'
 import {
   runJobMatchAnalysis, generateTailoredResume,
-  runPlannerSync,
+  runPlannerSync, NotJobDescriptionError,
 } from './lib/agents'
 import { applyStyleAndFitA4 } from './lib/styleUtils'
 import { getMatchLevel } from './lib/matchLevel'
@@ -29,6 +29,46 @@ import CoverLetter from './components/CoverLetter'
 import StylePresets from './components/StylePresets'
 import { hasDriveAccess, createGoogleDoc, DriveAuthError } from './lib/gdrive'
 import { MissingApiKeyError } from './lib/anthropic'
+
+const Alert: React.FC<{
+  message: string
+  icon?: React.ReactNode
+  onDismiss: () => void
+}> = ({ message, icon, onDismiss }) => {
+  useEffect(() => {
+    const t = setTimeout(onDismiss, 10000)
+    return () => clearTimeout(t)
+  }, [message, onDismiss])
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -6 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -6 }}
+      className="relative overflow-hidden border border-flare/30 bg-flare/10"
+    >
+      <div className="flex items-start gap-2.5 p-3 pr-8">
+        <span className="shrink-0 mt-0.5 text-flare">{icon ?? <AlertCircle className="w-3.5 h-3.5" />}</span>
+        <p className="text-[11px] text-flare leading-snug line-clamp-3 font-medium">{message}</p>
+      </div>
+      <button
+        onClick={onDismiss}
+        className="absolute top-2 right-2 text-flare/50 hover:text-flare transition-colors"
+        aria-label="Dismiss"
+      >
+        <X className="w-3.5 h-3.5" />
+      </button>
+      <div className="absolute bottom-0 left-0 h-[2px] w-full bg-flare/15">
+        <motion.div
+          className="h-full bg-flare/50"
+          initial={{ width: '100%' }}
+          animate={{ width: '0%' }}
+          transition={{ duration: 10, ease: 'linear' }}
+        />
+      </div>
+    </motion.div>
+  )
+}
 
 const Alert: React.FC<{
   message: string
