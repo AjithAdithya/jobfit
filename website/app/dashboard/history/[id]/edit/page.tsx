@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { notFound, redirect } from 'next/navigation'
-import ResumeEditorMinimal from '@/components/ResumeEditorMinimal'
+import ResumeEditor from '@/components/ResumeEditor'
 
 export default async function ResumeEditPage({ params }: { params: { id: string } }) {
   const supabase = createClient()
@@ -48,11 +48,20 @@ export default async function ResumeEditPage({ params }: { params: { id: string 
   }
 
   return (
-    <ResumeEditorMinimal
+    <ResumeEditor
       historyId={item.id}
       initialHtml={item.generated_resume}
       jobTitle={item.job_title || 'Untitled role'}
+      jobUrl={item.job_url || ''}
+      siteName={item.site_name || ''}
       score={item.score || 0}
+      keywords={item.keywords || []}
+      selectedKeywords={item.selected_keywords || []}
+      gaps={item.gaps || []}
+      selectedGaps={item.selected_gaps || []}
+      matches={item.matches || []}
+      baseResumeName={baseResumeName}
+      baseResumeText={baseResumeText}
     />
   )
 }
