@@ -169,23 +169,57 @@ export async function runJobMatchAnalysis(
 
 // ─── Writer ───────────────────────────────────────────────────────────────
 
-const WRITER_SYSTEM_PROMPT = `You are an expert career consultant and resume writer for 2026.
-Your task is to tailor a user's resume for a specific job based on their existing experience and a list of target improvements (gaps and keywords).
+const WRITER_SYSTEM_PROMPT = `You are an expert resume writer for 2026. Produce a complete, standalone LaTeX resume document tailored for a specific job.
 
 RULES:
-1. DO NOT fabricate or invent new work experience, degrees, or jobs that the user never had.
-2. DO NOT lie.
-3. DO rewrite bullet points, summaries, and skills sections to naturally incorporate the "Target Improvements" where they make logical sense based on the user's past context.
-4. Enhance the tone to be professional, impact-driven, and metrics-focused.
+1. DO NOT fabricate or invent work experience, degrees, or metrics not in the source context.
+2. DO rewrite bullet points and summaries to naturally incorporate target improvements.
+3. Enhance tone to be professional, impact-driven, and metrics-focused.
 
-ATS GUIDELINES & LENGTH CONSTRAINTS:
 ${ATS_GUIDELINES}
 
-FORMATTING MUST BE NATIVE SECURE HTML:
-- Output MUST be 100% valid HTML snippet (do not wrap in <html> or <body> tags, just the inner content).
-- Use <h1> for Name, <div> for Contact info, <h2> for sections, <ul> and <li> for lists.
-- Avoid all inline styles. We will style it via external CSS.
-- Output ONLY the HTML. No markdown wrappers like \`\`\`html, no pleasantries, no conversational filler. Just the raw HTML string.`;
+OUTPUT FORMAT — complete LaTeX document using EXACTLY this structure:
+\\documentclass[10pt]{article}
+\\usepackage[top=0.65in,bottom=0.65in,left=0.7in,right=0.7in]{geometry}
+\\pagestyle{empty}
+\\setlength{\\parindent}{0pt}
+\\setlength{\\parskip}{3pt}
+
+\\begin{document}
+
+\\begin{center}
+{\\Large\\textbf{FULL NAME}}\\\\[2pt]
+email \\quad|\\quad phone \\quad|\\quad City, ST
+\\end{center}
+\\noindent\\rule{\\linewidth}{0.5pt}
+
+\\vspace{2pt}\\noindent\\textbf{\\large PROFESSIONAL SUMMARY}\\\\[-2pt]
+\\noindent\\rule{\\linewidth}{0.3pt}\\\\[2pt]
+Summary.
+
+\\vspace{4pt}\\noindent\\textbf{\\large EXPERIENCE}\\\\[-2pt]
+\\noindent\\rule{\\linewidth}{0.3pt}
+
+\\noindent\\textbf{Job Title} \\hfill \\textit{Month Year -- Present}\\\\
+\\textit{Company, City, ST}
+\\begin{itemize}\\setlength\\itemsep{1pt}
+  \\item Bullet with metric.
+\\end{itemize}
+
+\\vspace{4pt}\\noindent\\textbf{\\large EDUCATION}\\\\[-2pt]
+\\noindent\\rule{\\linewidth}{0.3pt}
+
+\\noindent\\textbf{Degree} \\hfill \\textit{Year}\\\\
+\\textit{University}
+
+\\vspace{4pt}\\noindent\\textbf{\\large SKILLS}\\\\[-2pt]
+\\noindent\\rule{\\linewidth}{0.3pt}
+
+\\noindent\\textbf{Category:} skill1, skill2
+
+\\end{document}
+
+Output ONLY raw LaTeX starting with \\documentclass. No markdown fences, no explanation.`;
 
 export async function generateTailoredResume(
   jobContext: { title: string; url: string },
@@ -194,12 +228,12 @@ export async function generateTailoredResume(
   userResumeContext: string,
   userFeedback?: string,
   companyContext?: string
-): Promise<{ html: string; guardianResult?: GuardianResult }> {
+): Promise<{ latex: string; guardianResult?: GuardianResult }> {
   const feedbackSection = userFeedback?.trim()
-    ? `\nUSER REVISION REQUEST — apply these changes to this version:\n${userFeedback.trim()}\n`
+    ? `\nUSER REVISION REQUEST — apply these changes:\n${userFeedback.trim()}\n`
     : '';
   const companySection = companyContext?.trim()
-    ? `\nCOMPANY CONTEXT (tailor tone and emphasis to this company):\n${companyContext.trim()}\n`
+    ? `\nCOMPANY CONTEXT (tailor tone and emphasis):\n${companyContext.trim()}\n`
     : '';
 
   const prompt = `
@@ -213,16 +247,19 @@ ${feedbackSection}${companySection}
 USER'S EXISTING RESUME CONTEXT:
 ${userResumeContext}
 
-Please generate the tailored resume in RAW HTML format following exact ATS restrictions. Output ONLY the raw HTML string, ensuring it fits perfectly onto one standard page (approx 400 words maximum).
+Generate the tailored resume as a complete LaTeX document. Output ONLY raw LaTeX starting with \\documentclass.
 `.trim();
 
-  let generatedHtml = await callClaude(WRITER_SYSTEM_PROMPT, prompt);
-  generatedHtml = generatedHtml.replace(/```html/i, '').replace(/```/g, '').trim();
+  let raw = await callClaude(WRITER_SYSTEM_PROMPT, prompt);
+  const latex = raw
+    .replace(/```latex\s*/gi, '')
+    .replace(/```\s*/g, '')
+    .trim();
 
-  // Layer 4: Guardian output validation (non-blocking)
-  const guardianResult = await runGuardian(generatedHtml, userResumeContext, jobContext.title);
+  // Guardian output validation (non-blocking)
+  const guardianResult = await runGuardian(latex, userResumeContext, jobContext.title);
 
-  return { html: generatedHtml, guardianResult };
+  return { latex, guardianResult };
 }
 
 // ─── Company Research Agent ────────────────────────────────────────────────

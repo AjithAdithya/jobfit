@@ -1,14 +1,17 @@
 'use client'
-import { useState, useRef, useEffect, useMemo, useCallback } from 'react'
+import { useState, useCallback } from 'react'
+import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import {
-  ArrowLeft, Save, Loader2, MessageSquarePlus, Type, Palette,
-  AlignLeft, Check, X, Sparkles, FileText, RotateCcw, History, RefreshCw,
+  ArrowLeft, Save, Loader2, FileText, Sparkles, RefreshCw,
+  Download, Printer, Code, Eye,
 } from 'lucide-react'
+
+const LatexPreview = dynamic(() => import('./LatexPreview'), { ssr: false })
 
 interface Props {
   historyId: string
-  initialHtml: string
+  initialLatex: string
   jobTitle: string
   jobUrl: string
   siteName: string
@@ -24,25 +27,8 @@ interface Props {
 
 interface EditEntry {
   id: string
-  before: string
-  after: string
-  comment: string
+  instruction: string
   at: number
-}
-
-interface PendingComment {
-  selection: string
-  range: Range | null
-  rect: DOMRect
-}
-
-interface ResumeStyle {
-  fontFamily: string
-  fontSize: number
-  lineHeight: number
-  margin: number
-  accent: string
-  headingWeight: number
 }
 
 const NODE_LABELS: Record<string, string> = {
@@ -53,123 +39,38 @@ const NODE_LABELS: Record<string, string> = {
   polish: 'polishing output',
 }
 
-const FONT_OPTIONS = [
-  { label: 'Inter', value: '"Inter", system-ui, sans-serif' },
-  { label: 'Source Serif', value: '"Source Serif Pro", Georgia, serif' },
-  { label: 'Merriweather', value: '"Merriweather", Georgia, serif' },
-  { label: 'Roboto Mono', value: '"Roboto Mono", monospace' },
-  { label: 'Helvetica', value: '"Helvetica Neue", Arial, sans-serif' },
-  { label: 'Times', value: '"Times New Roman", Times, serif' },
-]
-
-const ACCENT_PRESETS = [
-  { label: 'ink',     value: '#1c1917' },
-  { label: 'crimson', value: '#c01414' },
-  { label: 'sky',     value: '#3ba8d4' },
-  { label: 'citrus',  value: '#9fbf25' },
-  { label: 'navy',    value: '#1e3a8a' },
-  { label: 'forest',  value: '#166534' },
-]
-
-const DEFAULT_STYLE: ResumeStyle = {
-  fontFamily: '"Inter", system-ui, sans-serif',
-  fontSize: 11,
-  lineHeight: 1.45,
-  margin: 36,
-  accent: '#1c1917',
-  headingWeight: 700,
-}
-
-function stripStyleBlock(html: string): { html: string; style: ResumeStyle } {
-  const match = html.match(/<style[^>]*data-resume-style[^>]*>([\s\S]*?)<\/style>/i)
-  if (!match) return { html, style: DEFAULT_STYLE }
-  try {
-    const json = match[1].match(/\/\*JSON:([\s\S]*?)\*\//)
-    const parsed = json ? JSON.parse(json[1]) : DEFAULT_STYLE
-    const cleaned = html.replace(match[0], '').trim()
-    return { html: cleaned, style: { ...DEFAULT_STYLE, ...parsed } }
-  } catch {
-    return { html, style: DEFAULT_STYLE }
-  }
-}
-
-function buildStyleBlock(style: ResumeStyle): string {
-  const json = JSON.stringify(style)
-  return `<style data-resume-style>/*JSON:${json}*/
-.resume-doc { font-family: ${style.fontFamily}; font-size: ${style.fontSize}pt; line-height: ${style.lineHeight}; padding: ${style.margin}px; color: #111; }
-.resume-doc h1 { font-family: ${style.fontFamily}; font-weight: ${style.headingWeight}; color: ${style.accent}; font-size: ${style.fontSize * 2}pt; margin: 0 0 6px; }
-.resume-doc h2 { font-family: ${style.fontFamily}; font-weight: ${style.headingWeight}; color: ${style.accent}; font-size: ${style.fontSize * 1.25}pt; border-bottom: 1px solid ${style.accent}; padding-bottom: 2px; margin: 14px 0 6px; text-transform: uppercase; letter-spacing: 0.05em; }
-.resume-doc h3 { font-weight: 600; font-size: ${style.fontSize * 1.05}pt; margin: 8px 0 2px; }
-.resume-doc p, .resume-doc li { margin: 2px 0; }
-.resume-doc ul { padding-left: 18px; margin: 4px 0 8px; }
-</style>`
-}
-
 export default function ResumeEditor(props: Props) {
-  const initial = useMemo(() => stripStyleBlock(props.initialHtml), [props.initialHtml])
-
-  const [html, setHtml] = useState(initial.html)
-  const [style, setStyle] = useState<ResumeStyle>(initial.style)
+  const [latex, setLatex] = useState(props.initialLatex)
+  const [viewMode, setViewMode] = useState<'preview' | 'source'>('preview')
   const [edits, setEdits] = useState<EditEntry[]>([])
-  const [pending, setPending] = useState<PendingComment | null>(null)
-  const [comment, setComment] = useState('')
-  const [variants, setVariants] = useState<string[] | null>(null)
-  const [requesting, setRequesting] = useState(false)
-  const [requestError, setRequestError] = useState<string | null>(null)
+
+  // AI modification
+  const [instruction, setInstruction] = useState('')
+  const [modifying, setModifying] = useState(false)
+  const [modifyError, setModifyError] = useState<string | null>(null)
+
+  // Save
   const [saving, setSaving] = useState(false)
   const [savedAt, setSavedAt] = useState<number | null>(null)
   const [saveError, setSaveError] = useState<string | null>(null)
-  const [activeTab, setActiveTab] = useState<'context' | 'history'>('context')
-  const [stylePanel, setStylePanel] = useState<'typography' | 'spacing' | 'color'>('typography')
+
+  // LangGraph regeneration
   const [generating, setGenerating] = useState(false)
   const [currentNode, setCurrentNode] = useState<string | null>(null)
   const [genError, setGenError] = useState<string | null>(null)
 
-  const docRef = useRef<HTMLDivElement>(null)
-
-  // Capture selection inside the resume — ignore mouseups outside the doc
-  // (clicking into the textarea clears window selection, which would wipe pending)
-  const handleMouseUp = useCallback((e: MouseEvent) => {
-    if (!docRef.current?.contains(e.target as Node)) return
-
-    const sel = window.getSelection()
-    if (!sel || sel.rangeCount === 0 || sel.isCollapsed) {
-      setPending(null)
-      return
-    }
-    const range = sel.getRangeAt(0)
-    if (!docRef.current?.contains(range.commonAncestorContainer)) {
-      setPending(null)
-      return
-    }
-    const text = sel.toString().trim()
-    if (text.length < 3) {
-      setPending(null)
-      return
-    }
-    const rect = range.getBoundingClientRect()
-    setPending({ selection: text, range: range.cloneRange(), rect })
-  }, [])
-
-  useEffect(() => {
-    document.addEventListener('mouseup', handleMouseUp)
-    return () => document.removeEventListener('mouseup', handleMouseUp)
-  }, [handleMouseUp])
-
-  const requestVariants = async () => {
-    if (!pending || !comment.trim()) return
-    setRequesting(true)
-    setRequestError(null)
-    setVariants(null)
+  const handleModify = async () => {
+    if (!instruction.trim()) return
+    setModifying(true)
+    setModifyError(null)
     try {
       const res = await fetch('/api/resume/rewrite', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          selection: pending.selection,
-          comment: comment.trim(),
+          latex,
+          instruction: instruction.trim(),
           context: {
-            fullResume: docRef.current?.innerText.slice(0, 6000) || '',
             jobTitle: props.jobTitle,
             keywords: props.selectedKeywords.length ? props.selectedKeywords : props.keywords,
             gaps: props.selectedGaps.length ? props.selectedGaps : props.gaps,
@@ -177,46 +78,37 @@ export default function ResumeEditor(props: Props) {
         }),
       })
       const json = await res.json().catch(() => ({}))
-      if (!res.ok) throw new Error(json.error || `Server error ${res.status}`)
-      setVariants(json.variants || [])
-    } catch (err: any) {
-      setRequestError(err.message)
+      if (!res.ok) throw new Error((json as any).error || `Server error ${res.status}`)
+      const modified: string = (json as any).latex
+      if (!modified) throw new Error('Empty response from server')
+      setEdits(prev => [{ id: crypto.randomUUID(), instruction: instruction.trim(), at: Date.now() }, ...prev])
+      setLatex(modified)
+      setInstruction('')
+      if (viewMode === 'source') setViewMode('preview')
+    } catch (err: unknown) {
+      setModifyError(err instanceof Error ? err.message : 'Modification failed')
     } finally {
-      setRequesting(false)
+      setModifying(false)
     }
   }
 
-  const applyVariant = (variant: string) => {
-    if (!pending || !docRef.current) return
-    const before = pending.selection
-    const newHtml = docRef.current.innerHTML.replace(escapeForReplace(before), escapeReplacement(variant))
-    setHtml(newHtml)
-    setEdits(prev => [
-      { id: crypto.randomUUID(), before, after: stripTags(variant), comment, at: Date.now() },
-      ...prev,
-    ])
-    setPending(null)
-    setVariants(null)
-    setComment('')
-  }
-
-  const discardComment = () => {
-    setPending(null)
-    setVariants(null)
-    setComment('')
-    setRequestError(null)
-    window.getSelection()?.removeAllRanges()
-  }
-
-  const undoEdit = (entryId: string) => {
-    const entry = edits.find(e => e.id === entryId)
-    if (!entry || !docRef.current) return
-    const newHtml = docRef.current.innerHTML.replace(
-      escapeForReplace(entry.after),
-      escapeReplacement(entry.before)
-    )
-    setHtml(newHtml)
-    setEdits(prev => prev.filter(e => e.id !== entryId))
+  const handleSave = async () => {
+    setSaving(true)
+    setSaveError(null)
+    try {
+      const res = await fetch('/api/resume/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: props.historyId, html: latex }),
+      })
+      const json = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error((json as any).error || `Server error ${res.status}`)
+      setSavedAt(Date.now())
+    } catch (err: unknown) {
+      setSaveError(err instanceof Error ? err.message : 'Save failed')
+    } finally {
+      setSaving(false)
+    }
   }
 
   const handleRegenerate = async () => {
@@ -239,11 +131,9 @@ export default function ResumeEditor(props: Props) {
         const json = await res.json().catch(() => ({}))
         throw new Error((json as any).error || `Server error ${res.status}`)
       }
-
       const reader = res.body!.getReader()
       const dec = new TextDecoder()
       let buf = ''
-
       while (true) {
         const { done, value } = await reader.read()
         if (done) break
@@ -259,499 +149,288 @@ export default function ResumeEditor(props: Props) {
           }
           if (!data) continue
           const parsed = JSON.parse(data)
-          if (eventType === 'node') {
-            setCurrentNode(parsed.node)
-          } else if (eventType === 'done') {
-            const { html: cleanHtml } = stripStyleBlock(parsed.html || '')
-            setHtml(cleanHtml || parsed.html || '')
+          if (eventType === 'node') setCurrentNode(parsed.node)
+          else if (eventType === 'done') {
+            const incoming = (parsed.html || '').replace(/```latex\s*/gi, '').replace(/```\s*/g, '').trim()
+            setLatex(incoming || parsed.html || '')
             setCurrentNode(null)
-          } else if (eventType === 'error') {
-            throw new Error(parsed.error || 'Generation failed')
-          }
+          } else if (eventType === 'error') throw new Error(parsed.error || 'Generation failed')
         }
       }
-    } catch (err: any) {
-      setGenError(err.message)
+    } catch (err: unknown) {
+      setGenError(err instanceof Error ? err.message : 'Generation failed')
     } finally {
       setGenerating(false)
       setCurrentNode(null)
     }
   }
 
-  const handleSave = async () => {
-    setSaving(true)
-    setSaveError(null)
-    try {
-      const finalHtml = `${buildStyleBlock(style)}\n${html}`
-      const res = await fetch('/api/resume/save', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: props.historyId, html: finalHtml }),
-      })
-      const json = await res.json().catch(() => ({}))
-      if (!res.ok) throw new Error(json.error || `Server error ${res.status}`)
-      setSavedAt(Date.now())
-    } catch (err: any) {
-      setSaveError(err.message)
-    } finally {
-      setSaving(false)
-    }
-  }
+  const handleDownloadTex = useCallback(() => {
+    const blob = new Blob([latex], { type: 'text/plain' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `${props.jobTitle.replace(/[^a-z0-9]/gi, '_')}_resume.tex`
+    a.click()
+    URL.revokeObjectURL(url)
+  }, [latex, props.jobTitle])
 
-  const resetStyle = () => setStyle(DEFAULT_STYLE)
+  const handlePrint = useCallback(() => {
+    window.print()
+  }, [])
 
   return (
-    <div className="max-w-[1400px] mx-auto px-4 lg:px-8">
-      {/* Header */}
-      <div className="flex items-start justify-between mb-8 gap-6">
-        <div>
-          <Link href={`/dashboard/history/${props.historyId}`} className="inline-flex items-center gap-2 text-[13px] text-ink-500 hover:text-ink-900 mb-3">
-            <ArrowLeft className="w-3.5 h-3.5" /> back to analysis
-          </Link>
-          <p className="font-mono text-[10px] text-crimson-500 tracking-caps uppercase mb-2">resume editor</p>
-          <h1 className="font-chunk text-[36px] leading-tight tracking-tight text-ink-900">
-            {props.jobTitle}
-          </h1>
-          <p className="text-[13px] text-ink-500 mt-1">{props.siteName}</p>
+    <>
+      {/* Print-only: show just the preview pane */}
+      <style>{`
+        @media print {
+          body > * { display: none !important; }
+          .latex-print-target { display: block !important; }
+        }
+      `}</style>
+
+      <div className="max-w-[1400px] mx-auto px-4 lg:px-8">
+        {/* Header */}
+        <div className="flex items-start justify-between mb-8 gap-6">
+          <div>
+            <Link
+              href={`/dashboard/history/${props.historyId}`}
+              className="inline-flex items-center gap-2 text-[13px] text-ink-500 hover:text-ink-900 mb-3"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" /> back to analysis
+            </Link>
+            <p className="font-mono text-[10px] text-crimson-500 tracking-caps uppercase mb-2">resume editor</p>
+            <h1 className="font-chunk text-[36px] leading-tight tracking-tight text-ink-900">
+              {props.jobTitle}
+            </h1>
+            <p className="text-[13px] text-ink-500 mt-1">{props.siteName}</p>
+          </div>
+          <div className="flex items-center gap-3 flex-wrap justify-end">
+            {genError && <span className="text-[11px] text-flare max-w-[200px] truncate">{genError}</span>}
+            {savedAt && !saving && (
+              <span className="text-[11px] text-ink-500 font-mono tracking-caps uppercase">
+                saved · {new Date(savedAt).toLocaleTimeString()}
+              </span>
+            )}
+            {saveError && <span className="text-[11px] text-flare">{saveError}</span>}
+            <button
+              onClick={handleRegenerate}
+              disabled={generating || saving}
+              className="inline-flex items-center gap-2 px-4 py-2.5 border border-ink-300 text-ink-700 text-[13px] rounded-md hover:border-ink-900 hover:text-ink-900 disabled:opacity-50 transition-colors"
+            >
+              {generating ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+              regenerate
+            </button>
+            <button
+              onClick={handleSave}
+              disabled={saving || generating}
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-ink-900 text-cream font-medium text-[13px] rounded-md hover:bg-crimson-500 disabled:opacity-50"
+            >
+              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+              save
+            </button>
+          </div>
         </div>
-        <div className="flex items-center gap-3">
-          {genError && <span className="text-[11px] text-flare max-w-[200px] truncate">{genError}</span>}
-          {savedAt && !saving && (
-            <span className="text-[11px] text-ink-500 font-mono tracking-caps uppercase">
-              saved · {new Date(savedAt).toLocaleTimeString()}
-            </span>
-          )}
-          {saveError && <span className="text-[11px] text-flare">{saveError}</span>}
-          <button
-            onClick={handleRegenerate}
-            disabled={generating || saving}
-            title={!props.baseResumeText ? 'Upload a resume to the vault first for best results' : undefined}
-            className="inline-flex items-center gap-2 px-4 py-2.5 border border-ink-300 text-ink-700 text-[13px] rounded-md hover:border-ink-900 hover:text-ink-900 disabled:opacity-50 transition-colors"
-          >
-            {generating ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
-            regenerate
-          </button>
-          <button
-            onClick={handleSave}
-            disabled={saving || generating}
-            className="inline-flex items-center gap-2 px-5 py-2.5 bg-ink-900 text-cream font-medium text-[13px] rounded-md hover:bg-crimson-500 disabled:opacity-50"
-          >
-            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-            save resume
-          </button>
-        </div>
-      </div>
 
-      {/* 3-column grid */}
-      <div className="grid grid-cols-12 gap-6">
-        {/* Left rail — context */}
-        <aside className="col-span-3">
-          <div className="border border-ink-200 rounded-md bg-cream sticky top-24">
-            <div className="flex border-b border-ink-200">
-              {(['context', 'history'] as const).map(tab => (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  className={`flex-1 px-3 py-2.5 text-[11px] font-mono tracking-caps uppercase transition-colors ${
-                    activeTab === tab ? 'bg-ink-900 text-cream' : 'text-ink-500 hover:text-ink-900'
-                  }`}
-                >
-                  {tab}
-                </button>
-              ))}
-            </div>
+        {/* 3-column grid */}
+        <div className="grid grid-cols-12 gap-6">
 
-            {activeTab === 'context' && (
-              <div className="p-4 space-y-5 text-[12px] max-h-[calc(100vh-200px)] overflow-y-auto">
-                {/* Score */}
-                <div>
-                  <p className="font-mono text-[9px] text-ink-400 tracking-caps uppercase mb-1">match score</p>
-                  <div className="flex items-baseline gap-1">
-                    <span className="font-chunk text-[32px] leading-none tracking-tight text-ink-900 num">{props.score}</span>
-                    <span className="num text-[11px] text-ink-400">/100</span>
-                  </div>
+          {/* Left rail — context */}
+          <aside className="col-span-3">
+            <div className="border border-ink-200 rounded-md bg-cream sticky top-24 p-4 space-y-5 text-[12px] max-h-[calc(100vh-160px)] overflow-y-auto">
+              {/* Score */}
+              <div>
+                <p className="font-mono text-[9px] text-ink-400 tracking-caps uppercase mb-1">match score</p>
+                <div className="flex items-baseline gap-1">
+                  <span className="font-chunk text-[32px] leading-none tracking-tight text-ink-900 num">{props.score}</span>
+                  <span className="num text-[11px] text-ink-400">/100</span>
                 </div>
+              </div>
 
-                {/* Base resume */}
-                <div>
-                  <p className="font-mono text-[9px] text-ink-400 tracking-caps uppercase mb-2">base resume</p>
-                  {props.baseResumeName ? (
-                    <div className="flex items-start gap-2 p-2 border border-ink-200 rounded-sm">
-                      <FileText className="w-3.5 h-3.5 mt-0.5 text-ink-500 shrink-0" />
-                      <span className="text-[12px] text-ink-700 break-all">{props.baseResumeName}</span>
-                    </div>
-                  ) : (
-                    <p className="text-[11px] text-ink-400 italic">unknown source</p>
-                  )}
-                </div>
-
-                {/* Keywords */}
-                {props.keywords.length > 0 && (
-                  <div>
-                    <p className="font-mono text-[9px] text-ink-400 tracking-caps uppercase mb-2">target keywords</p>
-                    <div className="flex flex-wrap gap-1">
-                      {props.keywords.map((k, i) => {
-                        const on = props.selectedKeywords.includes(k)
-                        return (
-                          <span
-                            key={i}
-                            className={`px-2 py-0.5 text-[10px] rounded-sm border ${
-                              on ? 'bg-ink-900 text-cream border-ink-900' : 'border-ink-300 text-ink-500'
-                            }`}
-                          >
-                            {k}
-                          </span>
-                        )
-                      })}
-                    </div>
+              {/* Base resume */}
+              <div>
+                <p className="font-mono text-[9px] text-ink-400 tracking-caps uppercase mb-2">base resume</p>
+                {props.baseResumeName ? (
+                  <div className="flex items-start gap-2 p-2 border border-ink-200 rounded-sm">
+                    <FileText className="w-3.5 h-3.5 mt-0.5 text-ink-500 shrink-0" />
+                    <span className="text-[12px] text-ink-700 break-all">{props.baseResumeName}</span>
                   </div>
-                )}
-
-                {/* Gaps */}
-                {props.gaps.length > 0 && (
-                  <div>
-                    <p className="font-mono text-[9px] text-ink-400 tracking-caps uppercase mb-2">gaps addressed</p>
-                    <ul className="space-y-1.5">
-                      {props.gaps.map((g, i) => {
-                        const on = props.selectedGaps.includes(g)
-                        return (
-                          <li key={i} className="flex items-start gap-2">
-                            <span className={`w-1.5 h-1.5 mt-1.5 rounded-full shrink-0 ${on ? 'bg-citrus' : 'bg-ink-200'}`} />
-                            <span className={`text-[11px] leading-snug ${on ? 'text-ink-900' : 'text-ink-400'}`}>{g}</span>
-                          </li>
-                        )
-                      })}
-                    </ul>
-                  </div>
-                )}
-
-                {/* Matches */}
-                {props.matches.length > 0 && (
-                  <div>
-                    <p className="font-mono text-[9px] text-ink-400 tracking-caps uppercase mb-2">strengths leveraged</p>
-                    <ul className="space-y-1">
-                      {props.matches.map((m, i) => (
-                        <li key={i} className="flex items-start gap-2">
-                          <span className="font-mono text-[9px] text-ink-400 num">{String(i + 1).padStart(2, '0')}</span>
-                          <span className="text-[11px] text-ink-700 leading-snug">{m}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-
-                {/* Base resume preview */}
-                {props.baseResumeText && (
-                  <details className="border-t border-ink-200 pt-3">
-                    <summary className="font-mono text-[9px] text-ink-400 tracking-caps uppercase cursor-pointer hover:text-ink-900">
-                      view source resume content
-                    </summary>
-                    <pre className="mt-2 text-[10px] text-ink-600 whitespace-pre-wrap leading-relaxed max-h-[200px] overflow-y-auto p-2 bg-ink-50 rounded-sm font-sans">
-                      {props.baseResumeText.slice(0, 3000)}
-                      {props.baseResumeText.length > 3000 && '\n\n…(truncated)'}
-                    </pre>
-                  </details>
+                ) : (
+                  <p className="text-[11px] text-ink-400 italic">unknown source</p>
                 )}
               </div>
-            )}
 
-            {activeTab === 'history' && (
-              <div className="p-4 max-h-[calc(100vh-200px)] overflow-y-auto">
-                <p className="font-mono text-[9px] text-ink-400 tracking-caps uppercase mb-3">
-                  edits this session · <span className="num">{edits.length}</span>
-                </p>
-                {edits.length === 0 ? (
-                  <p className="text-[11px] text-ink-400 italic">no changes yet. select text in the resume to comment.</p>
-                ) : (
-                  <ul className="space-y-3">
-                    {edits.map(e => (
-                      <li key={e.id} className="border border-ink-200 rounded-sm p-2.5 bg-white">
-                        <div className="flex items-start justify-between gap-2 mb-1.5">
-                          <p className="font-serif italic text-[11px] text-crimson-500 leading-snug flex-1">"{e.comment}"</p>
-                          <button
-                            onClick={() => undoEdit(e.id)}
-                            className="text-ink-400 hover:text-flare shrink-0"
-                            title="Undo"
-                          >
-                            <RotateCcw className="w-3 h-3" />
-                          </button>
-                        </div>
-                        <div className="text-[10px] text-ink-400 line-through line-clamp-2 mb-1">{e.before}</div>
-                        <div className="text-[10px] text-ink-900 line-clamp-2">{e.after}</div>
+              {/* Keywords */}
+              {props.keywords.length > 0 && (
+                <div>
+                  <p className="font-mono text-[9px] text-ink-400 tracking-caps uppercase mb-2">target keywords</p>
+                  <div className="flex flex-wrap gap-1">
+                    {props.keywords.map((k, i) => {
+                      const on = props.selectedKeywords.includes(k)
+                      return (
+                        <span key={i} className={`px-2 py-0.5 text-[10px] rounded-sm border ${on ? 'bg-ink-900 text-cream border-ink-900' : 'border-ink-300 text-ink-500'}`}>
+                          {k}
+                        </span>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Gaps */}
+              {props.gaps.length > 0 && (
+                <div>
+                  <p className="font-mono text-[9px] text-ink-400 tracking-caps uppercase mb-2">gaps addressed</p>
+                  <ul className="space-y-1.5">
+                    {props.gaps.map((g, i) => {
+                      const on = props.selectedGaps.includes(g)
+                      return (
+                        <li key={i} className="flex items-start gap-2">
+                          <span className={`w-1.5 h-1.5 mt-1.5 rounded-full shrink-0 ${on ? 'bg-citrus' : 'bg-ink-200'}`} />
+                          <span className={`text-[11px] leading-snug ${on ? 'text-ink-900' : 'text-ink-400'}`}>{g}</span>
+                        </li>
+                      )
+                    })}
+                  </ul>
+                </div>
+              )}
+
+              {/* Matches */}
+              {props.matches.length > 0 && (
+                <div>
+                  <p className="font-mono text-[9px] text-ink-400 tracking-caps uppercase mb-2">strengths leveraged</p>
+                  <ul className="space-y-1">
+                    {props.matches.map((m, i) => (
+                      <li key={i} className="flex items-start gap-2">
+                        <span className="font-mono text-[9px] text-ink-400 num">{String(i + 1).padStart(2, '0')}</span>
+                        <span className="text-[11px] text-ink-700 leading-snug">{m}</span>
                       </li>
                     ))}
                   </ul>
-                )}
-              </div>
-            )}
-          </div>
-        </aside>
-
-        {/* Center — resume preview */}
-        <main className="col-span-6">
-          <div className="bg-white border border-ink-300 shadow-sm relative">
-            <style dangerouslySetInnerHTML={{ __html: stylesheetFor(style) }} />
-            <div
-              ref={docRef}
-              className="resume-doc resume-editable min-h-[1100px]"
-              dangerouslySetInnerHTML={{ __html: html }}
-            />
-            {generating && (
-              <div className="absolute inset-0 bg-cream/80 backdrop-blur-sm flex flex-col items-center justify-center gap-3 z-10">
-                <Loader2 className="w-6 h-6 animate-spin text-ink-500" />
-                <p className="font-mono text-[11px] text-ink-500 tracking-caps uppercase">
-                  {currentNode ? (NODE_LABELS[currentNode] ?? currentNode) : 'starting…'}
-                </p>
-              </div>
-            )}
-
-            {/* Selection callout */}
-            {pending && !variants && !requesting && (
-              <div
-                className="fixed z-50 bg-ink-900 text-cream rounded-md shadow-print-xl p-3 flex items-center gap-2 animate-in fade-in"
-                style={{
-                  top: pending.rect.bottom + window.scrollY + 8,
-                  left: Math.min(pending.rect.left + window.scrollX, window.innerWidth - 320),
-                  width: 300,
-                }}
-              >
-                <MessageSquarePlus className="w-4 h-4 text-citrus shrink-0" />
-                <span className="text-[12px] flex-1 line-clamp-1">comment on selection</span>
-                <button onClick={discardComment} className="text-cream/60 hover:text-cream">
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            )}
-          </div>
-        </main>
-
-        {/* Right rail — comment / variants / styles */}
-        <aside className="col-span-3 space-y-4">
-          {/* Comment + variants box */}
-          {pending ? (
-            <div className="border border-ink-900 rounded-md bg-cream sticky top-24">
-              <div className="px-4 py-2.5 border-b border-ink-200 flex items-center justify-between">
-                <p className="font-mono text-[10px] text-crimson-500 tracking-caps uppercase">rewrite selection</p>
-                <button onClick={discardComment} className="text-ink-400 hover:text-ink-900">
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              </div>
-
-              <div className="p-4">
-                <div className="text-[11px] text-ink-500 mb-3 p-2 bg-ink-50 border-l-2 border-crimson-500 line-clamp-4">
-                  "{pending.selection}"
                 </div>
-
-                <textarea
-                  value={comment}
-                  onChange={e => setComment(e.target.value)}
-                  placeholder="Make this more concrete with metrics. Or: shorten to one line. Or: emphasize Python."
-                  rows={3}
-                  className="w-full text-[12px] p-2 border border-ink-300 rounded-sm focus:outline-none focus:border-ink-900 resize-none mb-3"
-                />
-
-                {!variants && (
-                  <button
-                    onClick={requestVariants}
-                    disabled={!comment.trim() || requesting}
-                    className="w-full inline-flex items-center justify-center gap-2 px-3 py-2 bg-ink-900 text-cream text-[12px] font-medium rounded-md hover:bg-crimson-500 disabled:opacity-50"
-                  >
-                    {requesting ? (
-                      <><Loader2 className="w-3.5 h-3.5 animate-spin" /> generating 3 options…</>
-                    ) : (
-                      <><Sparkles className="w-3.5 h-3.5" /> generate 3 variants</>
-                    )}
-                  </button>
-                )}
-
-                {requestError && (
-                  <p className="mt-2 text-[11px] text-flare">{requestError}</p>
-                )}
-
-                {variants && (
-                  <div className="space-y-2 mt-2">
-                    <p className="font-mono text-[9px] text-ink-400 tracking-caps uppercase">pick a variant</p>
-                    {variants.map((v, i) => (
-                      <button
-                        key={i}
-                        onClick={() => applyVariant(v)}
-                        className="w-full text-left p-2.5 border border-ink-300 rounded-sm hover:border-ink-900 hover:bg-ink-50 transition-colors group"
-                      >
-                        <div className="flex items-start justify-between gap-2 mb-1">
-                          <span className="font-mono text-[9px] text-crimson-500 tracking-caps">option {String(i + 1).padStart(2, '0')}</span>
-                          <Check className="w-3 h-3 text-ink-300 group-hover:text-citrus" />
-                        </div>
-                        <div className="text-[11px] text-ink-700 leading-snug" dangerouslySetInnerHTML={{ __html: v }} />
-                      </button>
-                    ))}
-                    <button
-                      onClick={() => { setVariants(null); setComment('') }}
-                      className="w-full px-3 py-1.5 border border-ink-300 text-ink-500 text-[11px] rounded-sm hover:border-ink-900 hover:text-ink-900"
-                    >
-                      try a different instruction
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-          ) : (
-            <div className="border border-dashed border-ink-300 rounded-md p-4 text-center bg-cream sticky top-24">
-              <MessageSquarePlus className="w-5 h-5 text-ink-300 mx-auto mb-2" />
-              <p className="font-mono text-[10px] text-ink-500 tracking-caps uppercase mb-1">comment to rewrite</p>
-              <p className="text-[11px] text-ink-400 leading-snug">
-                Highlight any text in the resume to leave a comment and generate three rewrite options.
-              </p>
-            </div>
-          )}
-
-          {/* Style controls */}
-          <div className="border border-ink-200 rounded-md bg-cream">
-            <div className="flex border-b border-ink-200">
-              {([
-                { id: 'typography', label: 'type', icon: Type },
-                { id: 'spacing', label: 'space', icon: AlignLeft },
-                { id: 'color', label: 'color', icon: Palette },
-              ] as const).map(t => (
-                <button
-                  key={t.id}
-                  onClick={() => setStylePanel(t.id)}
-                  className={`flex-1 px-2 py-2 text-[10px] font-mono tracking-caps uppercase inline-flex items-center justify-center gap-1.5 transition-colors ${
-                    stylePanel === t.id ? 'bg-ink-900 text-cream' : 'text-ink-500 hover:text-ink-900'
-                  }`}
-                >
-                  <t.icon className="w-3 h-3" />
-                  {t.label}
-                </button>
-              ))}
-            </div>
-
-            <div className="p-4 space-y-4">
-              {stylePanel === 'typography' && (
-                <>
-                  <Field label="font family">
-                    <select
-                      value={style.fontFamily}
-                      onChange={e => setStyle(s => ({ ...s, fontFamily: e.target.value }))}
-                      className="w-full text-[12px] px-2 py-1.5 border border-ink-300 rounded-sm focus:outline-none focus:border-ink-900"
-                    >
-                      {FONT_OPTIONS.map(f => (
-                        <option key={f.value} value={f.value}>{f.label}</option>
-                      ))}
-                    </select>
-                  </Field>
-
-                  <Slider label="font size" suffix="pt" min={8} max={14} step={0.5}
-                    value={style.fontSize}
-                    onChange={v => setStyle(s => ({ ...s, fontSize: v }))} />
-
-                  <Slider label="heading weight" suffix="" min={400} max={900} step={100}
-                    value={style.headingWeight}
-                    onChange={v => setStyle(s => ({ ...s, headingWeight: v }))} />
-                </>
               )}
+            </div>
+          </aside>
 
-              {stylePanel === 'spacing' && (
-                <>
-                  <Slider label="line height" suffix="" min={1.0} max={2.0} step={0.05}
-                    value={style.lineHeight}
-                    onChange={v => setStyle(s => ({ ...s, lineHeight: v }))} />
-
-                  <Slider label="page margin" suffix="px" min={16} max={72} step={2}
-                    value={style.margin}
-                    onChange={v => setStyle(s => ({ ...s, margin: v }))} />
-                </>
-              )}
-
-              {stylePanel === 'color' && (
-                <Field label="accent color">
-                  <div className="grid grid-cols-3 gap-1.5">
-                    {ACCENT_PRESETS.map(c => (
-                      <button
-                        key={c.value}
-                        onClick={() => setStyle(s => ({ ...s, accent: c.value }))}
-                        className={`flex flex-col items-center gap-1 p-2 border rounded-sm hover:border-ink-900 ${
-                          style.accent === c.value ? 'border-ink-900' : 'border-ink-200'
-                        }`}
-                      >
-                        <div className="w-5 h-5 rounded-full" style={{ background: c.value }} />
-                        <span className="font-mono text-[9px] tracking-caps uppercase text-ink-500">{c.label}</span>
-                      </button>
-                    ))}
-                  </div>
-                  <input
-                    type="color"
-                    value={style.accent}
-                    onChange={e => setStyle(s => ({ ...s, accent: e.target.value }))}
-                    className="mt-2 w-full h-8 border border-ink-300 rounded-sm cursor-pointer"
-                  />
-                </Field>
-              )}
-
+          {/* Center — preview / source */}
+          <main className="col-span-6">
+            {/* Tab bar */}
+            <div className="flex border border-ink-200 rounded-t-md overflow-hidden mb-0">
               <button
-                onClick={resetStyle}
-                className="w-full inline-flex items-center justify-center gap-2 px-3 py-1.5 border border-ink-200 text-ink-500 text-[11px] rounded-sm hover:border-ink-900 hover:text-ink-900"
+                onClick={() => setViewMode('preview')}
+                className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-[11px] font-mono tracking-caps uppercase transition-colors ${viewMode === 'preview' ? 'bg-ink-900 text-cream' : 'text-ink-500 hover:text-ink-900'}`}
               >
-                <RotateCcw className="w-3 h-3" /> reset to defaults
+                <Eye className="w-3 h-3" /> preview
+              </button>
+              <button
+                onClick={() => setViewMode('source')}
+                className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-[11px] font-mono tracking-caps uppercase transition-colors ${viewMode === 'source' ? 'bg-ink-900 text-cream' : 'text-ink-500 hover:text-ink-900'}`}
+              >
+                <Code className="w-3 h-3" /> source
               </button>
             </div>
-          </div>
-        </aside>
+
+            <div className="border border-t-0 border-ink-200 rounded-b-md bg-white relative overflow-hidden">
+              {/* Generation overlay */}
+              {generating && (
+                <div className="absolute inset-0 bg-cream/80 backdrop-blur-sm flex flex-col items-center justify-center gap-3 z-10">
+                  <Loader2 className="w-6 h-6 animate-spin text-ink-500" />
+                  <p className="font-mono text-[11px] text-ink-500 tracking-caps uppercase">
+                    {currentNode ? (NODE_LABELS[currentNode] ?? currentNode) : 'starting…'}
+                  </p>
+                </div>
+              )}
+
+              {viewMode === 'preview' && (
+                <div className="latex-print-target p-2 min-h-[900px]">
+                  <LatexPreview source={latex} />
+                </div>
+              )}
+
+              {viewMode === 'source' && (
+                <textarea
+                  value={latex}
+                  onChange={e => setLatex(e.target.value)}
+                  spellCheck={false}
+                  className="w-full font-mono text-[11px] text-ink-800 leading-relaxed p-4 min-h-[900px] resize-none focus:outline-none bg-ink-50"
+                />
+              )}
+            </div>
+          </main>
+
+          {/* Right rail — AI modify + export */}
+          <aside className="col-span-3 space-y-4">
+
+            {/* AI modify */}
+            <div className="border border-ink-200 rounded-md bg-cream">
+              <div className="px-4 py-2.5 border-b border-ink-200">
+                <p className="font-mono text-[10px] text-crimson-500 tracking-caps uppercase">modify with ai</p>
+              </div>
+              <div className="p-4 space-y-3">
+                <textarea
+                  value={instruction}
+                  onChange={e => setInstruction(e.target.value)}
+                  placeholder="Describe what to change — e.g. 'make the summary more concise', 'add more Python keywords', 'shorten to one page'…"
+                  rows={4}
+                  className="w-full text-[12px] p-2 border border-ink-300 rounded-sm focus:outline-none focus:border-ink-900 resize-none"
+                />
+                <button
+                  onClick={handleModify}
+                  disabled={!instruction.trim() || modifying}
+                  className="w-full inline-flex items-center justify-center gap-2 px-3 py-2 bg-ink-900 text-cream text-[12px] font-medium rounded-md hover:bg-crimson-500 disabled:opacity-50"
+                >
+                  {modifying
+                    ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> applying…</>
+                    : <><Sparkles className="w-3.5 h-3.5" /> apply changes</>
+                  }
+                </button>
+                {modifyError && <p className="text-[11px] text-flare">{modifyError}</p>}
+              </div>
+            </div>
+
+            {/* Edit history */}
+            {edits.length > 0 && (
+              <div className="border border-ink-200 rounded-md bg-cream">
+                <div className="px-4 py-2.5 border-b border-ink-200">
+                  <p className="font-mono text-[10px] text-ink-400 tracking-caps uppercase">
+                    edits this session · <span className="num">{edits.length}</span>
+                  </p>
+                </div>
+                <ul className="divide-y divide-ink-100 max-h-[240px] overflow-y-auto">
+                  {edits.map(e => (
+                    <li key={e.id} className="px-4 py-2.5">
+                      <p className="font-serif italic text-[11px] text-crimson-500 leading-snug line-clamp-2">"{e.instruction}"</p>
+                      <p className="text-[10px] text-ink-400 mt-0.5">{new Date(e.at).toLocaleTimeString()}</p>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* Export */}
+            <div className="border border-ink-200 rounded-md bg-cream">
+              <div className="px-4 py-2.5 border-b border-ink-200">
+                <p className="font-mono text-[10px] text-ink-400 tracking-caps uppercase">export</p>
+              </div>
+              <div className="p-4 space-y-2">
+                <button
+                  onClick={handleDownloadTex}
+                  className="w-full inline-flex items-center gap-2 px-3 py-2 border border-ink-300 text-ink-700 text-[12px] rounded-sm hover:border-ink-900 hover:text-ink-900 transition-colors"
+                >
+                  <Download className="w-3.5 h-3.5" /> download .tex
+                </button>
+                <button
+                  onClick={handlePrint}
+                  className="w-full inline-flex items-center gap-2 px-3 py-2 border border-ink-300 text-ink-700 text-[12px] rounded-sm hover:border-ink-900 hover:text-ink-900 transition-colors"
+                >
+                  <Printer className="w-3.5 h-3.5" /> print / save as PDF
+                </button>
+              </div>
+            </div>
+
+          </aside>
+        </div>
       </div>
-    </div>
+    </>
   )
-}
-
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div>
-      <p className="font-mono text-[9px] text-ink-400 tracking-caps uppercase mb-1.5">{label}</p>
-      {children}
-    </div>
-  )
-}
-
-function Slider({ label, suffix, min, max, step, value, onChange }: {
-  label: string; suffix: string; min: number; max: number; step: number; value: number; onChange: (v: number) => void
-}) {
-  return (
-    <div>
-      <div className="flex items-baseline justify-between mb-1.5">
-        <p className="font-mono text-[9px] text-ink-400 tracking-caps uppercase">{label}</p>
-        <span className="font-mono text-[10px] text-ink-900 num">{value}{suffix}</span>
-      </div>
-      <input
-        type="range"
-        min={min}
-        max={max}
-        step={step}
-        value={value}
-        onChange={e => onChange(parseFloat(e.target.value))}
-        className="w-full accent-ink-900"
-      />
-    </div>
-  )
-}
-
-function stylesheetFor(s: ResumeStyle): string {
-  return `
-    .resume-editable { font-family: ${s.fontFamily}; font-size: ${s.fontSize}pt; line-height: ${s.lineHeight}; padding: ${s.margin}px; color: #111; }
-    .resume-editable h1 { font-family: ${s.fontFamily}; font-weight: ${s.headingWeight}; color: ${s.accent}; font-size: ${s.fontSize * 2}pt; margin: 0 0 6px; }
-    .resume-editable h2 { font-family: ${s.fontFamily}; font-weight: ${s.headingWeight}; color: ${s.accent}; font-size: ${s.fontSize * 1.25}pt; border-bottom: 1px solid ${s.accent}; padding-bottom: 2px; margin: 14px 0 6px; text-transform: uppercase; letter-spacing: 0.05em; }
-    .resume-editable h3 { font-weight: 600; font-size: ${s.fontSize * 1.05}pt; margin: 8px 0 2px; }
-    .resume-editable p, .resume-editable li { margin: 2px 0; }
-    .resume-editable ul { padding-left: 18px; margin: 4px 0 8px; }
-    .resume-editable ::selection { background: ${s.accent}33; }
-  `
-}
-
-function escapeForReplace(text: string): string {
-  return text
-}
-
-function escapeReplacement(text: string): string {
-  return text.replace(/\$/g, '$$$$')
-}
-
-function stripTags(html: string): string {
-  return html.replace(/<[^>]+>/g, '').trim()
 }

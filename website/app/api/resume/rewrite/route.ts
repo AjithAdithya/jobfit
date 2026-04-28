@@ -1,72 +1,49 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 interface RewriteBody {
-  selection: string
-  comment: string
+  latex: string
+  instruction: string
   context: {
-    fullResume: string
     jobTitle: string
     keywords: string[]
     gaps: string[]
   }
 }
 
-const SYSTEM_PROMPT = `You are an expert resume editor. The user has selected a specific snippet of HTML from their tailored resume and given an instruction for how to rewrite it.
+const SYSTEM_PROMPT = `You are an expert LaTeX resume editor. The user has a tailored resume written in LaTeX and wants a specific modification applied.
 
-Generate exactly THREE distinct variants for that snippet. Each variant must:
-- Preserve the same HTML tag structure (if input is <li>...</li>, return <li>...</li>; if it's a fragment of text inside a <p>, return text only).
-- Keep the rewrite ATS-friendly (no emojis, no decorative characters, no inline styles).
-- Reflect the user's instruction faithfully while staying truthful to their existing experience context.
-- Be distinct from each other in tone, structure, or emphasis — not three copies of the same sentence.`
-
-const REWRITE_TOOL = {
-  name: 'generate_variants',
-  description: 'Generate exactly three distinct rewrite variants for a resume HTML snippet.',
-  input_schema: {
-    type: 'object',
-    properties: {
-      variants: {
-        type: 'array',
-        items: { type: 'string' },
-        description: 'Exactly three distinct rewrite variants of the selected snippet',
-      },
-    },
-    required: ['variants'],
-  },
-}
+Apply the user's instruction to the LaTeX source. Rules:
+- Return ONLY the complete modified LaTeX document starting with \\documentclass.
+- Preserve the document structure and preamble.
+- Stay truthful — do not fabricate credentials or metrics not already present.
+- Keep ATS best practices: single-column, standard headings, action verbs, metrics.
+- No markdown fences, no explanation, just raw LaTeX.`
 
 export async function POST(req: NextRequest) {
   try {
     const apiKey = process.env.ANTHROPIC_API_KEY
     if (!apiKey) {
-      return NextResponse.json(
-        { error: 'ANTHROPIC_API_KEY not configured on server.' },
-        { status: 500 }
-      )
+      return NextResponse.json({ error: 'ANTHROPIC_API_KEY not configured.' }, { status: 500 })
     }
 
     const body = (await req.json()) as RewriteBody
-    const { selection, comment, context } = body
+    const { latex, instruction, context } = body
 
-    if (!selection || !comment) {
-      return NextResponse.json({ error: 'selection and comment are required' }, { status: 400 })
+    if (!latex || !instruction) {
+      return NextResponse.json({ error: 'latex and instruction are required' }, { status: 400 })
     }
 
     const userPrompt = `JOB TITLE: ${context.jobTitle}
-
 TARGET KEYWORDS: ${context.keywords.join(', ') || 'none'}
 GAPS BEING ADDRESSED: ${context.gaps.join(', ') || 'none'}
 
-FULL RESUME (for context only — do not rewrite the whole thing):
-${context.fullResume}
+CURRENT LATEX RESUME:
+${latex}
 
-SELECTED SNIPPET TO REWRITE:
-${selection}
+MODIFICATION INSTRUCTION:
+${instruction}
 
-USER INSTRUCTION:
-${comment}
-
-Generate three distinct variant rewrites for the selected snippet.`
+Apply the instruction and return the complete modified LaTeX document.`
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -77,12 +54,10 @@ Generate three distinct variant rewrites for the selected snippet.`
       },
       body: JSON.stringify({
         model: 'claude-haiku-4-5',
-        max_tokens: 1500,
-        temperature: 0.7,
+        max_tokens: 3000,
+        temperature: 0.3,
         system: SYSTEM_PROMPT,
         messages: [{ role: 'user', content: userPrompt }],
-        tools: [REWRITE_TOOL],
-        tool_choice: { type: 'tool', name: 'generate_variants' },
       }),
     })
 
@@ -94,19 +69,17 @@ Generate three distinct variant rewrites for the selected snippet.`
       )
     }
 
-    const toolBlock = data.content?.find((b: any) => b.type === 'tool_use' && b.name === 'generate_variants')
-    const variants: string[] = Array.isArray(toolBlock?.input?.variants)
-      ? toolBlock.input.variants.slice(0, 3)
-      : []
+    const raw: string = data.content?.[0]?.text ?? ''
+    const modified = raw
+      .replace(/```latex\s*/gi, '')
+      .replace(/```\s*/g, '')
+      .trim()
 
-    if (variants.length < 3) {
-      return NextResponse.json(
-        { error: 'Model returned fewer than 3 variants. Try again.' },
-        { status: 502 }
-      )
+    if (!modified.includes('\\documentclass')) {
+      return NextResponse.json({ error: 'Model did not return valid LaTeX. Try again.' }, { status: 502 })
     }
 
-    return NextResponse.json({ variants })
+    return NextResponse.json({ latex: modified })
   } catch (err: any) {
     console.error('Resume rewrite error:', err)
     return NextResponse.json({ error: err.message || 'Server error' }, { status: 500 })

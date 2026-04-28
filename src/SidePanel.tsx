@@ -6,6 +6,7 @@ import {
   Brain, Target, Zap, Home, Briefcase, Download, FileText,
   Mail, Palette, AlertTriangle, ClipboardPaste, ChevronDown, X,
 } from 'lucide-react'
+import LatexPreview from './components/LatexPreview'
 import { useAuth } from './hooks/useAuth'
 import { useResumes } from './hooks/useResumes'
 import {
@@ -299,7 +300,7 @@ const SidePanel: React.FC = () => {
       const fullContext = data.map(d => d.content).join('\n\n')
       setResumeContext(fullContext)
 
-      const { html: generated, guardianResult } = await generateTailoredResume(
+      const { latex: generated, guardianResult } = await generateTailoredResume(
         jobContext,
         selectedGaps,
         selectedKeywords,
@@ -314,14 +315,13 @@ const SidePanel: React.FC = () => {
         }
       }
 
-      const styledHtml = applyStyleAndFitA4(generated, activeStyle)
-      setGeneratedResume(styledHtml)
+      setGeneratedResume(generated)
 
       // Auto-save to history
       const { activeHistoryItem: histItem } = useUIStore.getState()
       if (histItem?.id) {
         await supabase.from('analysis_history').update({
-          generated_resume: styledHtml,
+          generated_resume: generated,
           updated_at: new Date().toISOString(),
         }).eq('id', histItem.id)
       }
@@ -334,51 +334,37 @@ const SidePanel: React.FC = () => {
     }
   }
 
-  const handleDownloadDocx = () => {
+  const handleDownloadTex = () => {
     if (!generatedResume) return
-    const header = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
-<head>
-<meta charset='utf-8'>
-<title>Resume</title>
-<!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom><w:DoNotOptimizeForBrowser/></w:WordDocument></xml><![endif]-->
-<style>
-@page WordSection1 { size: 8.5in 11.0in; margin: 0.4in 0.4in 0.4in 0.4in; mso-page-orientation: portrait; }
-div.WordSection1 { page: WordSection1; }
-</style>
-</head>
-<body><div class='WordSection1'>`
-    const footer = "</div></body></html>"
-    const source = 'data:application/vnd.ms-word;charset=utf-8,' + encodeURIComponent(header + generatedResume + footer)
+    const blob = new Blob([generatedResume], { type: 'text/plain' })
+    const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
+    a.href = url
+    a.download = 'JobFit_Resume.tex'
     document.body.appendChild(a)
-    a.href = source
-    a.download = 'JobFit_Tailored_Resume.doc'
     a.click()
     document.body.removeChild(a)
+    URL.revokeObjectURL(url)
   }
 
-  const handleDownloadPdf = () => {
+  const handleDownloadPdf = async () => {
     if (!generatedResume) return
+    const { HtmlGenerator, parse } = await import('latex.js')
+    const generator = new HtmlGenerator({ hyphenate: false })
+    parse(generatedResume, { generator })
+    const fragment = generator.domFragment()
+    const tmp = document.createElement('div')
+    tmp.appendChild(fragment)
     const html = `<!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
   <title>JobFit Resume</title>
-  <style>
-    @page { size: letter; margin: 0.4in; }
-    html, body { margin: 0; padding: 0; background: #fff; }
-    .jobfit-resume { max-width: 100% !important; padding: 0 !important; margin: 0 !important; }
-    @media print {
-      html, body { width: 7.7in; }
-      .jobfit-resume { page-break-inside: avoid; }
-      .jobfit-resume > *:nth-child(n) { break-inside: avoid; }
-    }
-  </style>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/latex.js@0.12.6/dist/css/base.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/latex.js@0.12.6/dist/css/article.css">
+  <style>@page { size: letter; margin: 0.5in; } @media print { html, body { margin: 0; } }</style>
 </head>
-<body>
-  ${generatedResume}
-  <script>window.onload=function(){window.print()}<\/script>
-</body>
+<body>${tmp.innerHTML}<script>window.onload=function(){window.print()}<\/script></body>
 </html>`
     const url = 'data:text/html;charset=utf-8,' + encodeURIComponent(html)
     chrome.tabs.create({ url })
@@ -944,10 +930,9 @@ div.WordSection1 { page: WordSection1; }
                             <p className="eyebrow text-ink-500">Regenerating…</p>
                           </div>
                         )}
-                        <div
+                        <LatexPreview
+                          source={generatedResume}
                           className="html-resume-preview"
-                          style={{ colorScheme: 'light' }}
-                          dangerouslySetInnerHTML={{ __html: generatedResume }}
                         />
                       </div>
 
@@ -963,11 +948,11 @@ div.WordSection1 { page: WordSection1; }
 
                       <div className={`grid gap-3 mt-4 ${driveConnected ? 'grid-cols-3' : 'grid-cols-2'}`}>
                         <button
-                          onClick={handleDownloadDocx}
+                          onClick={handleDownloadTex}
                           className="flex items-center justify-center gap-2 p-3 bg-crimson-500 hover:bg-crimson-600 text-cream font-bold uppercase tracking-widest text-xs transition-all shadow-print-sm active:scale-95 border border-crimson-600"
                         >
                           <FileText className="w-4 h-4" />
-                          DOCX
+                          .TEX
                         </button>
                         <button
                           onClick={handleDownloadPdf}

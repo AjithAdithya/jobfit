@@ -1,19 +1,19 @@
 export const ATS_GUIDELINES = `
-# 2026 ATS Best Practices & Constraints
+# 2026 ATS Best Practices for LaTeX Resumes
 
-1. FORMATTING & PARSING:
-   - Use standard semantic HTML (<h1>, <h2>, <ul>, <li>). No headers/footers.
-   - Use conventional headings ("Work Experience", "Education", "Skills"). No creative labels.
-   - Implicitly single-column layout.
+1. STRUCTURE:
+   - Single-column layout only. No tables, no multi-column.
+   - Standard section headings: "PROFESSIONAL SUMMARY", "EXPERIENCE", "EDUCATION", "SKILLS".
+   - No photos, no icons, no decorative graphics.
 
-2. LENGTH CONSTRAINT (STRICT):
-   - Must fit on exactly ONE letter-sized page (~400 words).
-   - High signal density. Every bullet must be relevant to the target job.
-   - Only include the 3-4 most recent and relevant work experiences.
+2. LENGTH (STRICT):
+   - Exactly ONE page. Adjust \\vspace and \\setlength{\\parskip} to fit.
+   - ~400 words maximum. Every bullet must be relevant.
+   - Include only the 3-4 most recent and relevant work experiences.
 
 3. CONTENT STRATEGY:
-   - Reverse-chronological format.
-   - 2-3 sentence "Professional Summary" highlighting years of experience and quantifiable wins.
-   - Bullet points start with strong action verbs.
-   - Include quantifiable metrics whenever possible.
+   - Reverse-chronological order for experience.
+   - 2-3 sentence "PROFESSIONAL SUMMARY" with years of experience and quantifiable wins.
+   - Every bullet starts with a strong past-tense action verb.
+   - Include quantifiable metrics wherever possible (percentages, dollar amounts, scale).
 `

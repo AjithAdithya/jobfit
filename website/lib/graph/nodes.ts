@@ -154,7 +154,7 @@ async function fetchCompanyResearch(
 // ─── Node 2: Write resume ─────────────────────────────────────────────────────
 // Generates ATS-compliant HTML; incorporates critique feedback on retries
 
-const WRITER_SYSTEM = `You are an expert resume writer for 2026. Tailor the user's resume for a specific job.
+const WRITER_SYSTEM = `You are an expert resume writer for 2026. Produce a complete, standalone LaTeX resume document tailored for a specific job.
 
 RULES:
 1. DO NOT fabricate work experience, degrees, or metrics not present in the source context.
@@ -163,9 +163,48 @@ RULES:
 
 ${ATS_GUIDELINES}
 
-OUTPUT FORMAT — valid HTML snippet only:
-- Use <h1> for name, <div> for contact, <h2> for sections, <ul>/<li> for bullets.
-- No inline styles. No markdown wrappers. No pleasantries. Raw HTML only.`
+OUTPUT FORMAT — complete LaTeX document using EXACTLY this structure:
+\\documentclass[10pt]{article}
+\\usepackage[top=0.65in,bottom=0.65in,left=0.7in,right=0.7in]{geometry}
+\\pagestyle{empty}
+\\setlength{\\parindent}{0pt}
+\\setlength{\\parskip}{3pt}
+
+\\begin{document}
+
+\\begin{center}
+{\\Large\\textbf{FULL NAME}}\\\\[2pt]
+email \\quad|\\quad phone \\quad|\\quad City, ST
+\\end{center}
+\\noindent\\rule{\\linewidth}{0.5pt}
+
+\\vspace{2pt}\\noindent\\textbf{\\large PROFESSIONAL SUMMARY}\\\\[-2pt]
+\\noindent\\rule{\\linewidth}{0.3pt}\\\\[2pt]
+Summary text.
+
+\\vspace{4pt}\\noindent\\textbf{\\large EXPERIENCE}\\\\[-2pt]
+\\noindent\\rule{\\linewidth}{0.3pt}
+
+\\noindent\\textbf{Job Title} \\hfill \\textit{Month Year -- Present}\\\\
+\\textit{Company, City, ST}
+\\begin{itemize}\\setlength\\itemsep{1pt}
+  \\item Bullet with metric.
+\\end{itemize}
+
+\\vspace{4pt}\\noindent\\textbf{\\large EDUCATION}\\\\[-2pt]
+\\noindent\\rule{\\linewidth}{0.3pt}
+
+\\noindent\\textbf{Degree} \\hfill \\textit{Year}\\\\
+\\textit{University}
+
+\\vspace{4pt}\\noindent\\textbf{\\large SKILLS}\\\\[-2pt]
+\\noindent\\rule{\\linewidth}{0.3pt}
+
+\\noindent\\textbf{Category:} skill1, skill2
+
+\\end{document}
+
+Output ONLY raw LaTeX starting with \\documentclass. No markdown fences, no explanation.`
 
 export function createWriteResumeNode() {
   return async function writeResumeNode(
@@ -191,15 +230,20 @@ ${state.resumeContext}
 
 Generate the tailored resume as raw HTML. Max ~400 words. One page only.`
 
-    const html = await withRetry(() =>
+    const raw = await withRetry(() =>
       callClaudeText(WRITER_SYSTEM, prompt, {
         model: 'claude-sonnet-4-6',
         maxTokens: 4096,
       })
     )
 
+    const latex = raw
+      .replace(/```latex\s*/gi, '')
+      .replace(/```\s*/g, '')
+      .trim()
+
     return {
-      generatedHtml: html.replace(/```html/i, '').replace(/```/g, '').trim(),
+      generatedHtml: latex,
       writerRetries: state.writerRetries + 1,
     }
   }

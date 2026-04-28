@@ -49,7 +49,7 @@ export default async function ResumeEditPage({ params }: { params: { id: string 
   return (
     <ResumeEditor
       historyId={item.id}
-      initialHtml={item.generated_resume}
+      initialLatex={item.generated_resume}
       jobTitle={item.job_title || 'Untitled role'}
       jobUrl={item.job_url || ''}
       siteName={item.site_name || ''}
