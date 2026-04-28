@@ -110,21 +110,24 @@ export default function Navbar() {
           </Link>
 
           {/* Desktop nav */}
-          <nav className="hidden md:flex items-center gap-8">
-            {(user ? APP_NAV : MARKETING_NAV).map(link => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={`group flex items-baseline gap-2 text-[15px] transition-colors ${
-                  pathname === link.href || (link.href !== '/dashboard' && pathname.startsWith(link.href))
-                    ? 'text-ink-900'
-                    : 'text-ink-500 hover:text-ink-900'
-                }`}
-              >
-                <span className="font-mono text-[10px] text-ink-400 tracking-caps">№{link.num}</span>
-                {link.label}
-              </Link>
-            ))}
+          <nav className="hidden md:flex items-center gap-2">
+            {(user ? APP_NAV : MARKETING_NAV).map(link => {
+              const active = pathname === link.href || (link.href !== '/dashboard' && pathname.startsWith(link.href))
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={`flex items-baseline gap-1.5 text-[15px] transition-colors px-3 py-1 rounded-full ${
+                    active
+                      ? 'bg-[#D7FF3A] text-ink-900'
+                      : 'text-ink-500 hover:text-ink-900'
+                  }`}
+                >
+                  <span className={`font-mono text-[10px] tracking-caps ${active ? 'text-ink-600' : 'text-ink-400'}`}>№{link.num}</span>
+                  {link.label}
+                </Link>
+              )
+            })}
           </nav>
 
           {/* Right actions */}
@@ -189,17 +192,20 @@ export default function Navbar() {
 
       {menuOpen && (
         <div className="md:hidden bg-cream border-b border-ink-200 px-6 py-4 space-y-1">
-          {(user ? APP_NAV : MARKETING_NAV).map(link => (
-            <Link
-              key={link.href}
-              href={link.href}
-              onClick={() => setMenuOpen(false)}
-              className="flex items-baseline gap-3 py-3 text-[15px] text-ink-900"
-            >
-              <span className="font-mono text-[10px] text-ink-400 tracking-caps">№{link.num}</span>
-              {link.label}
-            </Link>
-          ))}
+          {(user ? APP_NAV : MARKETING_NAV).map(link => {
+            const active = pathname === link.href || (link.href !== '/dashboard' && pathname.startsWith(link.href))
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                onClick={() => setMenuOpen(false)}
+                className={`flex items-baseline gap-3 py-2.5 px-3 rounded-full text-[15px] transition-colors ${active ? 'bg-[#D7FF3A] text-ink-900' : 'text-ink-900'}`}
+              >
+                <span className={`font-mono text-[10px] tracking-caps ${active ? 'text-ink-600' : 'text-ink-400'}`}>№{link.num}</span>
+                {link.label}
+              </Link>
+            )
+          })}
           <div className="pt-3 mt-3 border-t border-ink-200 flex flex-col gap-1">
             {user ? (
               <>
