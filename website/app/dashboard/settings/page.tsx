@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import SignOutButton from './SignOutButton'
+import DangerZone from './DangerZone'
 
 export default async function SettingsPage() {
   const supabase = createClient()
@@ -60,10 +61,7 @@ export default async function SettingsPage() {
         </div>
       </section>
 
-      {/* More sections — usage analytics, delete account — coming soon */}
-      <section className="border border-dashed border-ink-300 rounded-xl p-8 text-center text-ink-400 text-[15px]">
-        Usage analytics and data deletion coming soon.
-      </section>
+      <DangerZone />
 
       {/* Sign out */}
       <section className="border border-ink-200 rounded-xl p-6">
