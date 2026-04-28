@@ -228,7 +228,7 @@ ${critiqueSection}${feedbackSection}${companySection}
 RESUME CONTEXT:
 ${state.resumeContext}
 
-Generate the tailored resume as raw HTML. Max ~400 words. One page only.`
+Generate the tailored resume as LaTeX starting with \\documentclass. One page only.`
 
     const raw = await withRetry(() =>
       callClaudeText(WRITER_SYSTEM, prompt, {

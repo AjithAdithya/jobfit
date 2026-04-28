@@ -4,7 +4,7 @@ import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import {
   ArrowLeft, Save, Loader2, FileText, Sparkles, RefreshCw,
-  Download, Printer, Code, Eye,
+  Download, Printer, RefreshCcw,
 } from 'lucide-react'
 
 const LatexPreview = dynamic(() => import('./LatexPreview'), { ssr: false })
@@ -41,7 +41,7 @@ const NODE_LABELS: Record<string, string> = {
 
 export default function ResumeEditor(props: Props) {
   const [latex, setLatex] = useState(props.initialLatex)
-  const [viewMode, setViewMode] = useState<'preview' | 'source'>('preview')
+  const [recompileKey, setRecompileKey] = useState(0)
   const [edits, setEdits] = useState<EditEntry[]>([])
 
   // AI modification
@@ -84,7 +84,7 @@ export default function ResumeEditor(props: Props) {
       setEdits(prev => [{ id: crypto.randomUUID(), instruction: instruction.trim(), at: Date.now() }, ...prev])
       setLatex(modified)
       setInstruction('')
-      if (viewMode === 'source') setViewMode('preview')
+      setRecompileKey(k => k + 1)
     } catch (err: unknown) {
       setModifyError(err instanceof Error ? err.message : 'Modification failed')
     } finally {
@@ -312,25 +312,9 @@ export default function ResumeEditor(props: Props) {
             </div>
           </aside>
 
-          {/* Center — preview / source */}
+          {/* Center — Overleaf-style split: source (left) | PDF preview (right) */}
           <main className="col-span-6">
-            {/* Tab bar */}
-            <div className="flex border border-ink-200 rounded-t-md overflow-hidden mb-0">
-              <button
-                onClick={() => setViewMode('preview')}
-                className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-[11px] font-mono tracking-caps uppercase transition-colors ${viewMode === 'preview' ? 'bg-ink-900 text-cream' : 'text-ink-500 hover:text-ink-900'}`}
-              >
-                <Eye className="w-3 h-3" /> preview
-              </button>
-              <button
-                onClick={() => setViewMode('source')}
-                className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-[11px] font-mono tracking-caps uppercase transition-colors ${viewMode === 'source' ? 'bg-ink-900 text-cream' : 'text-ink-500 hover:text-ink-900'}`}
-              >
-                <Code className="w-3 h-3" /> source
-              </button>
-            </div>
-
-            <div className="border border-t-0 border-ink-200 rounded-b-md bg-white relative overflow-hidden">
+            <div className="flex gap-0 border border-ink-200 rounded-md overflow-hidden relative" style={{ minHeight: '940px' }}>
               {/* Generation overlay */}
               {generating && (
                 <div className="absolute inset-0 bg-cream/80 backdrop-blur-sm flex flex-col items-center justify-center gap-3 z-10">
@@ -341,20 +325,35 @@ export default function ResumeEditor(props: Props) {
                 </div>
               )}
 
-              {viewMode === 'preview' && (
-                <div className="latex-print-target p-2 min-h-[900px]">
-                  <LatexPreview source={latex} />
+              {/* Source pane */}
+              <div className="flex flex-col w-1/2 border-r border-ink-200">
+                <div className="px-3 py-1.5 border-b border-ink-200 bg-ink-50">
+                  <span className="font-mono text-[9px] text-ink-400 tracking-caps uppercase">source</span>
                 </div>
-              )}
-
-              {viewMode === 'source' && (
                 <textarea
                   value={latex}
                   onChange={e => setLatex(e.target.value)}
                   spellCheck={false}
-                  className="w-full font-mono text-[11px] text-ink-800 leading-relaxed p-4 min-h-[900px] resize-none focus:outline-none bg-ink-50"
+                  className="flex-1 w-full font-mono text-[11px] text-ink-800 leading-relaxed p-3 resize-none focus:outline-none bg-white"
+                  style={{ minHeight: '900px' }}
                 />
-              )}
+              </div>
+
+              {/* Preview pane */}
+              <div className="flex flex-col w-1/2">
+                <div className="px-3 py-1.5 border-b border-ink-200 bg-ink-50 flex items-center justify-between">
+                  <span className="font-mono text-[9px] text-ink-400 tracking-caps uppercase">preview</span>
+                  <button
+                    onClick={() => setRecompileKey(k => k + 1)}
+                    className="flex items-center gap-1 px-2 py-0.5 text-[9px] font-mono tracking-caps uppercase text-ink-500 hover:text-ink-900 hover:bg-ink-100 rounded transition-colors"
+                  >
+                    <RefreshCcw className="w-2.5 h-2.5" /> recompile
+                  </button>
+                </div>
+                <div className="latex-print-target flex-1 overflow-auto bg-white">
+                  <LatexPreview key={recompileKey} source={latex} />
+                </div>
+              </div>
             </div>
           </main>
 

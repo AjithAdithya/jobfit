@@ -2,9 +2,10 @@
 import { useEffect, useRef, useState } from 'react'
 import { Loader2 } from 'lucide-react'
 
+type Status = 'idle' | 'loading-engine' | 'compiling' | 'done' | 'error'
+
 function isLatex(s: string) {
-  const t = s.trimStart()
-  return t.startsWith('\\documentclass') || t.startsWith('\\begin{')
+  return s.trimStart().startsWith('\\documentclass')
 }
 
 interface Props {
@@ -13,93 +14,101 @@ interface Props {
 }
 
 export default function LatexPreview({ source, className = '' }: Props) {
-  const [srcdoc, setSrcdoc] = useState<string | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [iframeHeight, setIframeHeight] = useState(1100)
-  const iframeRef = useRef<HTMLIFrameElement>(null)
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null)
+  const [status, setStatus] = useState<Status>('idle')
+  const [error, setError] = useState<string | null>(null)
+  const prevUrl = useRef<string | null>(null)
 
   useEffect(() => {
-    if (!source.trim()) return
-    setLoading(true)
+    if (!source.trim() || !isLatex(source)) return
+    let cancelled = false
 
-    if (!isLatex(source)) {
-      const html = `<!DOCTYPE html><html><body style="margin:0;padding:16px;font-family:sans-serif">${source}</body></html>`
-      setSrcdoc(html)
-      return
-    }
+    async function run() {
+      setStatus('loading-engine')
+      setError(null)
 
-    const escaped = JSON.stringify(source)
-    const doc = `<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/latex.js@0.12.6/dist/css/base.css">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/latex.js@0.12.6/dist/css/article.css">
-  <style>
-    html, body { margin: 0; padding: 0; background: white; }
-    .page { box-shadow: none !important; margin: 0 !important; }
-  </style>
-</head>
-<body>
-<script type="module">
-  import { HtmlGenerator, parse } from 'https://cdn.jsdelivr.net/npm/latex.js@0.12.6/dist/latex.mjs'
-  try {
-    const source = ${escaped}
-    const generator = new HtmlGenerator({ hyphenate: false })
-    parse(source, { generator })
-    const fragment = generator.domFragment()
-    document.body.innerHTML = ''
-    document.body.appendChild(fragment)
-    window.parent.postMessage({ type: 'latex-ready', height: document.body.scrollHeight }, '*')
-  } catch (e) {
-    document.body.innerHTML = '<pre style="color:red;padding:16px;font-size:12px;white-space:pre-wrap">' + String(e) + '</pre>'
-    window.parent.postMessage({ type: 'latex-error' }, '*')
-  }
-<\/script>
-</body>
-</html>`
-    setSrcdoc(doc)
-  }, [source])
-
-  useEffect(() => {
-    function onMessage(e: MessageEvent) {
-      if (e.data?.type === 'latex-ready') {
-        setLoading(false)
-        if (e.data.height > 100) setIframeHeight(e.data.height + 32)
-      } else if (e.data?.type === 'latex-error') {
-        setLoading(false)
+      if (!(window as any).PdfTeXEngine) {
+        await new Promise<void>((resolve, reject) => {
+          const existing = document.querySelector('script[data-swiftlatex]')
+          if (existing) { resolve(); return }
+          const s = document.createElement('script')
+          s.src = 'https://swiftlatex.github.io/SwiftLaTeX/dist/pdftexengine.js'
+          s.setAttribute('data-swiftlatex', '1')
+          s.onload = () => resolve()
+          s.onerror = () => reject(new Error('Failed to load SwiftLaTeX engine'))
+          document.head.appendChild(s)
+        })
       }
+
+      if (cancelled) return
+
+      const Engine = (window as any).PdfTeXEngine
+      const engine = new Engine()
+      await engine.loadEngine()
+
+      if (cancelled) return
+
+      setStatus('compiling')
+      engine.writeMemFSFile('main.tex', source)
+      engine.setEngineMainFile('main.tex')
+      const result = await engine.compileLaTeX()
+
+      if (cancelled) return
+
+      if (result.status !== 0) {
+        throw new Error(result.log?.slice(-3000) || 'Compile error')
+      }
+
+      const blob = new Blob([result.pdf], { type: 'application/pdf' })
+      const url = URL.createObjectURL(blob)
+      if (prevUrl.current) URL.revokeObjectURL(prevUrl.current)
+      prevUrl.current = url
+      setPdfUrl(url)
+      setStatus('done')
     }
-    window.addEventListener('message', onMessage)
-    return () => window.removeEventListener('message', onMessage)
-  }, [])
+
+    run().catch(e => {
+      if (!cancelled) {
+        setError(String(e))
+        setStatus('error')
+      }
+    })
+
+    return () => { cancelled = true }
+  }, [source])
 
   if (!source.trim()) return null
 
+  if (!isLatex(source)) {
+    return <div className={className} dangerouslySetInnerHTML={{ __html: source }} />
+  }
+
   return (
     <div className={`relative ${className}`}>
-      {loading && (
-        <div className="flex items-center justify-center p-10 text-ink-400">
-          <Loader2 className="w-5 h-5 animate-spin mr-2" />
-          <span className="text-[13px]">rendering…</span>
+      {(status === 'loading-engine' || status === 'compiling') && (
+        <div className="flex items-center justify-center p-10 text-ink-400 gap-2">
+          <Loader2 className="w-5 h-5 animate-spin" />
+          <span className="text-[13px]">
+            {status === 'loading-engine' ? 'loading engine…' : 'compiling…'}
+          </span>
         </div>
       )}
-      {srcdoc && (
+      {status === 'error' && (
+        <pre className="p-4 text-[11px] text-red-600 bg-red-50 whitespace-pre-wrap overflow-auto max-h-[300px]">
+          {error}
+        </pre>
+      )}
+      {pdfUrl && (
         <iframe
-          ref={iframeRef}
-          srcDoc={srcdoc}
+          src={pdfUrl}
           style={{
             border: 'none',
             width: '100%',
-            height: `${iframeHeight}px`,
-            display: loading ? 'none' : 'block',
+            height: '1100px',
+            display: status === 'done' ? 'block' : 'none',
             background: 'white',
           }}
-          onLoad={() => {
-            if (!isLatex(source)) setLoading(false)
-          }}
-          sandbox="allow-scripts"
-          title="LaTeX Preview"
+          title="Resume Preview"
         />
       )}
     </div>

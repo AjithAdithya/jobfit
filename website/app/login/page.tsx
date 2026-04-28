@@ -20,6 +20,7 @@ export default function LoginPage() {
     if (!accessToken || !refreshToken) return
 
     setLoading(true)
+    const redirectTo = params.get('redirect') || '/dashboard'
     const supabase = createClient()
     supabase.auth
       .setSession({ access_token: accessToken, refresh_token: refreshToken })
@@ -28,7 +29,7 @@ export default function LoginPage() {
           setError('Could not sign in from extension. Please sign in manually.')
           setLoading(false)
         } else {
-          router.replace('/dashboard')
+          router.replace(redirectTo)
         }
       })
   }, [router])

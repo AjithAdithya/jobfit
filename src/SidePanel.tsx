@@ -359,31 +359,14 @@ const SidePanel: React.FC = () => {
     URL.revokeObjectURL(url)
   }
 
-  const handleDownloadPdf = () => {
-    if (!generatedResume) return
-    const escaped = JSON.stringify(generatedResume)
-    const html = `<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <title>JobFit Resume</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/latex.js@0.12.6/dist/css/base.css">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/latex.js@0.12.6/dist/css/article.css">
-  <style>@page { size: letter; margin: 0; } @media print { html, body { margin: 0; } .page { box-shadow: none !important; } }</style>
-</head>
-<body>
-<script type="module">
-  import { HtmlGenerator, parse } from 'https://cdn.jsdelivr.net/npm/latex.js@0.12.6/dist/latex.mjs'
-  const source = ${escaped}
-  const generator = new HtmlGenerator({ hyphenate: false })
-  parse(source, { generator })
-  document.body.innerHTML = ''
-  document.body.appendChild(generator.domFragment())
-  window.onload = function() { window.print() }
-<\/script>
-</body>
-</html>`
-    const url = 'data:text/html;charset=utf-8,' + encodeURIComponent(html)
+  const handleOpenInEditor = async () => {
+    const { data: { session } } = await supabase.auth.getSession()
+    const histItem = useUIStore.getState().activeHistoryItem
+    if (!histItem?.id) return
+    let url = `${WEBSITE_URL}/dashboard/history/${histItem.id}/edit`
+    if (session) {
+      url = `${WEBSITE_URL}/login#access_token=${session.access_token}&refresh_token=${session.refresh_token}&type=bearer&redirect=/dashboard/history/${histItem.id}/edit`
+    }
     chrome.tabs.create({ url })
   }
 
@@ -1021,11 +1004,11 @@ const SidePanel: React.FC = () => {
                           .TEX
                         </button>
                         <button
-                          onClick={handleDownloadPdf}
+                          onClick={handleOpenInEditor}
                           className="flex items-center justify-center gap-2 p-3 bg-ink-900 hover:bg-ink-700 text-cream font-bold uppercase tracking-widest text-xs transition-all shadow-print-sm active:scale-95 border border-ink-900"
                         >
                           <Download className="w-4 h-4" />
-                          PDF
+                          Edit + PDF
                         </button>
                         {driveConnected && (
                           <button
