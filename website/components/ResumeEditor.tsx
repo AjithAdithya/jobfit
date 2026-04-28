@@ -1,12 +1,16 @@
 'use client'
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   ArrowLeft, Save, Loader2, FileText, Sparkles, RefreshCw,
-  Download, Printer, RefreshCcw, ChevronLeft, ChevronRight, Minimize2,
+  Download, RefreshCcw, ChevronLeft, ChevronRight, Minimize2,
+  Palette, Check, Trash2,
 } from 'lucide-react'
+import { createClient } from '@/lib/supabase/client'
+import { DEFAULT_RESUME_STYLE } from '@/lib/types'
+import type { ResumeStyle } from '@/lib/types'
 
 const LatexPreview = dynamic(() => import('./LatexPreview'), { ssr: false })
 
@@ -32,6 +36,13 @@ interface EditEntry {
   at: number
 }
 
+interface StylePreset {
+  id: string
+  name: string
+  instruction: string
+  style_json: ResumeStyle
+}
+
 const NODE_LABELS: Record<string, string> = {
   retrieve_context: 'retrieving context',
   write_resume: 'writing resume',
@@ -46,13 +57,40 @@ const GLASS_STYLE = {
   WebkitBackdropFilter: 'blur(6px)',
 } as const
 
+const LATEX_FONTS = [
+  { value: 'Latin Modern', label: 'Latin Modern (default)' },
+  { value: 'TeX Gyre Termes', label: 'TeX Gyre Termes (Times)' },
+  { value: 'TeX Gyre Heros', label: 'TeX Gyre Heros (Helvetica)' },
+  { value: 'TeX Gyre Pagella', label: 'TeX Gyre Pagella (Palatino)' },
+  { value: 'TeX Gyre Bonum', label: 'TeX Gyre Bonum (Bookman)' },
+  { value: 'EB Garamond', label: 'EB Garamond' },
+  { value: 'Lato', label: 'Lato (modern sans)' },
+  { value: 'Source Sans Pro', label: 'Source Sans Pro' },
+]
+
+const COLOR_SWATCHES = [
+  '#000000', '#1B2A4A', '#1A3A2A', '#6B2737', '#2D3748', '#7C3AED',
+]
+
 export default function ResumeEditor(props: Props) {
   const [latex, setLatex] = useState(props.initialLatex)
   const [recompileKey, setRecompileKey] = useState(0)
   const [edits, setEdits] = useState<EditEntry[]>([])
 
+  const [leftTab, setLeftTab] = useState<'context' | 'style'>('context')
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [floatOpen, setFloatOpen] = useState(true)
+
+  // Style panel
+  const [style, setStyle] = useState<ResumeStyle>(DEFAULT_RESUME_STYLE)
+  const [presets, setPresets] = useState<StylePreset[]>([])
+  const [presetsLoaded, setPresetsLoaded] = useState(false)
+  const [restyling, setRestyling] = useState(false)
+  const [restyleError, setRestyleError] = useState<string | null>(null)
+  const [savingPreset, setSavingPreset] = useState(false)
+  const [presetName, setPresetName] = useState('')
+  const [showSavePreset, setShowSavePreset] = useState(false)
+  const [appliedPresetId, setAppliedPresetId] = useState<string | null>(null)
 
   // AI modification
   const [instruction, setInstruction] = useState('')
@@ -68,6 +106,26 @@ export default function ResumeEditor(props: Props) {
   const [generating, setGenerating] = useState(false)
   const [currentNode, setCurrentNode] = useState<string | null>(null)
   const [genError, setGenError] = useState<string | null>(null)
+
+  const busy = generating || modifying || restyling
+
+  // Load presets lazily when style tab first opened
+  useEffect(() => {
+    if (leftTab !== 'style' || presetsLoaded) return
+    const supabase = createClient()
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) return
+      supabase
+        .from('style_presets')
+        .select('id, name, instruction, style_json')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .then(({ data }) => {
+          if (data) setPresets(data as StylePreset[])
+          setPresetsLoaded(true)
+        })
+    })
+  }, [leftTab, presetsLoaded])
 
   const handleModify = async () => {
     if (!instruction.trim()) return
@@ -100,6 +158,70 @@ export default function ResumeEditor(props: Props) {
     } finally {
       setModifying(false)
     }
+  }
+
+  const handleRestyle = async () => {
+    setRestyling(true)
+    setRestyleError(null)
+    setShowSavePreset(false)
+    try {
+      const res = await fetch('/api/resume/restyle', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ latex, style }),
+      })
+      const json = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error((json as any).error || `Server error ${res.status}`)
+      const restyled: string = (json as any).latex
+      if (!restyled) throw new Error('Empty response from server')
+      setLatex(restyled)
+      setRecompileKey(k => k + 1)
+      setShowSavePreset(true)
+      setAppliedPresetId(null)
+    } catch (err: unknown) {
+      setRestyleError(err instanceof Error ? err.message : 'Restyle failed')
+    } finally {
+      setRestyling(false)
+    }
+  }
+
+  const handleSavePreset = async () => {
+    if (!presetName.trim()) return
+    setSavingPreset(true)
+    try {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error('Not authenticated')
+      const { data } = await supabase
+        .from('style_presets')
+        .insert({ user_id: user.id, name: presetName.trim(), instruction: '', style_json: style })
+        .select('id, name, instruction, style_json')
+        .single()
+      if (data) {
+        setPresets(prev => [data as StylePreset, ...prev])
+        setAppliedPresetId(data.id)
+      }
+      setPresetName('')
+      setShowSavePreset(false)
+    } catch (err: unknown) {
+      setRestyleError(err instanceof Error ? err.message : 'Save failed')
+    } finally {
+      setSavingPreset(false)
+    }
+  }
+
+  const handleLoadPreset = (preset: StylePreset) => {
+    setStyle(preset.style_json)
+    setAppliedPresetId(preset.id)
+    setShowSavePreset(false)
+  }
+
+  const handleDeletePreset = async (id: string, e: React.MouseEvent) => {
+    e.stopPropagation()
+    const supabase = createClient()
+    await supabase.from('style_presets').delete().eq('id', id)
+    setPresets(prev => prev.filter(p => p.id !== id))
+    if (appliedPresetId === id) setAppliedPresetId(null)
   }
 
   const handleSave = async () => {
@@ -185,9 +307,14 @@ export default function ResumeEditor(props: Props) {
     URL.revokeObjectURL(url)
   }, [latex, props.jobTitle])
 
-  const handlePrint = useCallback(() => {
-    window.print()
-  }, [])
+  const setStyleField = <K extends keyof ResumeStyle>(key: K, value: ResumeStyle[K]) =>
+    setStyle(s => ({ ...s, [key]: value }))
+
+  const setStyleNested = <K extends keyof ResumeStyle>(
+    key: K,
+    sub: keyof ResumeStyle[K],
+    value: unknown,
+  ) => setStyle(s => ({ ...s, [key]: { ...(s[key] as object), [sub]: value } }))
 
   return (
     <>
@@ -209,9 +336,7 @@ export default function ResumeEditor(props: Props) {
               <ArrowLeft className="w-3.5 h-3.5" /> back to analysis
             </Link>
             <p className="font-mono text-[10px] text-crimson-500 tracking-caps uppercase mb-2">resume editor</p>
-            <h1 className="font-chunk text-[36px] leading-tight tracking-tight text-ink-900">
-              {props.jobTitle}
-            </h1>
+            <h1 className="font-chunk text-[36px] leading-tight tracking-tight text-ink-900">{props.jobTitle}</h1>
             <p className="text-[13px] text-ink-500 mt-1">{props.siteName}</p>
           </div>
           <div className="flex items-center gap-3 flex-wrap justify-end">
@@ -224,7 +349,7 @@ export default function ResumeEditor(props: Props) {
             {saveError && <span className="text-[11px] text-flare">{saveError}</span>}
             <button
               onClick={handleRegenerate}
-              disabled={generating || saving}
+              disabled={busy || saving}
               className="inline-flex items-center gap-2 px-4 py-2.5 border border-ink-300 text-ink-700 text-[13px] rounded-md hover:border-ink-900 hover:text-ink-900 disabled:opacity-50 transition-colors"
             >
               {generating ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
@@ -232,7 +357,7 @@ export default function ResumeEditor(props: Props) {
             </button>
             <button
               onClick={handleSave}
-              disabled={saving || generating}
+              disabled={saving || busy}
               className="inline-flex items-center gap-2 px-5 py-2.5 bg-ink-900 text-cream font-medium text-[13px] rounded-md hover:bg-crimson-500 disabled:opacity-50"
             >
               {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
@@ -244,94 +369,306 @@ export default function ResumeEditor(props: Props) {
         {/* Grid */}
         <div className="grid grid-cols-12 gap-6">
 
-          {/* Left rail — collapsible match context */}
+          {/* Left rail */}
           {!sidebarCollapsed && (
             <aside className="col-span-3">
               <div className="border border-ink-200 rounded-md bg-cream sticky top-24 text-[12px] max-h-[calc(100vh-160px)] overflow-y-auto">
-                <div className="px-4 py-3 flex items-center justify-between border-b border-ink-100">
-                  <p className="font-mono text-[9px] text-ink-400 tracking-caps uppercase">match context</p>
+
+                {/* Tab bar */}
+                <div className="flex items-center border-b border-ink-100">
+                  <button
+                    onClick={() => setLeftTab('context')}
+                    className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-[9px] font-mono tracking-caps uppercase transition-colors ${leftTab === 'context' ? 'text-ink-900 bg-ink-50' : 'text-ink-400 hover:text-ink-700'}`}
+                  >
+                    <FileText className="w-3 h-3" /> context
+                  </button>
+                  <button
+                    onClick={() => setLeftTab('style')}
+                    className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-[9px] font-mono tracking-caps uppercase transition-colors ${leftTab === 'style' ? 'text-ink-900 bg-ink-50' : 'text-ink-400 hover:text-ink-700'}`}
+                  >
+                    <Palette className="w-3 h-3" /> style
+                  </button>
                   <button
                     onClick={() => setSidebarCollapsed(true)}
-                    className="text-ink-400 hover:text-ink-900 transition-colors"
+                    className="px-2.5 py-2.5 text-ink-400 hover:text-ink-900 transition-colors border-l border-ink-100"
                     title="Collapse"
                   >
-                    <ChevronLeft className="w-4 h-4" />
+                    <ChevronLeft className="w-3.5 h-3.5" />
                   </button>
                 </div>
 
-                <div className="p-4 space-y-5">
-                  {/* Score */}
-                  <div>
-                    <p className="font-mono text-[9px] text-ink-400 tracking-caps uppercase mb-1">match score</p>
-                    <div className="flex items-baseline gap-1">
-                      <span className="font-chunk text-[32px] leading-none tracking-tight text-ink-900 num">{props.score}</span>
-                      <span className="num text-[11px] text-ink-400">/100</span>
-                    </div>
-                  </div>
-
-                  {/* Base resume */}
-                  <div>
-                    <p className="font-mono text-[9px] text-ink-400 tracking-caps uppercase mb-2">base resume</p>
-                    {props.baseResumeName ? (
-                      <div className="flex items-start gap-2 p-2 border border-ink-200 rounded-sm">
-                        <FileText className="w-3.5 h-3.5 mt-0.5 text-ink-500 shrink-0" />
-                        <span className="text-[12px] text-ink-700 break-all">{props.baseResumeName}</span>
+                {/* Context tab */}
+                {leftTab === 'context' && (
+                  <div className="p-4 space-y-5">
+                    <div>
+                      <p className="font-mono text-[9px] text-ink-400 tracking-caps uppercase mb-1">match score</p>
+                      <div className="flex items-baseline gap-1">
+                        <span className="font-chunk text-[32px] leading-none tracking-tight text-ink-900 num">{props.score}</span>
+                        <span className="num text-[11px] text-ink-400">/100</span>
                       </div>
-                    ) : (
-                      <p className="text-[11px] text-ink-400 italic">unknown source</p>
+                    </div>
+                    <div>
+                      <p className="font-mono text-[9px] text-ink-400 tracking-caps uppercase mb-2">base resume</p>
+                      {props.baseResumeName ? (
+                        <div className="flex items-start gap-2 p-2 border border-ink-200 rounded-sm">
+                          <FileText className="w-3.5 h-3.5 mt-0.5 text-ink-500 shrink-0" />
+                          <span className="text-[12px] text-ink-700 break-all">{props.baseResumeName}</span>
+                        </div>
+                      ) : (
+                        <p className="text-[11px] text-ink-400 italic">unknown source</p>
+                      )}
+                    </div>
+                    {props.keywords.length > 0 && (
+                      <div>
+                        <p className="font-mono text-[9px] text-ink-400 tracking-caps uppercase mb-2">target keywords</p>
+                        <div className="flex flex-wrap gap-1">
+                          {props.keywords.map((k, i) => {
+                            const on = props.selectedKeywords.includes(k)
+                            return (
+                              <span key={i} className={`px-2 py-0.5 text-[10px] rounded-sm border ${on ? 'bg-ink-900 text-cream border-ink-900' : 'border-ink-300 text-ink-500'}`}>
+                                {k}
+                              </span>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    )}
+                    {props.gaps.length > 0 && (
+                      <div>
+                        <p className="font-mono text-[9px] text-ink-400 tracking-caps uppercase mb-2">gaps addressed</p>
+                        <ul className="space-y-1.5">
+                          {props.gaps.map((g, i) => {
+                            const on = props.selectedGaps.includes(g)
+                            return (
+                              <li key={i} className="flex items-start gap-2">
+                                <span className={`w-1.5 h-1.5 mt-1.5 rounded-full shrink-0 ${on ? 'bg-citrus' : 'bg-ink-200'}`} />
+                                <span className={`text-[11px] leading-snug ${on ? 'text-ink-900' : 'text-ink-400'}`}>{g}</span>
+                              </li>
+                            )
+                          })}
+                        </ul>
+                      </div>
+                    )}
+                    {props.matches.length > 0 && (
+                      <div>
+                        <p className="font-mono text-[9px] text-ink-400 tracking-caps uppercase mb-2">strengths leveraged</p>
+                        <ul className="space-y-1">
+                          {props.matches.map((m, i) => (
+                            <li key={i} className="flex items-start gap-2">
+                              <span className="font-mono text-[9px] text-ink-400 num">{String(i + 1).padStart(2, '0')}</span>
+                              <span className="text-[11px] text-ink-700 leading-snug">{m}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
                     )}
                   </div>
+                )}
 
-                  {/* Keywords */}
-                  {props.keywords.length > 0 && (
+                {/* Style tab */}
+                {leftTab === 'style' && (
+                  <div className="p-4 space-y-5">
+
+                    {/* Template */}
                     <div>
-                      <p className="font-mono text-[9px] text-ink-400 tracking-caps uppercase mb-2">target keywords</p>
-                      <div className="flex flex-wrap gap-1">
-                        {props.keywords.map((k, i) => {
-                          const on = props.selectedKeywords.includes(k)
-                          return (
-                            <span key={i} className={`px-2 py-0.5 text-[10px] rounded-sm border ${on ? 'bg-ink-900 text-cream border-ink-900' : 'border-ink-300 text-ink-500'}`}>
-                              {k}
-                            </span>
-                          )
-                        })}
+                      <p className="font-mono text-[9px] text-ink-400 tracking-caps uppercase mb-2">template</p>
+                      <div className="grid grid-cols-3 gap-px bg-ink-200 border border-ink-200 rounded-sm overflow-hidden">
+                        {(['classic', 'modern', 'compact'] as const).map(t => (
+                          <button
+                            key={t}
+                            onClick={() => setStyleField('template', t)}
+                            className={`py-1.5 text-[9px] font-mono tracking-caps uppercase transition-colors ${style.template === t ? 'bg-ink-900 text-cream' : 'bg-cream text-ink-500 hover:bg-ink-50'}`}
+                          >
+                            {t}
+                          </button>
+                        ))}
                       </div>
                     </div>
-                  )}
 
-                  {/* Gaps */}
-                  {props.gaps.length > 0 && (
+                    {/* Columns */}
                     <div>
-                      <p className="font-mono text-[9px] text-ink-400 tracking-caps uppercase mb-2">gaps addressed</p>
-                      <ul className="space-y-1.5">
-                        {props.gaps.map((g, i) => {
-                          const on = props.selectedGaps.includes(g)
-                          return (
-                            <li key={i} className="flex items-start gap-2">
-                              <span className={`w-1.5 h-1.5 mt-1.5 rounded-full shrink-0 ${on ? 'bg-citrus' : 'bg-ink-200'}`} />
-                              <span className={`text-[11px] leading-snug ${on ? 'text-ink-900' : 'text-ink-400'}`}>{g}</span>
-                            </li>
-                          )
-                        })}
-                      </ul>
-                    </div>
-                  )}
-
-                  {/* Matches */}
-                  {props.matches.length > 0 && (
-                    <div>
-                      <p className="font-mono text-[9px] text-ink-400 tracking-caps uppercase mb-2">strengths leveraged</p>
-                      <ul className="space-y-1">
-                        {props.matches.map((m, i) => (
-                          <li key={i} className="flex items-start gap-2">
-                            <span className="font-mono text-[9px] text-ink-400 num">{String(i + 1).padStart(2, '0')}</span>
-                            <span className="text-[11px] text-ink-700 leading-snug">{m}</span>
-                          </li>
+                      <p className="font-mono text-[9px] text-ink-400 tracking-caps uppercase mb-2">columns</p>
+                      <div className="grid grid-cols-2 gap-px bg-ink-200 border border-ink-200 rounded-sm overflow-hidden">
+                        {([1, 2] as const).map(c => (
+                          <button
+                            key={c}
+                            onClick={() => setStyleField('columns', c)}
+                            className={`py-1.5 text-[9px] font-mono tracking-caps uppercase transition-colors ${style.columns === c ? 'bg-ink-900 text-cream' : 'bg-cream text-ink-500 hover:bg-ink-50'}`}
+                          >
+                            {c} col
+                          </button>
                         ))}
-                      </ul>
+                      </div>
                     </div>
-                  )}
-                </div>
+
+                    {/* Fonts */}
+                    <div className="space-y-2">
+                      <p className="font-mono text-[9px] text-ink-400 tracking-caps uppercase">fonts</p>
+                      <div>
+                        <label className="text-[10px] text-ink-500 mb-0.5 block">heading</label>
+                        <select
+                          value={style.fontFamily.heading}
+                          onChange={e => setStyleNested('fontFamily', 'heading', e.target.value)}
+                          className="w-full text-[11px] p-1.5 border border-ink-200 rounded-sm focus:outline-none focus:border-ink-900 bg-white"
+                        >
+                          {LATEX_FONTS.map(f => <option key={f.value} value={f.value}>{f.label}</option>)}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="text-[10px] text-ink-500 mb-0.5 block">body</label>
+                        <select
+                          value={style.fontFamily.body}
+                          onChange={e => setStyleNested('fontFamily', 'body', e.target.value)}
+                          className="w-full text-[11px] p-1.5 border border-ink-200 rounded-sm focus:outline-none focus:border-ink-900 bg-white"
+                        >
+                          {LATEX_FONTS.map(f => <option key={f.value} value={f.value}>{f.label}</option>)}
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* Primary color */}
+                    <div>
+                      <p className="font-mono text-[9px] text-ink-400 tracking-caps uppercase mb-2">accent color</p>
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        {COLOR_SWATCHES.map(c => (
+                          <button
+                            key={c}
+                            onClick={() => setStyleNested('colors', 'primary', c)}
+                            title={c}
+                            className={`w-5 h-5 rounded-full border-2 transition-all ${style.colors.primary === c ? 'border-ink-900 scale-110' : 'border-transparent'}`}
+                            style={{ background: c }}
+                          />
+                        ))}
+                        <input
+                          type="color"
+                          value={style.colors.primary}
+                          onChange={e => setStyleNested('colors', 'primary', e.target.value)}
+                          className="w-5 h-5 rounded-full border border-ink-200 cursor-pointer"
+                          title="Custom color"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Font sizes */}
+                    <div className="space-y-2">
+                      <p className="font-mono text-[9px] text-ink-400 tracking-caps uppercase">font sizes</p>
+                      {([
+                        { key: 'name', label: 'name', min: 16, max: 28 },
+                        { key: 'heading', label: 'sections', min: 10, max: 16 },
+                        { key: 'body', label: 'body', min: 9, max: 13 },
+                      ] as const).map(({ key, label, min, max }) => (
+                        <div key={key} className="flex items-center gap-2">
+                          <label className="text-[10px] text-ink-500 w-12 shrink-0">{label}</label>
+                          <input
+                            type="range" min={min} max={max} step={0.5}
+                            value={style.fontSize[key]}
+                            onChange={e => setStyleNested('fontSize', key, Number(e.target.value))}
+                            className="flex-1 h-1 accent-ink-900"
+                          />
+                          <span className="text-[10px] text-ink-500 w-7 text-right num">{style.fontSize[key]}pt</span>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Spacing */}
+                    <div className="space-y-2">
+                      <p className="font-mono text-[9px] text-ink-400 tracking-caps uppercase">spacing</p>
+                      <div className="flex items-center gap-2">
+                        <label className="text-[10px] text-ink-500 w-12 shrink-0">sections</label>
+                        <input
+                          type="range" min={6} max={24} step={1}
+                          value={style.spacing.section}
+                          onChange={e => setStyleNested('spacing', 'section', Number(e.target.value))}
+                          className="flex-1 h-1 accent-ink-900"
+                        />
+                        <span className="text-[10px] text-ink-500 w-7 text-right num">{style.spacing.section}pt</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <label className="text-[10px] text-ink-500 w-12 shrink-0">leading</label>
+                        <input
+                          type="range" min={1.0} max={1.8} step={0.05}
+                          value={style.spacing.lineHeight}
+                          onChange={e => setStyleNested('spacing', 'lineHeight', Number(e.target.value))}
+                          className="flex-1 h-1 accent-ink-900"
+                        />
+                        <span className="text-[10px] text-ink-500 w-7 text-right num">{style.spacing.lineHeight.toFixed(2)}</span>
+                      </div>
+                    </div>
+
+                    {/* Icons toggle */}
+                    <div className="flex items-center justify-between">
+                      <p className="font-mono text-[9px] text-ink-400 tracking-caps uppercase">contact icons</p>
+                      <button
+                        onClick={() => setStyleField('showIcons', !style.showIcons)}
+                        className={`relative w-8 h-4 rounded-full transition-colors ${style.showIcons ? 'bg-ink-900' : 'bg-ink-200'}`}
+                      >
+                        <span className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all ${style.showIcons ? 'left-4.5' : 'left-0.5'}`} />
+                      </button>
+                    </div>
+
+                    {/* Re-style button */}
+                    <button
+                      onClick={handleRestyle}
+                      disabled={busy}
+                      className="w-full flex items-center justify-center gap-2 px-3 py-2.5 bg-crimson-500 hover:bg-crimson-600 disabled:opacity-50 text-cream text-[11px] font-bold tracking-caps uppercase rounded-sm transition-colors"
+                    >
+                      {restyling ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Palette className="w-3.5 h-3.5" />}
+                      {restyling ? 're-styling…' : 're-style resume'}
+                    </button>
+
+                    {restyleError && (
+                      <p className="text-[11px] text-flare">{restyleError}</p>
+                    )}
+
+                    {/* Save as preset */}
+                    {showSavePreset && (
+                      <div className="space-y-2 p-3 bg-ink-50 border border-ink-200 rounded-sm">
+                        <p className="font-mono text-[9px] text-ink-400 tracking-caps uppercase">save this style</p>
+                        <input
+                          type="text"
+                          value={presetName}
+                          onChange={e => setPresetName(e.target.value)}
+                          placeholder="e.g. Modern Navy"
+                          className="w-full text-[11px] p-1.5 border border-ink-200 rounded-sm focus:outline-none focus:border-ink-900 bg-white"
+                          onKeyDown={e => e.key === 'Enter' && handleSavePreset()}
+                        />
+                        <button
+                          onClick={handleSavePreset}
+                          disabled={!presetName.trim() || savingPreset}
+                          className="w-full flex items-center justify-center gap-1.5 py-1.5 bg-ink-900 text-cream text-[10px] font-mono tracking-caps uppercase rounded-sm disabled:opacity-50"
+                        >
+                          {savingPreset ? <Loader2 className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />}
+                          save preset
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Saved presets */}
+                    {presets.length > 0 && (
+                      <div className="space-y-1.5">
+                        <p className="font-mono text-[9px] text-ink-400 tracking-caps uppercase">saved presets</p>
+                        {presets.map(preset => (
+                          <button
+                            key={preset.id}
+                            onClick={() => handleLoadPreset(preset)}
+                            className={`w-full flex items-center gap-2 p-2 rounded-sm border text-left transition-all group ${appliedPresetId === preset.id ? 'border-crimson-500/40 bg-crimson-500/5' : 'border-ink-200 hover:border-ink-900 bg-white'}`}
+                          >
+                            <div className="w-3.5 h-3.5 shrink-0 rounded-full border border-ink-200" style={{ background: preset.style_json.colors?.primary || '#000' }} />
+                            <span className="flex-1 text-[11px] text-ink-800 truncate">{preset.name}</span>
+                            {appliedPresetId === preset.id && <Check className="w-3 h-3 text-crimson-500 shrink-0" />}
+                            <span
+                              role="button"
+                              onClick={e => handleDeletePreset(preset.id, e)}
+                              className="opacity-0 group-hover:opacity-100 text-ink-300 hover:text-flare transition-all"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </aside>
           )}
@@ -343,18 +680,20 @@ export default function ResumeEditor(props: Props) {
                 onClick={() => setSidebarCollapsed(false)}
                 className="mb-3 flex items-center gap-1.5 text-[11px] font-mono text-ink-500 hover:text-ink-900 tracking-caps uppercase transition-colors"
               >
-                <ChevronRight className="w-3.5 h-3.5" />
-                match context
+                <ChevronRight className="w-3.5 h-3.5" /> match context
               </button>
             )}
 
             <div className="flex border border-ink-200 rounded-md overflow-hidden relative" style={{ minHeight: '940px' }}>
-              {/* Generation overlay */}
-              {generating && (
+              {/* Overlay — covers editor while any AI op is running */}
+              {busy && (
                 <div className="absolute inset-0 bg-cream/80 backdrop-blur-sm flex flex-col items-center justify-center gap-3 z-10">
                   <Loader2 className="w-6 h-6 animate-spin text-ink-500" />
                   <p className="font-mono text-[11px] text-ink-500 tracking-caps uppercase">
-                    {currentNode ? (NODE_LABELS[currentNode] ?? currentNode) : 'starting…'}
+                    {generating
+                      ? (currentNode ? NODE_LABELS[currentNode] ?? currentNode : 'starting…')
+                      : modifying ? 'applying changes…'
+                      : 're-styling…'}
                   </p>
                 </div>
               )}
@@ -366,7 +705,6 @@ export default function ResumeEditor(props: Props) {
                   <button
                     onClick={handleDownloadTex}
                     className="flex items-center gap-1 px-2 py-0.5 text-[9px] font-mono tracking-caps uppercase text-ink-500 hover:text-ink-900 hover:bg-ink-100 rounded transition-colors"
-                    title="Download .tex"
                   >
                     <Download className="w-2.5 h-2.5" /> .tex
                   </button>
@@ -374,8 +712,9 @@ export default function ResumeEditor(props: Props) {
                 <textarea
                   value={latex}
                   onChange={e => setLatex(e.target.value)}
+                  disabled={busy}
                   spellCheck={false}
-                  className="flex-1 w-full font-mono text-[11px] text-ink-800 leading-relaxed p-3 resize-none focus:outline-none bg-white"
+                  className="flex-1 w-full font-mono text-[11px] text-ink-800 leading-relaxed p-3 resize-none focus:outline-none bg-white disabled:opacity-60 disabled:cursor-not-allowed"
                   style={{ minHeight: '900px' }}
                 />
               </div>
@@ -384,21 +723,13 @@ export default function ResumeEditor(props: Props) {
               <div className="flex flex-col w-1/2">
                 <div className="px-3 py-1.5 border-b border-ink-200 bg-ink-50 flex items-center justify-between">
                   <span className="font-mono text-[9px] text-ink-400 tracking-caps uppercase">preview</span>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={handlePrint}
-                      className="flex items-center gap-1 px-2 py-0.5 text-[9px] font-mono tracking-caps uppercase text-ink-500 hover:text-ink-900 hover:bg-ink-100 rounded transition-colors"
-                      title="Save as PDF"
-                    >
-                      <Printer className="w-2.5 h-2.5" /> pdf
-                    </button>
-                    <button
-                      onClick={() => setRecompileKey(k => k + 1)}
-                      className="flex items-center gap-1 px-2 py-0.5 text-[9px] font-mono tracking-caps uppercase text-ink-500 hover:text-ink-900 hover:bg-ink-100 rounded transition-colors"
-                    >
-                      <RefreshCcw className="w-2.5 h-2.5" /> recompile
-                    </button>
-                  </div>
+                  <button
+                    onClick={() => setRecompileKey(k => k + 1)}
+                    disabled={busy}
+                    className="flex items-center gap-1 px-2 py-0.5 text-[9px] font-mono tracking-caps uppercase text-ink-500 hover:text-ink-900 hover:bg-ink-100 rounded transition-colors disabled:opacity-40"
+                  >
+                    <RefreshCcw className="w-2.5 h-2.5" /> recompile
+                  </button>
                 </div>
                 <div className="latex-print-target flex-1 overflow-auto bg-white">
                   <LatexPreview key={recompileKey} source={latex} />
@@ -423,7 +754,6 @@ export default function ResumeEditor(props: Props) {
                 className="w-full rounded-2xl border border-ink-200/60 shadow-2xl overflow-hidden"
                 style={GLASS_STYLE}
               >
-                {/* Panel header */}
                 <div className="px-4 py-2.5 flex items-center justify-between border-b border-ink-200/50">
                   <p className="font-mono text-[10px] text-crimson-500 tracking-caps uppercase flex items-center gap-1.5">
                     <Sparkles className="w-3 h-3" /> modify with ai
@@ -434,17 +764,12 @@ export default function ResumeEditor(props: Props) {
                         {edits.length} edit{edits.length !== 1 ? 's' : ''}
                       </span>
                     )}
-                    <button
-                      onClick={() => setFloatOpen(false)}
-                      className="text-ink-400 hover:text-ink-900 transition-colors"
-                      title="Minimize"
-                    >
+                    <button onClick={() => setFloatOpen(false)} className="text-ink-400 hover:text-ink-900 transition-colors">
                       <Minimize2 className="w-3.5 h-3.5" />
                     </button>
                   </div>
                 </div>
 
-                {/* Edit history — scrollable */}
                 {edits.length > 0 && (
                   <div className="border-b border-ink-200/50 max-h-[120px] overflow-y-auto">
                     <ul className="divide-y divide-ink-100/50">
@@ -460,21 +785,21 @@ export default function ResumeEditor(props: Props) {
                   </div>
                 )}
 
-                {/* AI modify input */}
                 <div className="p-4 space-y-3">
                   <textarea
                     value={instruction}
                     onChange={e => setInstruction(e.target.value)}
                     onKeyDown={e => { if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') handleModify() }}
+                    disabled={busy}
                     placeholder="Describe a change — e.g. 'make the summary more concise', 'add Python keywords', 'shorten to one page'…"
                     rows={3}
-                    className="w-full text-[12px] p-3 border border-ink-300/70 rounded-lg focus:outline-none focus:border-ink-900 resize-none bg-white/60 placeholder:text-ink-400"
+                    className="w-full text-[12px] p-3 border border-ink-300/70 rounded-lg focus:outline-none focus:border-ink-900 resize-none bg-white/60 placeholder:text-ink-400 disabled:opacity-50 disabled:cursor-not-allowed"
                   />
                   <div className="flex items-center justify-between gap-3">
                     <span className="text-[10px] text-ink-400 font-mono">⌘↵ to apply</span>
                     <button
                       onClick={handleModify}
-                      disabled={!instruction.trim() || modifying}
+                      disabled={!instruction.trim() || busy}
                       className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-ink-900 text-cream text-[12px] font-medium rounded-lg hover:bg-crimson-500 disabled:opacity-50 transition-colors"
                     >
                       {modifying

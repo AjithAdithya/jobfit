@@ -1,7 +1,6 @@
 'use client'
 import { useState, useRef } from 'react'
-import Link from 'next/link'
-import { Upload, Trash2, FileText, Sparkles } from 'lucide-react'
+import { Upload, Trash2, FileText } from 'lucide-react'
 
 interface UploadedResume {
   id: string
@@ -9,20 +8,11 @@ interface UploadedResume {
   created_at: string
 }
 
-interface GeneratedResume {
-  id: string
-  job_title: string
-  company_name: string | null
-  score: number
-  created_at: string
-}
-
 interface Props {
   uploaded: UploadedResume[]
-  generated: GeneratedResume[]
 }
 
-export default function VaultClient({ uploaded: initialUploaded, generated }: Props) {
+export default function VaultClient({ uploaded: initialUploaded }: Props) {
   const [uploaded, setUploaded] = useState(initialUploaded)
   const [uploading, setUploading] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
@@ -138,43 +128,6 @@ export default function VaultClient({ uploaded: initialUploaded, generated }: Pr
         )}
       </section>
 
-      {/* Generated resumes */}
-      <section>
-        <div className="mb-5">
-          <p className="font-mono text-[10px] text-crimson-500 tracking-caps uppercase mb-1">№ 02</p>
-          <h2 className="font-chunk text-2xl text-ink-900">generated</h2>
-        </div>
-
-        {generated.length === 0 ? (
-          <div className="border border-dashed border-ink-300 rounded-xl p-12 text-center text-ink-400 text-[15px]">
-            Tailored resumes will appear here after you generate them from a job analysis.
-          </div>
-        ) : (
-          <div className="divide-y divide-ink-100 border border-ink-200 rounded-xl overflow-hidden">
-            {generated.map(r => (
-              <div key={r.id} className="flex items-center gap-4 px-5 py-4 hover:bg-ink-50 transition-colors group">
-                <Sparkles className="w-4 h-4 text-crimson-400 shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <p className="text-[15px] text-ink-900 truncate">{r.job_title ?? 'Untitled job'}</p>
-                  <p className="text-[12px] text-ink-400 mt-0.5">
-                    {r.company_name && `${r.company_name} · `}
-                    {new Date(r.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                  </p>
-                </div>
-                {r.score > 0 && (
-                  <span className="font-chunk text-xl text-ink-900 shrink-0">{r.score}</span>
-                )}
-                <Link
-                  href={`/dashboard/history/${r.id}/edit`}
-                  className="shrink-0 text-[13px] text-ink-500 hover:text-ink-900 transition-colors underline underline-offset-4"
-                >
-                  edit →
-                </Link>
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
     </div>
   )
 }
