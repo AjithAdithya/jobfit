@@ -17,10 +17,23 @@ Generate exactly THREE distinct variants for that snippet. Each variant must:
 - Preserve the same HTML tag structure (if input is <li>...</li>, return <li>...</li>; if it's a fragment of text inside a <p>, return text only).
 - Keep the rewrite ATS-friendly (no emojis, no decorative characters, no inline styles).
 - Reflect the user's instruction faithfully while staying truthful to their existing experience context.
-- Be distinct from each other in tone, structure, or emphasis — not three copies of the same sentence.
+- Be distinct from each other in tone, structure, or emphasis — not three copies of the same sentence.`
 
-Output ONLY a single valid JSON object — no markdown, no commentary:
-{"variants": ["...", "...", "..."]}`
+const REWRITE_TOOL = {
+  name: 'generate_variants',
+  description: 'Generate exactly three distinct rewrite variants for a resume HTML snippet.',
+  input_schema: {
+    type: 'object',
+    properties: {
+      variants: {
+        type: 'array',
+        items: { type: 'string' },
+        description: 'Exactly three distinct rewrite variants of the selected snippet',
+      },
+    },
+    required: ['variants'],
+  },
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -53,7 +66,7 @@ ${selection}
 USER INSTRUCTION:
 ${comment}
 
-Generate three distinct variant rewrites for the selected snippet. Output the JSON object only.`
+Generate three distinct variant rewrites for the selected snippet.`
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -68,6 +81,8 @@ Generate three distinct variant rewrites for the selected snippet. Output the JS
         temperature: 0.7,
         system: SYSTEM_PROMPT,
         messages: [{ role: 'user', content: userPrompt }],
+        tools: [REWRITE_TOOL],
+        tool_choice: { type: 'tool', name: 'generate_variants' },
       }),
     })
 
@@ -79,11 +94,10 @@ Generate three distinct variant rewrites for the selected snippet. Output the JS
       )
     }
 
-    const raw = data.content?.[0]?.text || ''
-    const cleaned = raw.replace(/```json/gi, '').replace(/```/g, '').trim()
-    const match = cleaned.match(/\{[\s\S]*\}/)
-    const parsed = match ? JSON.parse(match[0]) : { variants: [] }
-    const variants = Array.isArray(parsed.variants) ? parsed.variants.slice(0, 3) : []
+    const toolBlock = data.content?.find((b: any) => b.type === 'tool_use' && b.name === 'generate_variants')
+    const variants: string[] = Array.isArray(toolBlock?.input?.variants)
+      ? toolBlock.input.variants.slice(0, 3)
+      : []
 
     if (variants.length < 3) {
       return NextResponse.json(

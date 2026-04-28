@@ -1,5 +1,4 @@
-import { callClaude } from './anthropic';
-import { extractJSON } from './agents';
+import { callClaudeWithTool } from './anthropic';
 
 export interface GuardianViolation {
   type: 'FABRICATED_CREDENTIAL' | 'LEAKED_SYSTEM_PROMPT' | 'INJECTED_INSTRUCTION' | 'SUSPICIOUS_URL' | 'POLICY_VIOLATION';
@@ -21,15 +20,31 @@ Examine the generated text for these specific violations:
 4. SUSPICIOUS_URL: Does the output contain URLs that were not in the source resume context?
 5. POLICY_VIOLATION: Does the output contain discriminatory content, false claims, or other ethical violations?
 
-Respond ONLY with valid JSON in this exact shape:
-{
-  "safe": boolean,
-  "violations": [
-    { "type": "VIOLATION_TYPE", "excerpt": "first 80 chars of suspicious fragment", "confidence": "HIGH|MEDIUM|LOW" }
-  ]
-}
+If no violations are found, return safe: true with an empty violations array.`;
 
-If no violations found: { "safe": true, "violations": [] }`;
+const GUARDIAN_TOOL = {
+  name: 'validate_resume_output',
+  description: 'Check AI-generated resume content for safety violations.',
+  input_schema: {
+    type: 'object' as const,
+    properties: {
+      safe: { type: 'boolean' },
+      violations: {
+        type: 'array',
+        items: {
+          type: 'object',
+          properties: {
+            type: { type: 'string', enum: ['FABRICATED_CREDENTIAL', 'LEAKED_SYSTEM_PROMPT', 'INJECTED_INSTRUCTION', 'SUSPICIOUS_URL', 'POLICY_VIOLATION'] },
+            excerpt: { type: 'string', description: 'First 80 chars of the suspicious fragment' },
+            confidence: { type: 'string', enum: ['HIGH', 'MEDIUM', 'LOW'] },
+          },
+          required: ['type', 'excerpt', 'confidence'],
+        },
+      },
+    },
+    required: ['safe', 'violations'],
+  },
+};
 
 // NEVER throws — returns safe:true on any error to avoid blocking generation
 export async function runGuardian(
@@ -50,20 +65,17 @@ ${output.slice(0, 4000)}
 
 Check the generated output for violations against the source context.`;
 
-    const response = await callClaude(GUARDIAN_SYSTEM_PROMPT, prompt, {
-      model: 'claude-haiku-4-5',
-      maxTokens: 512,
-    });
+    const result = await callClaudeWithTool<GuardianResult>(
+      GUARDIAN_SYSTEM_PROMPT,
+      prompt,
+      GUARDIAN_TOOL,
+      { model: 'claude-haiku-4-5', maxTokens: 512 }
+    );
 
-    const parsed = extractJSON(response);
-    if (typeof parsed.safe === 'boolean') {
-      return {
-        safe: parsed.safe,
-        violations: Array.isArray(parsed.violations) ? parsed.violations : [],
-      };
-    }
-
-    return safe;
+    return {
+      safe: typeof result.safe === 'boolean' ? result.safe : true,
+      violations: Array.isArray(result.violations) ? result.violations : [],
+    };
   } catch (err) {
     console.warn('Guardian check failed silently:', err);
     return safe;

@@ -3,7 +3,7 @@ import { useState, useRef, useEffect, useMemo, useCallback } from 'react'
 import Link from 'next/link'
 import {
   ArrowLeft, Save, Loader2, MessageSquarePlus, Type, Palette,
-  AlignLeft, Check, X, Sparkles, FileText, RotateCcw, History,
+  AlignLeft, Check, X, Sparkles, FileText, RotateCcw, History, RefreshCw,
 } from 'lucide-react'
 
 interface Props {
@@ -43,6 +43,14 @@ interface ResumeStyle {
   margin: number
   accent: string
   headingWeight: number
+}
+
+const NODE_LABELS: Record<string, string> = {
+  retrieve_context: 'retrieving context',
+  write_resume: 'writing resume',
+  critique: 'critiquing quality',
+  guardian: 'checking safety',
+  polish: 'polishing output',
 }
 
 const FONT_OPTIONS = [
@@ -113,11 +121,17 @@ export default function ResumeEditor(props: Props) {
   const [saveError, setSaveError] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<'context' | 'history'>('context')
   const [stylePanel, setStylePanel] = useState<'typography' | 'spacing' | 'color'>('typography')
+  const [generating, setGenerating] = useState(false)
+  const [currentNode, setCurrentNode] = useState<string | null>(null)
+  const [genError, setGenError] = useState<string | null>(null)
 
   const docRef = useRef<HTMLDivElement>(null)
 
-  // Capture selection inside the resume
-  const handleMouseUp = useCallback(() => {
+  // Capture selection inside the resume — ignore mouseups outside the doc
+  // (clicking into the textarea clears window selection, which would wipe pending)
+  const handleMouseUp = useCallback((e: MouseEvent) => {
+    if (!docRef.current?.contains(e.target as Node)) return
+
     const sel = window.getSelection()
     if (!sel || sel.rangeCount === 0 || sel.isCollapsed) {
       setPending(null)
@@ -205,6 +219,65 @@ export default function ResumeEditor(props: Props) {
     setEdits(prev => prev.filter(e => e.id !== entryId))
   }
 
+  const handleRegenerate = async () => {
+    setGenerating(true)
+    setCurrentNode(null)
+    setGenError(null)
+    try {
+      const res = await fetch('/api/resume/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          jobTitle: props.jobTitle,
+          companyName: props.siteName || undefined,
+          selectedGaps: props.selectedGaps.length ? props.selectedGaps : props.gaps,
+          selectedKeywords: props.selectedKeywords.length ? props.selectedKeywords : props.keywords,
+          resumeContext: props.baseResumeText || '',
+        }),
+      })
+      if (!res.ok) {
+        const json = await res.json().catch(() => ({}))
+        throw new Error((json as any).error || `Server error ${res.status}`)
+      }
+
+      const reader = res.body!.getReader()
+      const dec = new TextDecoder()
+      let buf = ''
+
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        buf += dec.decode(value, { stream: true })
+        const chunks = buf.split('\n\n')
+        buf = chunks.pop() ?? ''
+        for (const chunk of chunks) {
+          let eventType = 'message'
+          let data = ''
+          for (const line of chunk.split('\n')) {
+            if (line.startsWith('event: ')) eventType = line.slice(7).trim()
+            if (line.startsWith('data: ')) data = line.slice(6).trim()
+          }
+          if (!data) continue
+          const parsed = JSON.parse(data)
+          if (eventType === 'node') {
+            setCurrentNode(parsed.node)
+          } else if (eventType === 'done') {
+            const { html: cleanHtml } = stripStyleBlock(parsed.html || '')
+            setHtml(cleanHtml || parsed.html || '')
+            setCurrentNode(null)
+          } else if (eventType === 'error') {
+            throw new Error(parsed.error || 'Generation failed')
+          }
+        }
+      }
+    } catch (err: any) {
+      setGenError(err.message)
+    } finally {
+      setGenerating(false)
+      setCurrentNode(null)
+    }
+  }
+
   const handleSave = async () => {
     setSaving(true)
     setSaveError(null)
@@ -242,6 +315,7 @@ export default function ResumeEditor(props: Props) {
           <p className="text-[13px] text-ink-500 mt-1">{props.siteName}</p>
         </div>
         <div className="flex items-center gap-3">
+          {genError && <span className="text-[11px] text-flare max-w-[200px] truncate">{genError}</span>}
           {savedAt && !saving && (
             <span className="text-[11px] text-ink-500 font-mono tracking-caps uppercase">
               saved · {new Date(savedAt).toLocaleTimeString()}
@@ -249,8 +323,17 @@ export default function ResumeEditor(props: Props) {
           )}
           {saveError && <span className="text-[11px] text-flare">{saveError}</span>}
           <button
+            onClick={handleRegenerate}
+            disabled={generating || saving}
+            title={!props.baseResumeText ? 'Upload a resume to the vault first for best results' : undefined}
+            className="inline-flex items-center gap-2 px-4 py-2.5 border border-ink-300 text-ink-700 text-[13px] rounded-md hover:border-ink-900 hover:text-ink-900 disabled:opacity-50 transition-colors"
+          >
+            {generating ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+            regenerate
+          </button>
+          <button
             onClick={handleSave}
-            disabled={saving}
+            disabled={saving || generating}
             className="inline-flex items-center gap-2 px-5 py-2.5 bg-ink-900 text-cream font-medium text-[13px] rounded-md hover:bg-crimson-500 disabled:opacity-50"
           >
             {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
@@ -413,6 +496,14 @@ export default function ResumeEditor(props: Props) {
               className="resume-doc resume-editable min-h-[1100px]"
               dangerouslySetInnerHTML={{ __html: html }}
             />
+            {generating && (
+              <div className="absolute inset-0 bg-cream/80 backdrop-blur-sm flex flex-col items-center justify-center gap-3 z-10">
+                <Loader2 className="w-6 h-6 animate-spin text-ink-500" />
+                <p className="font-mono text-[11px] text-ink-500 tracking-caps uppercase">
+                  {currentNode ? (NODE_LABELS[currentNode] ?? currentNode) : 'starting…'}
+                </p>
+              </div>
+            )}
 
             {/* Selection callout */}
             {pending && !variants && !requesting && (

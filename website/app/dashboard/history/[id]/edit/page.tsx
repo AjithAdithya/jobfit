@@ -28,12 +28,11 @@ export default async function ResumeEditPage({ params }: { params: { id: string 
   let baseResumeText: string | null = null
   if (item.resume_id) {
     const { data: chunks } = await supabase
-      .from('resume_chunks')
-      .select('text, chunk_index')
+      .from('resume_chunkies')
+      .select('content, section')
       .eq('resume_id', item.resume_id)
-      .order('chunk_index', { ascending: true })
     if (chunks?.length) {
-      baseResumeText = chunks.map(c => c.text).join('\n\n')
+      baseResumeText = chunks.map(c => c.content).join('\n\n')
     }
   }
 

@@ -7,10 +7,17 @@ import { Menu, X } from 'lucide-react'
 import type { User as SupabaseUser } from '@supabase/supabase-js'
 import BetaSignupModal from './BetaSignupModal'
 
-const NAV_LINKS = [
+const MARKETING_NAV = [
   { href: '/features', label: 'features', num: '01' },
   { href: '/how-it-works', label: 'how it works', num: '02' },
   { href: '/privacy', label: 'privacy', num: '03' },
+]
+
+const APP_NAV = [
+  { href: '/dashboard', label: 'dashboard', num: '01' },
+  { href: '/dashboard/vault', label: 'vault', num: '02' },
+  { href: '/dashboard/history', label: 'history', num: '03' },
+  { href: '/dashboard/settings', label: 'settings', num: '04' },
 ]
 
 function Monogram() {
@@ -73,12 +80,14 @@ export default function Navbar() {
 
           {/* Desktop nav */}
           <nav className="hidden md:flex items-center gap-8">
-            {NAV_LINKS.map(link => (
+            {(user ? APP_NAV : MARKETING_NAV).map(link => (
               <Link
                 key={link.href}
                 href={link.href}
                 className={`group flex items-baseline gap-2 text-[15px] transition-colors ${
-                  pathname === link.href ? 'text-ink-900' : 'text-ink-500 hover:text-ink-900'
+                  pathname === link.href || (link.href !== '/dashboard' && pathname.startsWith(link.href))
+                    ? 'text-ink-900'
+                    : 'text-ink-500 hover:text-ink-900'
                 }`}
               >
                 <span className="font-mono text-[10px] text-ink-400 tracking-caps">№{link.num}</span>
@@ -90,14 +99,9 @@ export default function Navbar() {
           {/* Right actions */}
           <div className="hidden md:flex items-center gap-6">
             {user ? (
-              <>
-                <Link href="/dashboard" className="text-[15px] text-ink-900 hover:text-crimson-500 transition-colors underline decoration-1 underline-offset-4">
-                  dashboard
-                </Link>
-                <button onClick={handleSignOut} className="text-[15px] text-ink-500 hover:text-ink-900 transition-colors">
-                  sign out
-                </button>
-              </>
+              <button onClick={handleSignOut} className="text-[15px] text-ink-500 hover:text-ink-900 transition-colors">
+                sign out
+              </button>
             ) : (
               <>
                 <Link href="/login" className="text-[15px] text-ink-500 hover:text-ink-900 transition-colors">
@@ -122,7 +126,7 @@ export default function Navbar() {
 
       {menuOpen && (
         <div className="md:hidden bg-cream border-b border-ink-200 px-6 py-4 space-y-1">
-          {NAV_LINKS.map(link => (
+          {(user ? APP_NAV : MARKETING_NAV).map(link => (
             <Link
               key={link.href}
               href={link.href}
@@ -135,10 +139,7 @@ export default function Navbar() {
           ))}
           <div className="pt-3 mt-3 border-t border-ink-200 flex flex-col gap-2">
             {user ? (
-              <>
-                <Link href="/dashboard" onClick={() => setMenuOpen(false)} className="py-3 text-[15px] text-ink-900">dashboard</Link>
-                <button onClick={handleSignOut} className="py-3 text-left text-[15px] text-ink-500">sign out</button>
-              </>
+              <button onClick={handleSignOut} className="py-3 text-left text-[15px] text-ink-500">sign out</button>
             ) : (
               <>
                 <Link href="/login" onClick={() => setMenuOpen(false)} className="py-3 text-[15px] text-ink-900">sign in</Link>
