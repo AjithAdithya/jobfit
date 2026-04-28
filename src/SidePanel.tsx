@@ -377,7 +377,7 @@ const SidePanel: React.FC = () => {
     if (!histItem?.id) return
     let url = `${WEBSITE_URL}/dashboard/history/${histItem.id}/edit`
     if (session) {
-      url = `${WEBSITE_URL}/login#access_token=${session.access_token}&refresh_token=${session.refresh_token}&type=bearer&redirect=/dashboard/history/${histItem.id}/edit`
+      url = `${WEBSITE_URL}/auth/ext#access_token=${session.access_token}&refresh_token=${session.refresh_token}&redirect=/dashboard/history/${histItem.id}/edit`
     }
     chrome.tabs.create({ url })
   }

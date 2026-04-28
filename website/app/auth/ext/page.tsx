@@ -18,11 +18,12 @@ export default function ExtAuthPage() {
       return
     }
 
+    const redirectTo = params.get('redirect') || '/dashboard'
     const supabase = createClient()
     supabase.auth
       .setSession({ access_token: accessToken, refresh_token: refreshToken })
       .then(({ error }) => {
-        router.replace(error ? '/login' : '/dashboard')
+        router.replace(error ? '/login' : redirectTo)
       })
   }, [router])
 

@@ -21,7 +21,7 @@ async function openInEditor(itemId: string) {
   const { data: { session } } = await supabase.auth.getSession()
   let url = `${WEBSITE_URL}/dashboard/history/${itemId}/edit`
   if (session) {
-    url = `${WEBSITE_URL}/login#access_token=${session.access_token}&refresh_token=${session.refresh_token}&type=bearer&redirect=/dashboard/history/${itemId}/edit`
+    url = `${WEBSITE_URL}/auth/ext#access_token=${session.access_token}&refresh_token=${session.refresh_token}&redirect=/dashboard/history/${itemId}/edit`
   }
   chrome.tabs.create({ url })
 }
