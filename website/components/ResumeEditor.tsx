@@ -2,6 +2,7 @@
 import { useState, useCallback } from 'react'
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
+import { motion, AnimatePresence } from 'framer-motion'
 import {
   ArrowLeft, Save, Loader2, FileText, Sparkles, RefreshCw,
   Download, Printer, RefreshCcw, ChevronLeft, ChevronRight, Minimize2,
@@ -410,92 +411,104 @@ export default function ResumeEditor(props: Props) {
 
       {/* Floating AI edit panel */}
       <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 w-full max-w-md px-4 pointer-events-none">
-        <div className="pointer-events-auto">
-          {floatOpen ? (
-            <div
-              className="rounded-2xl border border-ink-200/60 shadow-2xl overflow-hidden"
-              style={GLASS_STYLE}
-            >
-              {/* Panel header */}
-              <div className="px-4 py-2.5 flex items-center justify-between border-b border-ink-200/50">
-                <p className="font-mono text-[10px] text-crimson-500 tracking-caps uppercase flex items-center gap-1.5">
-                  <Sparkles className="w-3 h-3" /> modify with ai
-                </p>
-                <div className="flex items-center gap-2">
-                  {edits.length > 0 && (
-                    <span className="font-mono text-[9px] text-ink-400 tracking-caps uppercase num">
-                      {edits.length} edit{edits.length !== 1 ? 's' : ''}
-                    </span>
-                  )}
-                  <button
-                    onClick={() => setFloatOpen(false)}
-                    className="text-ink-400 hover:text-ink-900 transition-colors"
-                    title="Minimize"
-                  >
-                    <Minimize2 className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              </div>
-
-              {/* Edit history — above the input, scrollable */}
-              {edits.length > 0 && (
-                <div className="border-b border-ink-200/50 max-h-[120px] overflow-y-auto">
-                  <ul className="divide-y divide-ink-100/50">
-                    {edits.map(e => (
-                      <li key={e.id} className="px-4 py-2 flex items-start gap-3">
-                        <span className="font-mono text-[9px] text-ink-400 mt-0.5 shrink-0 num">
-                          {new Date(e.at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                        </span>
-                        <p className="font-serif italic text-[11px] text-ink-700 leading-snug line-clamp-1">"{e.instruction}"</p>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              {/* AI modify input */}
-              <div className="p-4 space-y-3">
-                <textarea
-                  value={instruction}
-                  onChange={e => setInstruction(e.target.value)}
-                  onKeyDown={e => { if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') handleModify() }}
-                  placeholder="Describe a change — e.g. 'make the summary more concise', 'add Python keywords', 'shorten to one page'…"
-                  rows={3}
-                  className="w-full text-[12px] p-3 border border-ink-300/70 rounded-lg focus:outline-none focus:border-ink-900 resize-none bg-white/60 placeholder:text-ink-400"
-                />
-                <div className="flex items-center justify-between gap-3">
-                  <span className="text-[10px] text-ink-400 font-mono">⌘↵ to apply</span>
-                  <button
-                    onClick={handleModify}
-                    disabled={!instruction.trim() || modifying}
-                    className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-ink-900 text-cream text-[12px] font-medium rounded-lg hover:bg-crimson-500 disabled:opacity-50 transition-colors"
-                  >
-                    {modifying
-                      ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> applying…</>
-                      : <><Sparkles className="w-3.5 h-3.5" /> apply</>
-                    }
-                  </button>
-                </div>
-                {modifyError && <p className="text-[11px] text-flare">{modifyError}</p>}
-              </div>
-            </div>
-          ) : (
-            <div className="flex justify-center">
-              <button
-                onClick={() => setFloatOpen(true)}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-full shadow-xl border border-ink-200/60 text-[11px] font-mono tracking-caps uppercase text-ink-700 hover:text-ink-900 transition-all hover:scale-105 active:scale-95"
+        <div className="pointer-events-auto flex flex-col items-center">
+          <AnimatePresence mode="wait" initial={false}>
+            {floatOpen ? (
+              <motion.div
+                key="panel"
+                initial={{ opacity: 0, scale: 0.92, y: 16 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.92, y: 12 }}
+                transition={{ type: 'spring', stiffness: 380, damping: 28, mass: 0.8 }}
+                className="w-full rounded-2xl border border-ink-200/60 shadow-2xl overflow-hidden"
                 style={GLASS_STYLE}
+              >
+                {/* Panel header */}
+                <div className="px-4 py-2.5 flex items-center justify-between border-b border-ink-200/50">
+                  <p className="font-mono text-[10px] text-crimson-500 tracking-caps uppercase flex items-center gap-1.5">
+                    <Sparkles className="w-3 h-3" /> modify with ai
+                  </p>
+                  <div className="flex items-center gap-2">
+                    {edits.length > 0 && (
+                      <span className="font-mono text-[9px] text-ink-400 tracking-caps uppercase num">
+                        {edits.length} edit{edits.length !== 1 ? 's' : ''}
+                      </span>
+                    )}
+                    <button
+                      onClick={() => setFloatOpen(false)}
+                      className="text-ink-400 hover:text-ink-900 transition-colors"
+                      title="Minimize"
+                    >
+                      <Minimize2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Edit history — scrollable */}
+                {edits.length > 0 && (
+                  <div className="border-b border-ink-200/50 max-h-[120px] overflow-y-auto">
+                    <ul className="divide-y divide-ink-100/50">
+                      {edits.map(e => (
+                        <li key={e.id} className="px-4 py-2 flex items-start gap-3">
+                          <span className="font-mono text-[9px] text-ink-400 mt-0.5 shrink-0 num">
+                            {new Date(e.at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                          <p className="font-serif italic text-[11px] text-ink-700 leading-snug line-clamp-1">"{e.instruction}"</p>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {/* AI modify input */}
+                <div className="p-4 space-y-3">
+                  <textarea
+                    value={instruction}
+                    onChange={e => setInstruction(e.target.value)}
+                    onKeyDown={e => { if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') handleModify() }}
+                    placeholder="Describe a change — e.g. 'make the summary more concise', 'add Python keywords', 'shorten to one page'…"
+                    rows={3}
+                    className="w-full text-[12px] p-3 border border-ink-300/70 rounded-lg focus:outline-none focus:border-ink-900 resize-none bg-white/60 placeholder:text-ink-400"
+                  />
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-[10px] text-ink-400 font-mono">⌘↵ to apply</span>
+                    <button
+                      onClick={handleModify}
+                      disabled={!instruction.trim() || modifying}
+                      className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-ink-900 text-cream text-[12px] font-medium rounded-lg hover:bg-crimson-500 disabled:opacity-50 transition-colors"
+                    >
+                      {modifying
+                        ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> applying…</>
+                        : <><Sparkles className="w-3.5 h-3.5" /> apply</>
+                      }
+                    </button>
+                  </div>
+                  {modifyError && <p className="text-[11px] text-flare">{modifyError}</p>}
+                </div>
+              </motion.div>
+            ) : (
+              <motion.button
+                key="pill"
+                onClick={() => setFloatOpen(true)}
+                initial={{ opacity: 0, scale: 0.7, y: 8 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.7, y: 8 }}
+                transition={{ type: 'spring', stiffness: 420, damping: 26, mass: 0.7 }}
+                whileHover={{ scale: 1.06 }}
+                whileTap={{ scale: 0.94 }}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-full shadow-xl border border-ink-900/10 text-[11px] font-mono tracking-caps uppercase text-ink-900"
+                style={{ background: '#D7FF3A' }}
               >
                 <Sparkles className="w-3 h-3 text-crimson-500" />
                 ai edit
                 {edits.length > 0 && (
-                  <span className="px-1.5 py-0.5 bg-crimson-500 text-cream text-[9px] rounded-full num leading-none">
+                  <span className="px-1.5 py-0.5 bg-ink-900 text-cream text-[9px] rounded-full num leading-none">
                     {edits.length}
                   </span>
                 )}
-              </button>
-            </div>
-          )}
+              </motion.button>
+            )}
+          </AnimatePresence>
         </div>
       </div>
     </>
