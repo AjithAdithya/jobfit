@@ -6,6 +6,17 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from '../hooks/useAuth';
 import { useUIStore } from '../store/useUIStore';
 
+const WEBSITE_URL = 'https://jobfit-amber.vercel.app'
+
+async function openWebDashboard() {
+  const { data: { session } } = await supabase.auth.getSession()
+  let url = `${WEBSITE_URL}/login`
+  if (session) {
+    url = `${WEBSITE_URL}/login#access_token=${session.access_token}&refresh_token=${session.refresh_token}&type=bearer`
+  }
+  chrome.tabs.create({ url })
+}
+
 export interface HistoryItem {
   id: string;
   job_title: string;
@@ -175,6 +186,16 @@ const MatchHistory: React.FC = () => {
           </h2>
           <span className="font-mono text-[10px] text-ink-400 tracking-caps uppercase">{history.length} jobs</span>
         </div>
+        <button
+          onClick={openWebDashboard}
+          className="mt-3 w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-ink-900 hover:bg-crimson-500 text-cream transition-colors group"
+        >
+          <span className="font-chunk text-[12px]">
+            <span className="text-cream">Job</span><span className="serif-accent text-crimson-200 group-hover:text-cream/70">fit</span>
+          </span>
+          <span className="text-[11px] font-medium text-cream/70 group-hover:text-cream transition-colors">— open web dashboard</span>
+          <ArrowUpRight className="w-3.5 h-3.5 text-cream/50 group-hover:text-cream ml-auto transition-colors" />
+        </button>
       </div>
 
       {/* Stats — editorial grid */}

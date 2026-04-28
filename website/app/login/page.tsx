@@ -1,5 +1,6 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { Loader2 } from 'lucide-react'
@@ -7,6 +8,30 @@ import { Loader2 } from 'lucide-react'
 export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const router = useRouter()
+
+  // Extension SSO: /login#access_token=...&refresh_token=...
+  useEffect(() => {
+    const hash = window.location.hash.slice(1)
+    if (!hash) return
+    const params = new URLSearchParams(hash)
+    const accessToken = params.get('access_token')
+    const refreshToken = params.get('refresh_token')
+    if (!accessToken || !refreshToken) return
+
+    setLoading(true)
+    const supabase = createClient()
+    supabase.auth
+      .setSession({ access_token: accessToken, refresh_token: refreshToken })
+      .then(({ error }) => {
+        if (error) {
+          setError('Could not sign in from extension. Please sign in manually.')
+          setLoading(false)
+        } else {
+          router.replace('/dashboard')
+        }
+      })
+  }, [router])
 
   const handleGoogleLogin = async () => {
     setLoading(true)

@@ -4,7 +4,7 @@ import {
   Sparkles, Settings as SettingsIcon, Loader2, ArrowRight,
   CheckCircle2, AlertCircle, LayoutGrid, Upload, Check,
   Brain, Target, Zap, Home, Briefcase, Download, FileText,
-  Mail, Palette, AlertTriangle, ClipboardPaste, ChevronDown, X, LogOut,
+  Mail, Palette, AlertTriangle, ClipboardPaste, ChevronDown, X, LogOut, ArrowUpRight,
 } from 'lucide-react'
 import LatexPreview from './components/LatexPreview'
 import { useAuth } from './hooks/useAuth'
@@ -387,6 +387,17 @@ const SidePanel: React.FC = () => {
     chrome.tabs.create({ url })
   }
 
+  const WEBSITE_URL = 'https://jobfit-amber.vercel.app'
+
+  const handleOpenWebDashboard = async () => {
+    const { data: { session } } = await supabase.auth.getSession()
+    let url = `${WEBSITE_URL}/login`
+    if (session) {
+      url = `${WEBSITE_URL}/login#access_token=${session.access_token}&refresh_token=${session.refresh_token}&type=bearer`
+    }
+    chrome.tabs.create({ url })
+  }
+
   const handleOpenInDrive = async () => {
     if (!generatedResume || !jobContext) return
     setDriveError(null)
@@ -682,6 +693,17 @@ const SidePanel: React.FC = () => {
                   <span className="eyebrow text-ink-500 group-hover:text-ink-900 transition-colors">Dashboard</span>
                 </button>
               </div>
+
+              <button
+                onClick={handleOpenWebDashboard}
+                className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-ink-900 hover:bg-crimson-500 text-cream transition-colors group"
+              >
+                <span className="font-chunk text-[13px]">
+                  <span className="text-cream">Job</span><span className="serif-accent text-crimson-200 group-hover:text-cream/70">fit</span>
+                </span>
+                <span className="text-[11px] font-medium tracking-wide text-cream/70 group-hover:text-cream transition-colors">— open web dashboard</span>
+                <ArrowUpRight className="w-3.5 h-3.5 text-cream/50 group-hover:text-cream ml-auto transition-colors" />
+              </button>
 
               <AnimatePresence>
                 {error && <Alert message={error} onDismiss={() => setError(null)} />}
