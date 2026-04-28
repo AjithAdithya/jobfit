@@ -41,8 +41,8 @@ const NODE_LABELS: Record<string, string> = {
 
 const GLASS_STYLE = {
   background: 'rgba(237, 233, 227, 0.88)',
-  backdropFilter: 'blur(16px)',
-  WebkitBackdropFilter: 'blur(16px)',
+  backdropFilter: 'blur(6px)',
+  WebkitBackdropFilter: 'blur(6px)',
 } as const
 
 export default function ResumeEditor(props: Props) {
@@ -461,7 +461,7 @@ export default function ResumeEditor(props: Props) {
                   onKeyDown={e => { if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') handleModify() }}
                   placeholder="Describe a change — e.g. 'make the summary more concise', 'add Python keywords', 'shorten to one page'…"
                   rows={3}
-                  className="w-full text-[12px] p-3 border border-ink-300/70 rounded-lg focus:outline-none focus:border-ink-900 resize-none bg-white/60 backdrop-blur-sm placeholder:text-ink-400"
+                  className="w-full text-[12px] p-3 border border-ink-300/70 rounded-lg focus:outline-none focus:border-ink-900 resize-none bg-white/60 placeholder:text-ink-400"
                 />
                 <div className="flex items-center justify-between gap-3">
                   <span className="text-[10px] text-ink-400 font-mono">⌘↵ to apply</span>
