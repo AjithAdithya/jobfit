@@ -17,7 +17,7 @@ function ExtensionMockup() {
             <span className="font-chunk text-[11px] leading-none tracking-tighter">JF</span>
             <span className="absolute -top-0.5 -right-0.5 text-[8px] text-crimson-500">✦</span>
           </div>
-          <span className="font-chunk text-[14px] tracking-tight">jobfit</span>
+          <span className="font-chunk text-[14px] tracking-tight text-ink-900">Job</span><span className="serif-accent text-crimson-500 text-[14px]">fit</span>
         </div>
         <span className="font-mono text-[9px] text-ink-500 tracking-caps uppercase">v.0.1</span>
       </div>

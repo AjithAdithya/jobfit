@@ -35,7 +35,7 @@ export default function LoginPage() {
             <span className="font-chunk text-[16px] leading-none tracking-tighter">JF</span>
             <span className="absolute -top-0.5 -right-0.5 text-[11px] text-crimson-500">✦</span>
           </div>
-          <span className="font-chunk text-[22px] tracking-tight text-ink-900">jobfit</span>
+          <span className="font-chunk text-[22px] tracking-tight text-ink-900">Job</span><span className="serif-accent text-crimson-500 text-[22px]">fit</span>
         </Link>
 
         {/* Heading */}

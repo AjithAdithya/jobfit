@@ -104,8 +104,8 @@ export default function Navbar() {
           {/* Monogram */}
           <Link href="/" className="flex items-center gap-3 group">
             <Monogram />
-            <span className="font-chunk text-lg tracking-tight text-ink-900 hidden sm:block">
-              jobfit
+            <span className="hidden sm:inline">
+              <span className="font-chunk text-lg tracking-tight text-ink-900">Job</span><span className="serif-accent text-crimson-500 text-lg">fit</span>
             </span>
           </Link>
 
