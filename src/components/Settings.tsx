@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Shield, Key, Mail, LogOut, ChevronDown, Zap, Loader2,
-  Eye, EyeOff, Check, Trash2,
+  Eye, EyeOff, Check, Trash2, AlertTriangle,
 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabase';
@@ -33,6 +33,8 @@ const Settings: React.FC = () => {
 
   const [showPrivacy, setShowPrivacy] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [deleteModal, setDeleteModal] = useState<'data' | 'account' | null>(null);
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
 
   const [loading, setLoading] = useState(true);
 
@@ -89,9 +91,22 @@ const Settings: React.FC = () => {
     );
   };
 
-  const handleDeleteAllData = async () => {
+  const handleDeleteData = async () => {
     if (!user) return;
-    if (!window.confirm('Delete all your data? This cannot be undone.')) return;
+    setDeleting(true);
+    await Promise.all([
+      supabase.from('resume_chunkies').delete().eq('user_id', user.id),
+      supabase.from('resumes').delete().eq('user_id', user.id),
+      supabase.from('analysis_history').delete().eq('user_id', user.id),
+      supabase.from('generations').delete().eq('user_id', user.id),
+      supabase.from('style_presets').delete().eq('user_id', user.id),
+    ]);
+    setDeleting(false);
+    setDeleteModal(null);
+  };
+
+  const handleDeleteAccount = async () => {
+    if (!user || deleteConfirmText !== 'DELETE') return;
     setDeleting(true);
     await Promise.all([
       supabase.from('resume_chunkies').delete().eq('user_id', user.id),
@@ -123,12 +138,24 @@ const Settings: React.FC = () => {
 
       {/* Profile */}
       <div className="p-5 bg-ink-900 border border-ink-900 flex items-center gap-4">
-        <div className="w-12 h-12 bg-crimson-500 flex items-center justify-center font-chunk text-cream text-xl shrink-0">
-          {user?.email?.charAt(0).toUpperCase()}
-        </div>
+        {(user?.user_metadata?.avatar_url as string | undefined) ? (
+          <img
+            src={user!.user_metadata.avatar_url as string}
+            alt="profile"
+            className="w-12 h-12 rounded-full object-cover shrink-0"
+            referrerPolicy="no-referrer"
+          />
+        ) : (
+          <div className="w-12 h-12 bg-crimson-500 flex items-center justify-center font-chunk text-cream text-xl shrink-0">
+            {user?.email?.charAt(0).toUpperCase()}
+          </div>
+        )}
         <div className="flex-1 min-w-0">
-          <h3 className="text-sm font-bold text-cream truncate">{user?.email}</h3>
-          <div className="flex items-center gap-1.5 eyebrow text-ink-400 mt-1">
+          {(user?.user_metadata?.full_name as string | undefined) && (
+            <h3 className="text-sm font-bold text-cream truncate">{user!.user_metadata.full_name as string}</h3>
+          )}
+          <p className="text-[11px] text-ink-400 truncate">{user?.email}</p>
+          <div className="flex items-center gap-1.5 eyebrow text-ink-500 mt-1">
             <Mail className="w-3 h-3" />
             {loading ? <Loader2 className="w-3 h-3 animate-spin" /> : 'Developer Plan'}
           </div>
@@ -335,14 +362,82 @@ const Settings: React.FC = () => {
                   </ul>
                 </div>
 
-                <button
-                  onClick={handleDeleteAllData}
-                  disabled={deleting}
-                  className="w-full flex items-center justify-center gap-2 p-3 bg-flare/10 hover:bg-flare/20 text-flare border border-flare/30 font-bold uppercase tracking-widest text-[10px] transition-all active:scale-95 disabled:opacity-50"
-                >
-                  {deleting ? <Loader2 className="w-3 h-3 animate-spin" /> : <Trash2 className="w-3 h-3" />}
-                  {deleting ? 'Deleting...' : 'Delete All My Data'}
-                </button>
+                {/* Danger zone */}
+                <div className="border border-flare/30 overflow-hidden">
+                  <div className="px-3 py-2 bg-flare/10 flex items-center gap-1.5 border-b border-flare/20">
+                    <AlertTriangle className="w-3 h-3 text-flare shrink-0" />
+                    <span className="eyebrow text-flare text-[10px]">Danger zone</span>
+                  </div>
+
+                  {/* Delete data */}
+                  <div className="p-3 space-y-2 border-b border-flare/10">
+                    <div>
+                      <p className="text-[11px] font-bold text-ink-900">Delete all data</p>
+                      <p className="text-[10px] text-ink-500 mt-0.5">Removes all analyses, resumes and chunks. Account stays active.</p>
+                    </div>
+                    {deleteModal === 'data' ? (
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={handleDeleteData}
+                          disabled={deleting}
+                          className="flex-1 flex items-center justify-center gap-1.5 p-2 bg-flare text-cream text-[10px] font-bold uppercase tracking-widest transition-all active:scale-95 disabled:opacity-50"
+                        >
+                          {deleting ? <Loader2 className="w-3 h-3 animate-spin" /> : <Trash2 className="w-3 h-3" />}
+                          {deleting ? 'Deleting…' : 'Confirm'}
+                        </button>
+                        <button onClick={() => setDeleteModal(null)} className="px-3 py-2 text-[10px] text-ink-500 hover:text-ink-900 transition-colors">
+                          Cancel
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => setDeleteModal('data')}
+                        className="w-full flex items-center justify-center gap-1.5 p-2 bg-flare/10 hover:bg-flare/20 text-flare border border-flare/30 font-bold uppercase tracking-widest text-[10px] transition-all active:scale-95"
+                      >
+                        <Trash2 className="w-3 h-3" /> Delete data
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Delete account */}
+                  <div className="p-3 space-y-2">
+                    <div>
+                      <p className="text-[11px] font-bold text-ink-900">Delete account</p>
+                      <p className="text-[10px] text-ink-500 mt-0.5">Permanently deletes all data and signs you out.</p>
+                    </div>
+                    {deleteModal === 'account' ? (
+                      <div className="space-y-2">
+                        <input
+                          type="text"
+                          value={deleteConfirmText}
+                          onChange={e => setDeleteConfirmText(e.target.value)}
+                          placeholder='Type DELETE to confirm'
+                          className="w-full px-2 py-1.5 bg-white border border-ink-200 text-[11px] text-ink-900 placeholder:text-ink-300 font-mono focus:outline-none focus:border-flare"
+                        />
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={handleDeleteAccount}
+                            disabled={deleting || deleteConfirmText !== 'DELETE'}
+                            className="flex-1 flex items-center justify-center gap-1.5 p-2 bg-flare text-cream text-[10px] font-bold uppercase tracking-widest transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
+                          >
+                            {deleting ? <Loader2 className="w-3 h-3 animate-spin" /> : <Trash2 className="w-3 h-3" />}
+                            {deleting ? 'Deleting…' : 'Delete account'}
+                          </button>
+                          <button onClick={() => { setDeleteModal(null); setDeleteConfirmText('') }} className="px-3 py-2 text-[10px] text-ink-500 hover:text-ink-900 transition-colors">
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => { setDeleteModal('account'); setDeleteConfirmText('') }}
+                        className="w-full flex items-center justify-center gap-1.5 p-2 bg-flare text-cream font-bold uppercase tracking-widest text-[10px] transition-all active:scale-95"
+                      >
+                        <Trash2 className="w-3 h-3" /> Delete account
+                      </button>
+                    )}
+                  </div>
+                </div>
               </div>
             </motion.div>
           )}

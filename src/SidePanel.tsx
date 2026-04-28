@@ -4,7 +4,7 @@ import {
   Sparkles, Settings as SettingsIcon, Loader2, ArrowRight,
   CheckCircle2, AlertCircle, LayoutGrid, Upload, Check,
   Brain, Target, Zap, Home, Briefcase, Download, FileText,
-  Mail, Palette, AlertTriangle, ClipboardPaste, ChevronDown, X,
+  Mail, Palette, AlertTriangle, ClipboardPaste, ChevronDown, X, LogOut,
 } from 'lucide-react'
 import LatexPreview from './components/LatexPreview'
 import { useAuth } from './hooks/useAuth'
@@ -72,7 +72,7 @@ const Alert: React.FC<{
 }
 
 const SidePanel: React.FC = () => {
-  const { user, loading: authLoading, signingIn, authError, clearAuthError, getRedirectUri, signInWithGoogle } = useAuth()
+  const { user, loading: authLoading, signingIn, authError, clearAuthError, getRedirectUri, signInWithGoogle, signOut } = useAuth()
   const { uploadAndProcess, processing: resumeProcessing } = useResumes()
   const [loading, setLoading] = useState(false)
   const [analyzing, setAnalyzing] = useState(false)
@@ -106,6 +106,21 @@ const SidePanel: React.FC = () => {
   } = useUIStore()
 
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const profileMenuRef = useRef<HTMLDivElement>(null)
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false)
+
+  const avatarUrl = user?.user_metadata?.avatar_url as string | undefined
+  const fullName = user?.user_metadata?.full_name as string | undefined
+  const userInitial = (user?.email ?? '?')[0].toUpperCase()
+
+  React.useEffect(() => {
+    if (!profileMenuOpen) return
+    const handler = (e: MouseEvent) => {
+      if (!profileMenuRef.current?.contains(e.target as Node)) setProfileMenuOpen(false)
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [profileMenuOpen])
 
   React.useEffect(() => {
     hasDriveAccess().then(setDriveConnected);
@@ -495,13 +510,12 @@ const SidePanel: React.FC = () => {
   return (
     <div className="flex flex-col h-screen bg-cream text-ink-900 font-sans overflow-hidden">
       {/* Header */}
-      <header className="px-5 py-4 flex items-center justify-between z-20 bg-cream border-b border-ink-200">
-        <div className="flex items-center gap-3">
-          <img src="/icon48.png" alt="JobFit" className="w-8 h-8" />
-          <div>
-            <h1 className="font-chunk text-lg leading-none text-ink-900">JobFit</h1>
-            <p className="eyebrow text-crimson-500 mt-0.5">Intelligence</p>
-          </div>
+      <header className="px-5 py-3 flex items-center justify-between z-20 bg-cream border-b border-ink-200">
+        <div className="flex items-center gap-2.5">
+          <img src="/icon48.png" alt="JobFit" className="w-7 h-7" />
+          <h1 className="font-chunk text-lg leading-none">
+            <span className="text-ink-900">Job</span><span className="text-crimson-500">fit</span>
+          </h1>
         </div>
         <div className="flex items-center gap-2">
           {successMsg && (
@@ -513,12 +527,43 @@ const SidePanel: React.FC = () => {
               <Check className="w-4 h-4" />
             </motion.div>
           )}
-          <button
-            onClick={() => setView(currentView === 'settings' ? 'dashboard' : 'settings')}
-            className={`p-2 transition-all border ${currentView === 'settings' ? 'bg-crimson-500 text-cream border-crimson-500' : 'bg-white border-ink-200 text-ink-500 hover:border-ink-900'}`}
-          >
-            <SettingsIcon className="w-4 h-4" />
-          </button>
+          <div className="relative" ref={profileMenuRef}>
+            <button
+              onClick={() => setProfileMenuOpen(v => !v)}
+              className="rounded-full ring-2 ring-transparent hover:ring-ink-300 transition-all"
+              aria-label="Profile menu"
+            >
+              {avatarUrl ? (
+                <img src={avatarUrl} alt="profile" className="w-8 h-8 rounded-full object-cover" referrerPolicy="no-referrer" />
+              ) : (
+                <div className="w-8 h-8 rounded-full bg-ink-900 flex items-center justify-center font-chunk text-cream text-sm select-none">
+                  {userInitial}
+                </div>
+              )}
+            </button>
+            {profileMenuOpen && (
+              <div className="absolute right-0 top-10 w-52 bg-cream border border-ink-200 shadow-print-md z-50 overflow-hidden">
+                <div className="px-3 py-2.5 border-b border-ink-100">
+                  {fullName && <p className="text-[12px] font-medium text-ink-900 truncate">{fullName}</p>}
+                  <p className="text-[11px] text-ink-500 truncate">{user?.email}</p>
+                </div>
+                <button
+                  onClick={() => { setView('settings'); setProfileMenuOpen(false) }}
+                  className="w-full flex items-center gap-2 px-3 py-2.5 text-[13px] text-ink-700 hover:bg-ink-50 transition-colors text-left"
+                >
+                  <SettingsIcon className="w-3.5 h-3.5 text-ink-400" />
+                  Settings
+                </button>
+                <button
+                  onClick={() => { signOut(); setProfileMenuOpen(false) }}
+                  className="w-full flex items-center gap-2 px-3 py-2.5 text-[13px] text-ink-700 hover:bg-ink-50 transition-colors text-left border-t border-ink-100"
+                >
+                  <LogOut className="w-3.5 h-3.5 text-ink-400" />
+                  Sign out
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </header>
 
@@ -535,20 +580,17 @@ const SidePanel: React.FC = () => {
               exit={{ opacity: 0, x: 20 }}
               className="space-y-5"
             >
-              {/* Hero card — editorial inverted */}
-              <div className="p-6 bg-ink-900 border border-ink-900 relative overflow-hidden group">
-                <div className="absolute -top-10 -right-10 w-40 h-40 bg-crimson-500 rounded-full blur-[60px] opacity-10 group-hover:opacity-20 transition-opacity"></div>
-                <div className="relative z-10 space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="p-2 bg-white/10">
-                      <Zap className="w-5 h-5 text-citrus" />
-                    </div>
-                    <span className="eyebrow text-ink-400">Ready to Extract</span>
+              {/* Hero card — compact */}
+              <div className="px-4 py-3 bg-ink-900 border border-ink-900 relative overflow-hidden group">
+                <div className="absolute -top-8 -right-8 w-32 h-32 bg-crimson-500 rounded-full blur-[50px] opacity-10 group-hover:opacity-20 transition-opacity"></div>
+                <div className="relative z-10 flex items-center gap-3">
+                  <div className="p-1.5 bg-white/10 shrink-0">
+                    <Zap className="w-4 h-4 text-citrus" />
                   </div>
-                  <h2 className="font-chunk text-2xl leading-tight text-cream">Match against any job in one click.</h2>
-                  <p className="text-xs text-ink-300 leading-relaxed">
-                    Navigate to LinkedIn or Indeed and we'll automatically pull the requirements.
-                  </p>
+                  <div>
+                    <h2 className="font-chunk text-[15px] leading-tight text-cream">Match against any job in one click.</h2>
+                    <p className="text-[10px] text-ink-400 mt-0.5">Navigate to LinkedIn or Indeed to auto-extract.</p>
+                  </div>
                 </div>
               </div>
 
@@ -640,7 +682,7 @@ const SidePanel: React.FC = () => {
                   <div className="p-3 bg-ink-100 group-hover:bg-crimson-500 transition-colors">
                     <LayoutGrid className="w-5 h-5 text-ink-500 group-hover:text-cream" />
                   </div>
-                  <span className="eyebrow text-ink-500 group-hover:text-ink-900 transition-colors">History</span>
+                  <span className="eyebrow text-ink-500 group-hover:text-ink-900 transition-colors">Dashboard</span>
                 </button>
               </div>
 
