@@ -17,6 +17,8 @@ export default async function SettingsPage() {
     .select('*', { count: 'exact', head: true })
     .eq('user_id', user.id)
 
+  const avatarUrl = user.user_metadata?.avatar_url as string | undefined
+  const fullName = user.user_metadata?.full_name as string | undefined
   const initial = (user.email ?? '?')[0].toUpperCase()
 
   return (
@@ -25,12 +27,21 @@ export default async function SettingsPage() {
 
       {/* Profile */}
       <section className="border border-ink-200 rounded-xl p-6 flex items-center gap-5">
-        <div className="w-12 h-12 rounded-full bg-ink-900 text-cream flex items-center justify-center font-chunk text-xl shrink-0">
-          {initial}
-        </div>
+        {avatarUrl ? (
+          <img
+            src={avatarUrl}
+            alt="profile"
+            className="w-14 h-14 rounded-full object-cover shrink-0"
+            referrerPolicy="no-referrer"
+          />
+        ) : (
+          <div className="w-14 h-14 rounded-full bg-ink-900 text-cream flex items-center justify-center font-chunk text-xl shrink-0">
+            {initial}
+          </div>
+        )}
         <div>
-          <p className="text-[15px] text-ink-900 font-medium">{user.email}</p>
-          <p className="text-[13px] text-ink-400 mt-0.5">JobFit user</p>
+          {fullName && <p className="text-[16px] text-ink-900 font-medium">{fullName}</p>}
+          <p className="text-[14px] text-ink-500 mt-0.5">{user.email}</p>
         </div>
       </section>
 
