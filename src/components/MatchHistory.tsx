@@ -17,6 +17,15 @@ async function openWebDashboard() {
   chrome.tabs.create({ url })
 }
 
+async function openInEditor(itemId: string) {
+  const { data: { session } } = await supabase.auth.getSession()
+  let url = `${WEBSITE_URL}/dashboard/history/${itemId}/edit`
+  if (session) {
+    url = `${WEBSITE_URL}/login#access_token=${session.access_token}&refresh_token=${session.refresh_token}&type=bearer&redirect=/dashboard/history/${itemId}/edit`
+  }
+  chrome.tabs.create({ url })
+}
+
 export interface HistoryItem {
   id: string;
   job_title: string;
@@ -149,17 +158,16 @@ const MatchHistory: React.FC = () => {
     setView('analysis');
   };
 
-  const downloadNativeDocx = (htmlContent: string, jobTitle: string) => {
-    const header = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>Resume</title></head><body>";
-    const footer = "</body></html>";
-    const sourceHTML = header + htmlContent + footer;
-    const source = 'data:application/vnd.ms-word;charset=utf-8,' + encodeURIComponent(sourceHTML);
-    const fileDownload = document.createElement("a");
-    document.body.appendChild(fileDownload);
-    fileDownload.href = source;
-    fileDownload.download = `JobFit_Tailored_${jobTitle.replace(/[^a-z0-9]/gi, '_')}.doc`;
-    fileDownload.click();
-    document.body.removeChild(fileDownload);
+  const downloadTex = (latex: string, jobTitle: string) => {
+    const blob = new Blob([latex], { type: 'text/plain' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `JobFit_${jobTitle.replace(/[^a-z0-9]/gi, '_')}.tex`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
   };
 
   if (loading) {
@@ -301,11 +309,11 @@ const MatchHistory: React.FC = () => {
                   <ArrowUpRight className="w-3 h-3" /> open
                 </button>
                 <button
-                  onClick={() => item.generated_resume ? downloadNativeDocx(item.generated_resume, item.job_title) : null}
+                  onClick={() => item.generated_resume ? downloadTex(item.generated_resume, item.job_title) : null}
                   disabled={!item.generated_resume}
                   className="px-3 py-2 flex items-center justify-center gap-1.5 border-l border-r border-ink-100 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-ink-900 hover:text-cream transition-colors text-ink-500"
                 >
-                  <Download className="w-3 h-3" /> {item.generated_resume ? '.docx' : 'no resume'}
+                  <Download className="w-3 h-3" /> {item.generated_resume ? '.tex' : 'no resume'}
                 </button>
                 <button
                   onClick={() => deleteItem(item.id)}
@@ -314,6 +322,20 @@ const MatchHistory: React.FC = () => {
                   remove
                 </button>
               </div>
+
+              {/* Edit in Dashboard — shown only when a resume exists */}
+              {item.generated_resume && (
+                <button
+                  onClick={() => openInEditor(item.id)}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-ink-900 hover:bg-crimson-500 text-cream transition-colors group border-t border-ink-800"
+                >
+                  <span className="font-chunk text-[12px]">
+                    <span className="text-cream">Job</span><span className="serif-accent text-crimson-200 group-hover:text-cream/70">fit</span>
+                  </span>
+                  <span className="text-[10px] font-medium text-cream/70 group-hover:text-cream transition-colors tracking-wide">— edit in dashboard</span>
+                  <ArrowUpRight className="w-3 h-3 text-cream/50 group-hover:text-cream ml-auto transition-colors" />
+                </button>
+              )}
             </div>
           );
         })}

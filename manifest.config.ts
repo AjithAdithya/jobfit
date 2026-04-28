@@ -36,6 +36,7 @@ export default defineManifest(async (env) => ({
     'https://api.anthropic.com/*',
     'https://api.voyageai.com/*',
     'https://api.duckduckgo.com/*',
+    'https://jobfit-amber.vercel.app/*',
   ],
   background: {
     service_worker: 'src/background/index.ts',

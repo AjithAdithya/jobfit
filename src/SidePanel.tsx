@@ -82,6 +82,7 @@ const SidePanel: React.FC = () => {
   const [selectedKeywords, setSelectedKeywords] = useState<string[]>([])
   const [generatingResume, setGeneratingResume] = useState(false)
   const [generatedResume, setGeneratedResume] = useState<string | null>(null)
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null)
   const [regenerateNote, setRegenerateNote] = useState('')
   const [showStylePresets, setShowStylePresets] = useState(false)
   const [activeSection, setActiveSection] = useState<'matches' | 'gaps' | 'keywords' | null>(null)
@@ -328,6 +329,7 @@ const SidePanel: React.FC = () => {
       }
 
       setGeneratedResume(generated)
+      setPdfUrl(null)
 
       // Auto-save to history
       const { activeHistoryItem: histItem } = useUIStore.getState()
@@ -357,6 +359,16 @@ const SidePanel: React.FC = () => {
     a.click()
     document.body.removeChild(a)
     URL.revokeObjectURL(url)
+  }
+
+  const handleDownloadPdf = () => {
+    if (!pdfUrl) return
+    const a = document.createElement('a')
+    a.href = pdfUrl
+    a.download = 'JobFit_Resume.pdf'
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
   }
 
   const handleOpenInEditor = async () => {
@@ -982,6 +994,7 @@ const SidePanel: React.FC = () => {
                         <LatexPreview
                           source={generatedResume}
                           className="html-resume-preview"
+                          onPdfReady={url => setPdfUrl(url)}
                         />
                       </div>
 
@@ -1004,11 +1017,12 @@ const SidePanel: React.FC = () => {
                           .TEX
                         </button>
                         <button
-                          onClick={handleOpenInEditor}
-                          className="flex items-center justify-center gap-2 p-3 bg-ink-900 hover:bg-ink-700 text-cream font-bold uppercase tracking-widest text-xs transition-all shadow-print-sm active:scale-95 border border-ink-900"
+                          onClick={handleDownloadPdf}
+                          disabled={!pdfUrl}
+                          className="flex items-center justify-center gap-2 p-3 bg-ink-900 hover:bg-ink-700 disabled:opacity-40 disabled:cursor-not-allowed text-cream font-bold uppercase tracking-widest text-xs transition-all shadow-print-sm active:scale-95 border border-ink-900"
                         >
                           <Download className="w-4 h-4" />
-                          Edit + PDF
+                          PDF
                         </button>
                         {driveConnected && (
                           <button
@@ -1020,6 +1034,17 @@ const SidePanel: React.FC = () => {
                           </button>
                         )}
                       </div>
+
+                      <button
+                        onClick={handleOpenInEditor}
+                        className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-ink-900 hover:bg-crimson-500 text-cream transition-colors group"
+                      >
+                        <span className="font-chunk text-[13px]">
+                          <span className="text-cream">Job</span><span className="serif-accent text-crimson-200 group-hover:text-cream/70">fit</span>
+                        </span>
+                        <span className="text-[11px] font-medium tracking-wide text-cream/70 group-hover:text-cream transition-colors">— edit in dashboard</span>
+                        <ArrowUpRight className="w-3.5 h-3.5 text-cream/50 group-hover:text-cream ml-auto transition-colors" />
+                      </button>
 
                       {/* Regenerate with feedback */}
                       <div className="border border-ink-200 bg-ink-50">

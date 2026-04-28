@@ -1,4 +1,9 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
+import { Loader2 } from 'lucide-react'
+
+const COMPILE_URL = 'https://jobfit-amber.vercel.app/api/resume/compile'
+
+type Status = 'idle' | 'compiling' | 'done' | 'error'
 
 function isLatex(s: string) {
   return s.trimStart().startsWith('\\documentclass')
@@ -7,10 +12,52 @@ function isLatex(s: string) {
 interface Props {
   source: string
   className?: string
+  onPdfReady?: (url: string) => void
 }
 
-export default function LatexPreview({ source, className = '' }: Props) {
-  const [expanded, setExpanded] = useState(false)
+export default function LatexPreview({ source, className = '', onPdfReady }: Props) {
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null)
+  const [status, setStatus] = useState<Status>('idle')
+  const [error, setError] = useState<string | null>(null)
+  const prevUrl = useRef<string | null>(null)
+
+  useEffect(() => {
+    if (!source.trim() || !isLatex(source)) return
+    let cancelled = false
+
+    setStatus('compiling')
+    setError(null)
+    setPdfUrl(null)
+
+    fetch(COMPILE_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ latex: source }),
+    })
+      .then(res => {
+        if (!res.ok) {
+          return res.json().then(j => Promise.reject(new Error(j.error || `Error ${res.status}`)))
+        }
+        return res.blob()
+      })
+      .then(blob => {
+        if (cancelled) return
+        const url = URL.createObjectURL(blob)
+        if (prevUrl.current) URL.revokeObjectURL(prevUrl.current)
+        prevUrl.current = url
+        setPdfUrl(url)
+        setStatus('done')
+        onPdfReady?.(url)
+      })
+      .catch(e => {
+        if (!cancelled) {
+          setError(e instanceof Error ? e.message : String(e))
+          setStatus('error')
+        }
+      })
+
+    return () => { cancelled = true }
+  }, [source])
 
   if (!source.trim()) return null
 
@@ -20,17 +67,30 @@ export default function LatexPreview({ source, className = '' }: Props) {
 
   return (
     <div className={`relative ${className}`}>
-      <pre
-        className={`font-mono text-[10px] text-ink-700 bg-ink-50 p-3 overflow-auto whitespace-pre-wrap border border-ink-200 ${expanded ? '' : 'max-h-[300px]'}`}
-      >
-        {source}
-      </pre>
-      <button
-        onClick={() => setExpanded(v => !v)}
-        className="w-full text-[10px] font-mono text-ink-400 hover:text-ink-700 py-1 border-t border-ink-200 bg-ink-50 transition-colors"
-      >
-        {expanded ? '▲ collapse' : '▼ show full source'}
-      </button>
+      {status === 'compiling' && (
+        <div className="flex items-center justify-center p-10 text-ink-400 gap-2">
+          <Loader2 className="w-5 h-5 animate-spin" />
+          <span className="text-[11px]">compiling LaTeX…</span>
+        </div>
+      )}
+      {status === 'error' && (
+        <pre className="p-4 text-[11px] text-red-600 bg-red-50 whitespace-pre-wrap overflow-auto max-h-[300px]">
+          {error}
+        </pre>
+      )}
+      {pdfUrl && (
+        <iframe
+          src={pdfUrl}
+          style={{
+            border: 'none',
+            width: '100%',
+            height: '800px',
+            display: status === 'done' ? 'block' : 'none',
+            background: 'white',
+          }}
+          title="Resume Preview"
+        />
+      )}
     </div>
   )
 }
