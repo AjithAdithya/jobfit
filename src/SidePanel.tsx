@@ -13,13 +13,11 @@ import {
   runJobMatchAnalysis, generateTailoredResume,
   runPlannerSync,
 } from './lib/agents'
-import { applyStyleAndFitA4 } from './lib/styleUtils'
 import { getMatchLevel } from './lib/matchLevel'
 import { supabase } from './lib/supabase'
 import type { AnalysisResult } from './lib/agents'
 import { useUIStore } from './store/useUIStore'
 import type { ResumeStyle } from './lib/types'
-import { DEFAULT_RESUME_STYLE } from './lib/types'
 
 // Components
 import MatchCircle from './components/MatchCircle'
@@ -85,7 +83,6 @@ const SidePanel: React.FC = () => {
   const [generatingResume, setGeneratingResume] = useState(false)
   const [generatedResume, setGeneratedResume] = useState<string | null>(null)
   const [regenerateNote, setRegenerateNote] = useState('')
-  const [activeStyle, setActiveStyle] = useState<ResumeStyle>(DEFAULT_RESUME_STYLE)
   const [showStylePresets, setShowStylePresets] = useState(false)
   const [activeSection, setActiveSection] = useState<'matches' | 'gaps' | 'keywords' | null>(null)
   const toggleSection = (key: 'matches' | 'gaps' | 'keywords') =>
@@ -930,7 +927,7 @@ const SidePanel: React.FC = () => {
                         exit={{ opacity: 0, height: 0 }}
                         className="overflow-hidden"
                       >
-                        <StylePresets onStyleApplied={style => setActiveStyle(style)} />
+                        <StylePresets onStyleApplied={(_style: ResumeStyle) => {}} />
                       </motion.div>
                     )}
                   </AnimatePresence>

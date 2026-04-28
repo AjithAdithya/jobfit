@@ -119,11 +119,11 @@ export default function Navbar() {
                   href={link.href}
                   className={`flex items-baseline gap-1.5 text-[15px] transition-colors px-3 py-1 rounded-full ${
                     active
-                      ? 'bg-[#D7FF3A] text-ink-900'
+                      ? 'bg-ink-900 text-cream'
                       : 'text-ink-500 hover:text-ink-900'
                   }`}
                 >
-                  <span className={`font-mono text-[10px] tracking-caps ${active ? 'text-ink-600' : 'text-ink-400'}`}>№{link.num}</span>
+                  <span className={`font-mono text-[10px] tracking-caps ${active ? 'text-ink-400' : 'text-ink-400'}`}>№{link.num}</span>
                   {link.label}
                 </Link>
               )
@@ -199,9 +199,9 @@ export default function Navbar() {
                 key={link.href}
                 href={link.href}
                 onClick={() => setMenuOpen(false)}
-                className={`flex items-baseline gap-3 py-2.5 px-3 rounded-full text-[15px] transition-colors ${active ? 'bg-[#D7FF3A] text-ink-900' : 'text-ink-900'}`}
+                className={`flex items-baseline gap-3 py-2.5 px-3 rounded-full text-[15px] transition-colors ${active ? 'bg-ink-900 text-cream' : 'text-ink-900'}`}
               >
-                <span className={`font-mono text-[10px] tracking-caps ${active ? 'text-ink-600' : 'text-ink-400'}`}>№{link.num}</span>
+                <span className="font-mono text-[10px] tracking-caps text-ink-400">№{link.num}</span>
                 {link.label}
               </Link>
             )
