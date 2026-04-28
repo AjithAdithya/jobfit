@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Loader2 } from 'lucide-react'
 
-type Status = 'idle' | 'loading-engine' | 'compiling' | 'done' | 'error'
+type Status = 'idle' | 'compiling' | 'done' | 'error'
 
 function isLatex(s: string) {
   return s.trimStart().startsWith('\\documentclass')
@@ -23,56 +23,34 @@ export default function LatexPreview({ source, className = '' }: Props) {
     if (!source.trim() || !isLatex(source)) return
     let cancelled = false
 
-    async function run() {
-      setStatus('loading-engine')
-      setError(null)
+    setStatus('compiling')
+    setError(null)
 
-      if (!(window as any).PdfTeXEngine) {
-        await new Promise<void>((resolve, reject) => {
-          const existing = document.querySelector('script[data-swiftlatex]')
-          if (existing) { resolve(); return }
-          const s = document.createElement('script')
-          s.src = 'https://swiftlatex.github.io/SwiftLaTeX/dist/pdftexengine.js'
-          s.setAttribute('data-swiftlatex', '1')
-          s.onload = () => resolve()
-          s.onerror = () => reject(new Error('Failed to load SwiftLaTeX engine'))
-          document.head.appendChild(s)
-        })
-      }
-
-      if (cancelled) return
-
-      const Engine = (window as any).PdfTeXEngine
-      const engine = new Engine()
-      await engine.loadEngine()
-
-      if (cancelled) return
-
-      setStatus('compiling')
-      engine.writeMemFSFile('main.tex', source)
-      engine.setEngineMainFile('main.tex')
-      const result = await engine.compileLaTeX()
-
-      if (cancelled) return
-
-      if (result.status !== 0) {
-        throw new Error(result.log?.slice(-3000) || 'Compile error')
-      }
-
-      const blob = new Blob([result.pdf], { type: 'application/pdf' })
-      const url = URL.createObjectURL(blob)
-      if (prevUrl.current) URL.revokeObjectURL(prevUrl.current)
-      prevUrl.current = url
-      setPdfUrl(url)
-      setStatus('done')
-    }
-
-    run().catch(e => {
-      if (!cancelled) {
-        setError(String(e))
-        setStatus('error')
-      }
+    fetch('/api/resume/compile', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ latex: source }),
     })
+      .then(res => {
+        if (!res.ok) {
+          return res.json().then(j => Promise.reject(new Error(j.error || `Error ${res.status}`)))
+        }
+        return res.blob()
+      })
+      .then(blob => {
+        if (cancelled) return
+        const url = URL.createObjectURL(blob)
+        if (prevUrl.current) URL.revokeObjectURL(prevUrl.current)
+        prevUrl.current = url
+        setPdfUrl(url)
+        setStatus('done')
+      })
+      .catch(e => {
+        if (!cancelled) {
+          setError(e instanceof Error ? e.message : String(e))
+          setStatus('error')
+        }
+      })
 
     return () => { cancelled = true }
   }, [source])
@@ -85,12 +63,10 @@ export default function LatexPreview({ source, className = '' }: Props) {
 
   return (
     <div className={`relative ${className}`}>
-      {(status === 'loading-engine' || status === 'compiling') && (
+      {status === 'compiling' && (
         <div className="flex items-center justify-center p-10 text-ink-400 gap-2">
           <Loader2 className="w-5 h-5 animate-spin" />
-          <span className="text-[13px]">
-            {status === 'loading-engine' ? 'loading engine…' : 'compiling…'}
-          </span>
+          <span className="text-[13px]">compiling…</span>
         </div>
       )}
       {status === 'error' && (
