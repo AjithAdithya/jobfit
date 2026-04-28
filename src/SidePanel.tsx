@@ -347,14 +347,9 @@ const SidePanel: React.FC = () => {
     URL.revokeObjectURL(url)
   }
 
-  const handleDownloadPdf = async () => {
+  const handleDownloadPdf = () => {
     if (!generatedResume) return
-    const { HtmlGenerator, parse } = await import('latex.js')
-    const generator = new HtmlGenerator({ hyphenate: false })
-    parse(generatedResume, { generator })
-    const fragment = generator.domFragment()
-    const tmp = document.createElement('div')
-    tmp.appendChild(fragment)
+    const escaped = JSON.stringify(generatedResume)
     const html = `<!DOCTYPE html>
 <html>
 <head>
@@ -362,9 +357,19 @@ const SidePanel: React.FC = () => {
   <title>JobFit Resume</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/latex.js@0.12.6/dist/css/base.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/latex.js@0.12.6/dist/css/article.css">
-  <style>@page { size: letter; margin: 0.5in; } @media print { html, body { margin: 0; } }</style>
+  <style>@page { size: letter; margin: 0; } @media print { html, body { margin: 0; } .page { box-shadow: none !important; } }</style>
 </head>
-<body>${tmp.innerHTML}<script>window.onload=function(){window.print()}<\/script></body>
+<body>
+<script type="module">
+  import { HtmlGenerator, parse } from 'https://cdn.jsdelivr.net/npm/latex.js@0.12.6/dist/latex.mjs'
+  const source = ${escaped}
+  const generator = new HtmlGenerator({ hyphenate: false })
+  parse(source, { generator })
+  document.body.innerHTML = ''
+  document.body.appendChild(generator.domFragment())
+  window.onload = function() { window.print() }
+<\/script>
+</body>
 </html>`
     const url = 'data:text/html;charset=utf-8,' + encodeURIComponent(html)
     chrome.tabs.create({ url })
