@@ -1,7 +1,8 @@
 import { createClient } from '@/lib/supabase/server'
 import { getMatchLevel } from '@/lib/matchLevel'
+import { computeCompleteness, completenessColor } from '@/lib/profileUtils'
 import Link from 'next/link'
-import { ArrowUpRight, Pencil } from 'lucide-react'
+import { ArrowUpRight, Pencil, ArrowRight } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -12,6 +13,11 @@ const STATUS_STYLE: Record<string, string> = {
   Interviewing: 'border-ink-900 text-ink-900 bg-ink-900/5',
   Offer:        'border-citrus text-ink-900 bg-citrus',
   Rejected:     'border-flare text-flare bg-flare/5',
+}
+
+async function getProfile(userId: string, supabase: ReturnType<typeof createClient>) {
+  const { data } = await supabase.from('user_profiles').select('*').eq('user_id', userId).single()
+  return data
 }
 
 async function getStats(userId: string, supabase: ReturnType<typeof createClient>) {
@@ -44,9 +50,15 @@ export default async function DashboardPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return null
 
-  const { items, avgScore, statusCounts, resumeCount } = await getStats(user.id, supabase)
+  const [{ items, avgScore, statusCounts, resumeCount }, profile] = await Promise.all([
+    getStats(user.id, supabase),
+    getProfile(user.id, supabase),
+  ])
   const recent = items.slice(0, 10)
   const name = user.user_metadata?.full_name?.split(' ')[0] || 'friend'
+  const avatarUrl = user.user_metadata?.avatar_url as string | undefined
+  const profileCompleteness = profile ? computeCompleteness(profile) : 0
+  const profileBarColor = completenessColor(profileCompleteness)
 
   return (
     <div className="max-w-[1280px] mx-auto px-6 lg:px-10">
@@ -84,6 +96,46 @@ export default async function DashboardPage() {
           </div>
         ))}
       </div>
+
+      {/* Profile card */}
+      <Link href="/dashboard/profile" className="block mb-12 group">
+        <div className="border border-ink-200 hover:border-ink-900 transition-colors p-8 flex items-center gap-6">
+          {/* Avatar */}
+          <div className="shrink-0">
+            {avatarUrl ? (
+              <img src={avatarUrl} alt="profile" className="w-14 h-14 rounded-full object-cover border border-ink-200" referrerPolicy="no-referrer" />
+            ) : (
+              <div className="w-14 h-14 rounded-full bg-ink-900 text-cream flex items-center justify-center font-chunk text-xl">
+                {(user.email ?? '?')[0].toUpperCase()}
+              </div>
+            )}
+          </div>
+
+          {/* Details */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center justify-between mb-1">
+              <p className="font-mono text-[10px] text-ink-400 tracking-caps uppercase">candidate profile</p>
+              <span className="font-mono text-[10px] text-ink-500 num">{profileCompleteness}%</span>
+            </div>
+            <p className="font-chunk text-[22px] tracking-tight text-ink-900 leading-none mb-3 truncate">
+              {profile?.headline ?? (profile ? 'add a headline' : 'complete your profile')}
+            </p>
+            <div className="h-1 bg-ink-100 w-full">
+              <div
+                className={`h-full ${profileBarColor} transition-all`}
+                style={{ width: `${profileCompleteness}%` }}
+              />
+            </div>
+            {profileCompleteness < 80 && (
+              <p className="font-mono text-[10px] text-ink-400 tracking-caps uppercase mt-2">
+                {profileCompleteness < 40 ? 'add your details to improve tailoring accuracy' : 'almost there — a few more fields'}
+              </p>
+            )}
+          </div>
+
+          <ArrowRight className="w-5 h-5 text-ink-300 group-hover:text-ink-900 transition-colors shrink-0" />
+        </div>
+      </Link>
 
       {/* Pipeline */}
       {items.length > 0 && (

@@ -4,7 +4,7 @@ import {
   Sparkles, Settings as SettingsIcon, Loader2, ArrowRight,
   CheckCircle2, AlertCircle, LayoutGrid, Upload, Check,
   Brain, Target, Zap, Home, Briefcase, Download, FileText,
-  Mail, Palette, AlertTriangle, ClipboardPaste, ChevronDown, X, LogOut, ArrowUpRight,
+  Mail, Palette, AlertTriangle, ClipboardPaste, ChevronDown, X, LogOut, ArrowUpRight, User,
 } from 'lucide-react'
 import LatexPreview from './components/LatexPreview'
 import { useAuth } from './hooks/useAuth'
@@ -26,6 +26,8 @@ import SettingsView from './components/Settings'
 import MatchHistory from './components/MatchHistory'
 import CoverLetter from './components/CoverLetter'
 import StylePresets from './components/StylePresets'
+import ProfileView from './components/ProfileView'
+import { useProfile } from './hooks/useProfile'
 import { hasDriveAccess, createGoogleDoc, DriveAuthError } from './lib/gdrive'
 import { MissingApiKeyError } from './lib/anthropic'
 
@@ -103,6 +105,8 @@ const SidePanel: React.FC = () => {
     activeResumeId, activeResumeName, setActiveResume,
     activeHistoryItem, setActiveHistory,
   } = useUIStore()
+
+  const { completeness: profileCompleteness } = useProfile(user?.id)
 
   const fileInputRef = useRef<HTMLInputElement>(null)
   const profileMenuRef = useRef<HTMLDivElement>(null)
@@ -616,6 +620,13 @@ const SidePanel: React.FC = () => {
                   <p className="text-[11px] text-ink-500 truncate">{user?.email}</p>
                 </div>
                 <button
+                  onClick={() => { setView('profile'); setProfileMenuOpen(false) }}
+                  className="w-full flex items-center gap-2 px-3 py-2.5 text-[13px] text-ink-700 hover:bg-ink-50 transition-colors text-left"
+                >
+                  <User className="w-3.5 h-3.5 text-ink-400" />
+                  My Profile
+                </button>
+                <button
                   onClick={() => { setView('settings'); setProfileMenuOpen(false) }}
                   className="w-full flex items-center gap-2 px-3 py-2.5 text-[13px] text-ink-700 hover:bg-ink-50 transition-colors text-left"
                 >
@@ -731,26 +742,66 @@ const SidePanel: React.FC = () => {
                 )}
               </AnimatePresence>
 
-              <div className="grid grid-cols-2 gap-3">
+              {/* Profile nudge — shown once until dismissed if < 40% complete */}
+              {profileCompleteness < 40 && (
+                <button
+                  onClick={() => setView('profile')}
+                  className="w-full flex items-center gap-3 p-3.5 bg-crimson-500/8 border border-crimson-500/25 hover:bg-crimson-500/15 transition-colors text-left"
+                >
+                  <div className="w-7 h-7 rounded-full bg-crimson-500/15 flex items-center justify-center shrink-0">
+                    <span className="font-chunk text-[11px] text-crimson-500">{profileCompleteness}%</span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[11px] font-bold text-crimson-500">Complete your profile</p>
+                    <p className="text-[10px] text-ink-400 mt-0.5">Helps AI tailor resumes more precisely.</p>
+                  </div>
+                  <ArrowRight className="w-3.5 h-3.5 text-crimson-500/50 shrink-0" />
+                </button>
+              )}
+
+              <div className="grid grid-cols-3 gap-3">
                 <input type="file" ref={fileInputRef} onChange={handleResumeUpload} accept=".pdf" className="hidden" />
                 <button
                   onClick={() => fileInputRef.current?.click()}
                   disabled={resumeProcessing}
-                  className="p-5 bg-white border border-ink-200 hover:border-ink-900 transition-all group flex flex-col items-center gap-3"
+                  className="p-4 bg-white border border-ink-200 hover:border-ink-900 transition-all group flex flex-col items-center gap-2.5"
                 >
-                  <div className="p-3 bg-ink-100 group-hover:bg-crimson-500 transition-colors">
-                    {resumeProcessing ? <Loader2 className="w-5 h-5 animate-spin text-crimson-500 group-hover:text-cream" /> : <Upload className="w-5 h-5 text-ink-500 group-hover:text-cream" />}
+                  <div className="p-2.5 bg-ink-100 group-hover:bg-crimson-500 transition-colors">
+                    {resumeProcessing ? <Loader2 className="w-4 h-4 animate-spin text-crimson-500 group-hover:text-cream" /> : <Upload className="w-4 h-4 text-ink-500 group-hover:text-cream" />}
                   </div>
-                  <span className="eyebrow text-ink-500 group-hover:text-ink-900 transition-colors">Resumes</span>
+                  <span className="eyebrow text-ink-500 group-hover:text-ink-900 transition-colors text-[9px]">Resumes</span>
                 </button>
                 <button
                   onClick={() => setView('history')}
-                  className="p-5 bg-white border border-ink-200 hover:border-ink-900 transition-all group flex flex-col items-center gap-3"
+                  className="p-4 bg-white border border-ink-200 hover:border-ink-900 transition-all group flex flex-col items-center gap-2.5"
                 >
-                  <div className="p-3 bg-ink-100 group-hover:bg-crimson-500 transition-colors">
-                    <LayoutGrid className="w-5 h-5 text-ink-500 group-hover:text-cream" />
+                  <div className="p-2.5 bg-ink-100 group-hover:bg-crimson-500 transition-colors">
+                    <LayoutGrid className="w-4 h-4 text-ink-500 group-hover:text-cream" />
                   </div>
-                  <span className="eyebrow text-ink-500 group-hover:text-ink-900 transition-colors">Dashboard</span>
+                  <span className="eyebrow text-ink-500 group-hover:text-ink-900 transition-colors text-[9px]">Dashboard</span>
+                </button>
+                <button
+                  onClick={() => setView('profile')}
+                  className="p-4 bg-white border border-ink-200 hover:border-ink-900 transition-all group flex flex-col items-center gap-2.5 relative"
+                >
+                  <div className="relative">
+                    {avatarUrl ? (
+                      <img src={avatarUrl} alt="profile" className="w-9 h-9 rounded-full object-cover border border-ink-200 group-hover:border-crimson-500 transition-colors" referrerPolicy="no-referrer" />
+                    ) : (
+                      <div className="w-9 h-9 rounded-full bg-ink-100 group-hover:bg-crimson-500 transition-colors flex items-center justify-center">
+                        <span className="font-chunk text-[13px] text-ink-500 group-hover:text-cream transition-colors">{userInitial}</span>
+                      </div>
+                    )}
+                    {/* Completeness ring indicator */}
+                    <span className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white flex items-center justify-center text-[7px] font-mono font-bold ${
+                      profileCompleteness >= 80 ? 'bg-ink-900 text-cream' :
+                      profileCompleteness >= 40 ? 'bg-citrus text-ink-900' :
+                      'bg-flare text-cream'
+                    }`}>
+                      {profileCompleteness >= 80 ? '✓' : '!'}
+                    </span>
+                  </div>
+                  <span className="eyebrow text-ink-500 group-hover:text-ink-900 transition-colors text-[9px]">Profile</span>
                 </button>
               </div>
 
@@ -1170,6 +1221,16 @@ const SidePanel: React.FC = () => {
           {currentView === 'resumes' && <ResumeManager />}
           {currentView === 'history' && <MatchHistory />}
           {currentView === 'settings' && <SettingsView />}
+          {currentView === 'profile' && user && (
+            <motion.div
+              key="profile"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+            >
+              <ProfileView userId={user.id} onBack={() => setView('dashboard')} />
+            </motion.div>
+          )}
           {currentView === 'cover_letter' && analysis && jobContext && (
             <CoverLetter
               analysis={analysis}

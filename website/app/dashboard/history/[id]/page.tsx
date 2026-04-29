@@ -6,6 +6,7 @@ import { ArrowLeft, ArrowUpRight, Check, Pencil } from 'lucide-react'
 import StatusDropdown from '@/components/StatusDropdown'
 import HistoryResumePreview from '@/components/HistoryResumePreview'
 import ResumeVersionsList from '@/components/ResumeVersionsList'
+import MissingRequirementsRibbon from '@/components/MissingRequirementsRibbon'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -71,8 +72,11 @@ export default async function HistoryDetailPage({ params }: { params: { id: stri
         </div>
       </div>
 
+      {/* Missing requirements ribbon */}
+      <MissingRequirementsRibbon gaps={gaps.filter(g => !selectedGaps.includes(g))} />
+
       {/* Compatibility card */}
-      <div className="border border-ink-900 bg-ink-900 text-cream p-10 lg:p-14 mb-16">
+      <div className="relative border border-ink-900 bg-ink-900 text-cream p-10 lg:p-14 mb-16">
         <p className="font-mono text-[10px] text-citrus tracking-caps uppercase mb-4">compatibility</p>
         <div className="grid grid-cols-12 gap-6 items-end">
           <div className="col-span-8">

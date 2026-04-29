@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Menu, X, Settings, LogOut } from 'lucide-react'
+import { Menu, X, Settings, LogOut, User } from 'lucide-react'
 import type { User as SupabaseUser } from '@supabase/supabase-js'
 import BetaSignupModal from './BetaSignupModal'
 
@@ -151,6 +151,14 @@ export default function Navbar() {
                       <p className="text-[12px] text-ink-500 truncate">{user.email}</p>
                     </div>
                     <Link
+                      href="/dashboard/profile"
+                      onClick={() => setProfileOpen(false)}
+                      className="flex items-center gap-2.5 px-4 py-2.5 text-[14px] text-ink-700 hover:bg-ink-50 transition-colors"
+                    >
+                      <User className="w-3.5 h-3.5 text-ink-400" />
+                      my profile
+                    </Link>
+                    <Link
                       href="/dashboard/settings"
                       onClick={() => setProfileOpen(false)}
                       className="flex items-center gap-2.5 px-4 py-2.5 text-[14px] text-ink-700 hover:bg-ink-50 transition-colors"
@@ -216,6 +224,14 @@ export default function Navbar() {
                     <p className="text-[12px] text-ink-500 truncate">{user.email}</p>
                   </div>
                 </div>
+                <Link
+                  href="/dashboard/profile"
+                  onClick={() => setMenuOpen(false)}
+                  className="flex items-center gap-2.5 py-3 text-[15px] text-ink-700"
+                >
+                  <User className="w-4 h-4 text-ink-400" />
+                  my profile
+                </Link>
                 <Link
                   href="/dashboard/settings"
                   onClick={() => setMenuOpen(false)}

@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import type { CoverLetterTone } from '../lib/agents';
 
-export type AppView = 'dashboard' | 'analysis' | 'resumes' | 'settings' | 'history' | 'cover_letter';
+export type AppView = 'dashboard' | 'analysis' | 'resumes' | 'settings' | 'history' | 'cover_letter' | 'profile';
 
 export interface JobContext {
   title: string;
