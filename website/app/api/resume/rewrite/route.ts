@@ -17,7 +17,15 @@ Apply the user's instruction to the LaTeX source. Rules:
 - Preserve the document structure and preamble.
 - Stay truthful — do not fabricate credentials or metrics not already present.
 - Keep ATS best practices: single-column, standard headings, action verbs, metrics.
-- No markdown fences, no explanation, just raw LaTeX.`
+- No markdown fences, no explanation, just raw LaTeX.
+
+LATEX SAFETY — always escape these characters or the document will fail to compile:
+- Dollar amounts: \\$ not $ (e.g. \\$100K)
+- Percent: \\% not % (e.g. 35\\%)
+- Ampersand: \\& not &
+- Hash: \\# not #
+- Underscore in text: \\_ not _
+- Never use bare $ — it opens math mode and breaks \\item on subsequent lines.`
 
 export async function POST(req: NextRequest) {
   try {

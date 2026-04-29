@@ -179,6 +179,16 @@ RULES:
 2. DO rewrite bullet points and summaries to naturally incorporate target improvements.
 3. Enhance tone to be professional, impact-driven, and metrics-focused.
 
+LATEX SAFETY — these characters MUST be escaped or the document will fail to compile:
+- Dollar amounts: use \\$ not $ (e.g. \\$100K, \\$2M)
+- Percent: use \\% not % (e.g. 35\\%, 10\\%)
+- Ampersand: use \\& not & (e.g. Sales \\& Marketing)
+- Hash: use \\# not # (e.g. \\#1 ranked)
+- Underscore: use \\_ not _ in plain text
+- Tilde: use \\textasciitilde{} not ~
+- Caret: use \\textasciicircum{} not ^
+- Never use bare $ signs — they open math mode and break itemize bullets on subsequent lines.
+
 ${ATS_GUIDELINES}
 
 OUTPUT FORMAT — complete LaTeX document using EXACTLY this structure:
