@@ -1,4 +1,5 @@
-import { callClaude, callClaudeStream, callClaudeWithTool, withRetry } from './anthropic';
+import { withRetry } from './anthropic';
+import { callClaudeLogged, callClaudeWithToolLogged, callClaudeStreamLogged } from './logger';
 import { generateEmbeddings } from './voyage';
 import { searchResumeChunks } from './search';
 import { ATS_GUIDELINES } from './ats_guidelines';
@@ -123,10 +124,11 @@ export async function runJobMatchAnalysis(
   // 1. Analyze content — detects whether it's a JD and extracts requirements
   type AnalyzerOutput = { isJobDescription: boolean; reason: string; requirements: string[] };
   const analyzerResult = await withRetry(() =>
-    callClaudeWithTool<AnalyzerOutput>(
+    callClaudeWithToolLogged<AnalyzerOutput>(
       ANALYZER_SYSTEM_PROMPT,
       `Analyze this content:\n\n${wrappedJD}`,
       ANALYZER_TOOL,
+      'analyzer',
       { temperature: 0 }
     )
   );
@@ -149,10 +151,11 @@ export async function runJobMatchAnalysis(
   // 3. Synthesize final analysis
   type SynthesizerOutput = { score: number; matches: string[]; gaps: string[]; keywords: string[] };
   const synthResult = await withRetry(() =>
-    callClaudeWithTool<SynthesizerOutput>(
+    callClaudeWithToolLogged<SynthesizerOutput>(
       SYNTHESIZER_SYSTEM_PROMPT,
       `JOB REQUIREMENTS:\n${requirements.join('\n')}\n\nUSER RESUME CONTEXT:\n${matchContexts.join('\n\n')}\n\nAnalyze the fit.`,
       SYNTHESIZER_TOOL,
+      'synthesizer',
       { temperature: 0 }
     )
   );
@@ -250,7 +253,7 @@ ${userResumeContext}
 Generate the tailored resume as a complete LaTeX document. Output ONLY raw LaTeX starting with \\documentclass.
 `.trim();
 
-  let raw = await callClaude(WRITER_SYSTEM_PROMPT, prompt);
+  let raw = await callClaudeLogged(WRITER_SYSTEM_PROMPT, prompt, 'writer');
   const latex = raw
     .replace(/```latex\s*/gi, '')
     .replace(/```\s*/g, '')
@@ -349,10 +352,11 @@ Compile structured research to help them write a more targeted cover letter. Foc
 
 Return the JSON now.`;
 
-    return await callClaudeWithTool<CompanyResearch>(
+    return await callClaudeWithToolLogged<CompanyResearch>(
       COMPANY_RESEARCHER_SYSTEM_PROMPT,
       prompt,
       COMPANY_RESEARCHER_TOOL,
+      'planner',
       { model: 'claude-sonnet-4-6', maxTokens: 1024 }
     );
   } catch (err) {
@@ -432,7 +436,7 @@ Draft the 4-paragraph cover letter now. Use ONLY facts from the resume context a
 }
 
 export async function generateCoverLetter(input: CoverLetterInput): Promise<string> {
-  return callClaude(COVER_LETTER_SYSTEM_PROMPT, buildCoverLetterPrompt(input), {
+  return callClaudeLogged(COVER_LETTER_SYSTEM_PROMPT, buildCoverLetterPrompt(input), 'cover_letter', {
     model: 'claude-opus-4-7',
     maxTokens: 2048,
   });
@@ -442,9 +446,10 @@ export async function generateCoverLetterStream(
   input: CoverLetterInput,
   onChunk: (text: string) => void
 ): Promise<void> {
-  return callClaudeStream(
+  return callClaudeStreamLogged(
     COVER_LETTER_SYSTEM_PROMPT,
     buildCoverLetterPrompt(input),
+    'cover_letter',
     onChunk,
     { model: 'claude-opus-4-7', maxTokens: 2048 }
   );
@@ -527,9 +532,10 @@ function parseStyleJSON(raw: string): ResumeStyle {
 }
 
 export async function runStylistAgent(instruction: string): Promise<ResumeStyle> {
-  const raw = await callClaude(
+  const raw = await callClaudeLogged(
     STYLIST_SYSTEM_PROMPT,
     `Convert these styling preferences to JSON:\n\n${instruction}`,
+    'stylist',
     { model: 'claude-haiku-4-5', maxTokens: 512 }
   );
   return parseStyleJSON(raw);
@@ -550,9 +556,10 @@ Detected PDF metadata:
 
 Replicate this style as closely as possible. Use the exact font sizes. Infer spacing.section from the heading font size and typical resume conventions. Keep colors professional (black/dark text on white unless the sample clearly suggests otherwise).`;
 
-  const raw = await callClaude(
+  const raw = await callClaudeLogged(
     STYLE_EXTRACTOR_SYSTEM_PROMPT,
     prompt,
+    'stylist',
     { model: 'claude-haiku-4-5', maxTokens: 512 }
   );
   return parseStyleJSON(raw);

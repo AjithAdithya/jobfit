@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-export const maxDuration = 30
+export const maxDuration = 60
 
 export async function POST(req: NextRequest) {
   try {
@@ -12,14 +12,25 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Not a valid LaTeX document' }, { status: 400 })
     }
 
-    const compileUrl =
-      'https://latexonline.cc/compile?text=' + encodeURIComponent(latex)
+    // Use multipart POST — putting full LaTeX in a query string hits URL length limits
+    const form = new FormData()
+    form.append('file', new Blob([latex], { type: 'application/x-tex' }), 'resume.tex')
 
-    const upstream = await fetch(compileUrl)
+    const upstream = await fetch('https://latexonline.cc/compile', {
+      method: 'POST',
+      body: form,
+    })
 
     if (!upstream.ok) {
+      const log = await upstream.text().catch(() => '')
+      // Surface the first meaningful log line so the user can act on it
+      const brief = log
+        .split('\n')
+        .find(l => l.startsWith('!') || l.includes('Error'))
+        ?.trim()
+        ?? `upstream ${upstream.status}`
       return NextResponse.json(
-        { error: `LaTeX compilation failed (upstream ${upstream.status})` },
+        { error: `LaTeX compilation failed: ${brief}` },
         { status: 502 }
       )
     }

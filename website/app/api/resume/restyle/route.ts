@@ -1,28 +1,44 @@
 import { NextRequest, NextResponse } from 'next/server'
 import type { ResumeStyle } from '@/lib/types'
 
-const TEMPLATE_DESC: Record<string, string> = {
-  classic: 'traditional academic style with horizontal rules under section headers, serif-friendly',
-  modern: 'clean contemporary style with colored section headers and minimal decorations',
-  compact: 'dense information-first layout with reduced margins and tighter spacing',
+// Maps each font name to the exact pdflatex-compatible \usepackage commands.
+// All of these ship in TeX Live 2020+ and work with pdflatex.
+const FONT_PACKAGES: Record<string, string> = {
+  'Latin Modern':      '\\usepackage[T1]{fontenc}\n\\usepackage{lmodern}',
+  'TeX Gyre Termes':   '\\usepackage[T1]{fontenc}\n\\usepackage{tgtermes}',
+  'TeX Gyre Heros':    '\\usepackage[T1]{fontenc}\n\\usepackage{tgheros}\n\\renewcommand{\\familydefault}{\\sfdefault}',
+  'TeX Gyre Pagella':  '\\usepackage[T1]{fontenc}\n\\usepackage{tgpagella}',
+  'TeX Gyre Bonum':    '\\usepackage[T1]{fontenc}\n\\usepackage{tgbonum}',
+  'EB Garamond':       '\\usepackage[T1]{fontenc}\n\\usepackage{ebgaramond}',
+  'Lato':              '\\usepackage[T1]{fontenc}\n\\usepackage[default]{lato}',
+  'Source Sans Pro':   '\\usepackage[T1]{fontenc}\n\\usepackage[default]{sourcesanspro}',
 }
 
-const SYSTEM_PROMPT = `You are a LaTeX resume stylist. Re-style an existing LaTeX resume according to specifications. You must preserve ALL content exactly — every word, date, metric, and bullet point — while changing only the visual presentation.
+const TEMPLATE_DESC: Record<string, string> = {
+  classic: 'traditional, horizontal rules under section headers',
+  modern:  'clean, colored section headers, minimal decorations',
+  compact: 'dense, reduced margins, tighter spacing throughout',
+}
 
-You may change:
-- Font packages in the preamble (\\usepackage for fonts, fontenc, inputenc)
-- Page margins via geometry package
-- Color definitions and their usage on headings/rules
-- \\linespread, \\setlength for spacing
-- Section header formatting (font size, weight, rule decorators, colors)
-- Column layout (\\onecolumn vs \\twocolumn)
-- Document class base font size option
+function buildFontInstructions(style: ResumeStyle): string {
+  const hPkg = FONT_PACKAGES[style.fontFamily.heading] ?? FONT_PACKAGES['Latin Modern']
+  const bPkg = FONT_PACKAGES[style.fontFamily.body]    ?? FONT_PACKAGES['Latin Modern']
+  // If heading and body resolve to the same package, only emit once
+  const pkgs = hPkg === bPkg ? hPkg : `${hPkg}\n% body font:\n${bPkg}`
+  return `Replace all font packages in the preamble with EXACTLY these lines (remove any existing font packages first):
+${pkgs}
+Do NOT use \\usepackage{fontspec}, xunicode, xltxtra, or any XeLaTeX/LuaLaTeX font package.`
+}
 
-You must NOT change:
-- Any text content (names, job titles, descriptions, dates, metrics, bullets)
-- The logical document structure or ordering of sections
+const SYSTEM_PROMPT = `You are a pdflatex resume stylist. You re-style an existing LaTeX resume so it compiles with pdflatex.
 
-Return ONLY the raw LaTeX starting with \\documentclass. No markdown, no explanation.`
+STRICT RULES:
+1. Preserve ALL content exactly — every word, date, metric, bullet, and ordering.
+2. Never use fontspec, xunicode, xltxtra, luatextra, or any XeLaTeX/LuaLaTeX-only package.
+3. Use only pdflatex-compatible packages (lmodern, tgtermes, tgheros, tgpagella, tgbonum, ebgaramond, lato, sourcesanspro, xcolor, geometry, etc.).
+4. Keep \\usepackage[utf8]{inputenc} if present.
+5. For colors use \\usepackage{xcolor} with \\definecolor{accent}{HTML}{RRGGBB} (no leading #).
+6. Return ONLY raw LaTeX starting with \\documentclass — no markdown fences, no explanation.`
 
 export async function POST(req: NextRequest) {
   try {
@@ -32,17 +48,41 @@ export async function POST(req: NextRequest) {
     const { latex, style } = (await req.json()) as { latex: string; style: ResumeStyle }
     if (!latex || !style) return NextResponse.json({ error: 'latex and style are required' }, { status: 400 })
 
-    const userPrompt = `Re-style this resume with the following specifications:
+    // Strip the # from hex colors for \definecolor{}{HTML}{...}
+    const primaryHex = style.colors.primary.replace('#', '')
+    const textHex    = style.colors.text.replace('#', '')
+    const mutedHex   = style.colors.muted.replace('#', '')
 
-FONT — Heading: ${style.fontFamily.heading} | Body: ${style.fontFamily.body}
-COLORS — Primary/accent: ${style.colors.primary} (apply to section headers, rules, decorative elements)
-         Text: ${style.colors.text} | Muted: ${style.colors.muted}
-SIZES — Name: ${style.fontSize.name}pt | Sections: ${style.fontSize.heading}pt | Body: ${style.fontSize.body}pt
-SPACING — Between sections: ${style.spacing.section}pt | Item gap: ${style.spacing.item}pt | Line height: ${style.spacing.lineHeight}
-LAYOUT — Columns: ${style.columns} | Show contact icons: ${style.showIcons}
-TEMPLATE — ${style.template}: ${TEMPLATE_DESC[style.template] ?? style.template}
+    const userPrompt = `Apply this visual style to the LaTeX resume below.
 
-CURRENT LaTeX:
+FONT PACKAGES — ${buildFontInstructions(style)}
+
+COLORS (use \\definecolor with HTML format, no leading #):
+  \\definecolor{accent}{HTML}{${primaryHex}}   % section headers, rules
+  \\definecolor{bodytext}{HTML}{${textHex}}
+  \\definecolor{muted}{HTML}{${mutedHex}}
+
+SIZES:
+  Name/title: ${style.fontSize.name}pt
+  Section headings: ${style.fontSize.heading}pt
+  Body text: ${style.fontSize.body}pt (set as document base or \\small override)
+
+SPACING:
+  Between sections: ${style.spacing.section}pt (\\vspace or \\setlength\\sectionskip)
+  Line spread: \\linespread{${style.spacing.lineHeight}}
+
+LAYOUT:
+  Columns: ${style.columns} (use \\twocolumn if 2, otherwise \\onecolumn / single-column article)
+  Contact icons: ${style.showIcons ? 'keep or add FontAwesome icons' : 'remove icons, use plain text'}
+
+TEMPLATE STYLE: ${style.template} — ${TEMPLATE_DESC[style.template] ?? style.template}
+
+MARGINS (geometry package):
+${style.template === 'compact'
+  ? '  top=0.5in, bottom=0.5in, left=0.5in, right=0.5in'
+  : '  top=0.75in, bottom=0.75in, left=0.75in, right=0.75in'}
+
+RESUME TO RESTYLE:
 ${latex}
 
 Return the complete restyled LaTeX document.`
@@ -55,9 +95,9 @@ Return the complete restyled LaTeX document.`
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: 'claude-haiku-4-5',
+        model: 'claude-sonnet-4-6',
         max_tokens: 4000,
-        temperature: 0.2,
+        temperature: 0.1,
         system: SYSTEM_PROMPT,
         messages: [{ role: 'user', content: userPrompt }],
       }),
