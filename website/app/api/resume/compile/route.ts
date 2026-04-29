@@ -42,8 +42,7 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const pdf = await upstream.arrayBuffer()
-    return new NextResponse(pdf, {
+    return new NextResponse(upstream.body, {
       headers: {
         'Content-Type': 'application/pdf',
         'Cache-Control': 'no-store',

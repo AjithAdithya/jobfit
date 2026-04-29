@@ -126,6 +126,8 @@ export default function ResumeEditor(props: Props) {
         throw new Error((j as any).error || `Error ${res.status}`)
       }
       const blob = await res.blob()
+      console.log('[compile] received blob:', blob.size, 'bytes, type:', blob.type)
+      if (blob.size === 0) throw new Error('Empty PDF received from compiler')
       const url = URL.createObjectURL(blob)
       if (prevPdfUrl.current) URL.revokeObjectURL(prevPdfUrl.current)
       prevPdfUrl.current = url
@@ -589,15 +591,11 @@ export default function ResumeEditor(props: Props) {
                     </pre>
                   )}
                   {pdfUrl && !compiling && (
-                    <object
-                      data={pdfUrl}
-                      type="application/pdf"
-                      style={{ border: 'none', width: '100%', height: '1100px' }}
-                    >
-                      <a href={pdfUrl} download="resume.pdf" className="block p-4 text-[13px] text-ink-600 underline">
-                        Download PDF
-                      </a>
-                    </object>
+                    <iframe
+                      src={pdfUrl}
+                      title="Resume PDF"
+                      style={{ border: 'none', width: '100%', height: '1100px', display: 'block' }}
+                    />
                   )}
                   {!pdfUrl && !compiling && !compileError && (
                     <div className="flex items-center justify-center h-full text-ink-300 text-[13px]">
