@@ -1,6 +1,5 @@
 'use client'
-import { useState, useCallback, useEffect } from 'react'
-import dynamic from 'next/dynamic'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
@@ -11,8 +10,6 @@ import {
 import { createClient } from '@/lib/supabase/client'
 import { DEFAULT_RESUME_STYLE } from '@/lib/types'
 import type { ResumeStyle } from '@/lib/types'
-
-const LatexPreview = dynamic(() => import('./LatexPreview'), { ssr: false })
 
 interface Props {
   historyId: string
@@ -74,8 +71,13 @@ const COLOR_SWATCHES = [
 
 export default function ResumeEditor(props: Props) {
   const [latex, setLatex] = useState(props.initialLatex)
-  const [recompileKey, setRecompileKey] = useState(0)
   const [edits, setEdits] = useState<EditEntry[]>([])
+
+  // PDF preview
+  const prevPdfUrl = useRef<string | null>(null)
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null)
+  const [compiling, setCompiling] = useState(false)
+  const [compileError, setCompileError] = useState<string | null>(null)
 
   const [contextCollapsed, setContextCollapsed] = useState(true)
   const [sourceCollapsed, setSourceCollapsed] = useState(true)
@@ -108,7 +110,32 @@ export default function ResumeEditor(props: Props) {
   const [currentNode, setCurrentNode] = useState<string | null>(null)
   const [genError, setGenError] = useState<string | null>(null)
 
-  const busy = generating || modifying || restyling
+  const busy = generating || modifying || restyling || compiling
+
+  const compile = useCallback(async (source: string) => {
+    setCompiling(true)
+    setCompileError(null)
+    try {
+      const res = await fetch('/api/resume/compile', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ latex: source }),
+      })
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}))
+        throw new Error((j as any).error || `Error ${res.status}`)
+      }
+      const blob = await res.blob()
+      const url = URL.createObjectURL(blob)
+      if (prevPdfUrl.current) URL.revokeObjectURL(prevPdfUrl.current)
+      prevPdfUrl.current = url
+      setPdfUrl(url)
+    } catch (e: unknown) {
+      setCompileError(e instanceof Error ? e.message : String(e))
+    } finally {
+      setCompiling(false)
+    }
+  }, [])
 
   // Load presets lazily when style rail first opened
   useEffect(() => {
@@ -153,7 +180,7 @@ export default function ResumeEditor(props: Props) {
       setEdits(prev => [{ id: crypto.randomUUID(), instruction: instruction.trim(), at: Date.now() }, ...prev])
       setLatex(modified)
       setInstruction('')
-      setRecompileKey(k => k + 1)
+      void compile(modified)
     } catch (err: unknown) {
       setModifyError(err instanceof Error ? err.message : 'Modification failed')
     } finally {
@@ -176,7 +203,7 @@ export default function ResumeEditor(props: Props) {
       const restyled: string = (json as any).latex
       if (!restyled) throw new Error('Empty response from server')
       setLatex(restyled)
-      setRecompileKey(k => k + 1)
+      void compile(restyled)
       setShowSavePreset(true)
       setAppliedPresetId(null)
     } catch (err: unknown) {
@@ -285,8 +312,10 @@ export default function ResumeEditor(props: Props) {
           if (eventType === 'node') setCurrentNode(parsed.node)
           else if (eventType === 'done') {
             const incoming = (parsed.html || '').replace(/```latex\s*/gi, '').replace(/```\s*/g, '').trim()
-            setLatex(incoming || parsed.html || '')
+            const newLatex = incoming || parsed.html || ''
+            setLatex(newLatex)
             setCurrentNode(null)
+            void compile(newLatex)
           } else if (eventType === 'error') throw new Error(parsed.error || 'Generation failed')
         }
       }
@@ -540,15 +569,41 @@ export default function ResumeEditor(props: Props) {
                 <div className="px-3 py-1.5 border-b border-ink-200 bg-ink-50 flex items-center justify-between">
                   <span className="font-mono text-[9px] text-ink-400 tracking-caps uppercase">preview</span>
                   <button
-                    onClick={() => setRecompileKey(k => k + 1)}
+                    onClick={() => compile(latex)}
                     disabled={busy}
                     className="flex items-center gap-1 px-2 py-0.5 text-[9px] font-mono tracking-caps uppercase text-ink-500 hover:text-ink-900 hover:bg-ink-100 rounded transition-colors disabled:opacity-40"
                   >
                     <RefreshCcw className="w-2.5 h-2.5" /> recompile
                   </button>
                 </div>
-                <div className="latex-print-target flex-1 overflow-auto bg-white">
-                  <LatexPreview key={recompileKey} source={latex} />
+                <div className="latex-print-target flex-1 bg-white">
+                  {compiling && (
+                    <div className="flex items-center justify-center gap-2 p-10 text-ink-400">
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      <span className="text-[13px]">compiling…</span>
+                    </div>
+                  )}
+                  {compileError && !compiling && (
+                    <pre className="p-4 text-[11px] text-red-600 bg-red-50 whitespace-pre-wrap overflow-auto max-h-[300px]">
+                      {compileError}
+                    </pre>
+                  )}
+                  {pdfUrl && !compiling && (
+                    <object
+                      data={pdfUrl}
+                      type="application/pdf"
+                      style={{ border: 'none', width: '100%', height: '1100px' }}
+                    >
+                      <a href={pdfUrl} download="resume.pdf" className="block p-4 text-[13px] text-ink-600 underline">
+                        Download PDF
+                      </a>
+                    </object>
+                  )}
+                  {!pdfUrl && !compiling && !compileError && (
+                    <div className="flex items-center justify-center h-full text-ink-300 text-[13px]">
+                      hit recompile to preview
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
