@@ -84,6 +84,7 @@ const SidePanel: React.FC = () => {
   const [generatedResume, setGeneratedResume] = useState<string | null>(null)
   const [pdfUrl, setPdfUrl] = useState<string | null>(null)
   const [regenerateNote, setRegenerateNote] = useState('')
+  const [revisionHistory, setRevisionHistory] = useState<Array<{ id: string; note: string; at: number }>>([]);
   const [showStylePresets, setShowStylePresets] = useState(false)
   const [activeSection, setActiveSection] = useState<'matches' | 'gaps' | 'keywords' | null>(null)
   const toggleSection = (key: 'matches' | 'gaps' | 'keywords') =>
@@ -296,21 +297,39 @@ const SidePanel: React.FC = () => {
     }
   }
 
-  const handleGenerateResume = async (feedback?: string) => {
+  const handleGenerateResume = async (note?: string) => {
     if (!jobContext || !activeResumeId) return
 
     setGeneratingResume(true)
     setError(null)
     setWarning(null)
+
+    const trimmedNote = note?.trim()
+
+    // Build the full cumulative revision history including this new note
+    const updatedHistory = trimmedNote
+      ? [...revisionHistory, { id: crypto.randomUUID(), note: trimmedNote, at: Date.now() }]
+      : revisionHistory
+
+    // Format all revisions into a single feedback string so the writer sees every instruction
+    let cumulativeFeedback: string | undefined
+    if (updatedHistory.length > 0) {
+      if (updatedHistory.length === 1) {
+        cumulativeFeedback = updatedHistory[0].note
+      } else {
+        const lines = updatedHistory.map((r, i) => `[${i + 1}] ${r.note}`).join('\n')
+        cumulativeFeedback = `Apply ALL of the following revision instructions cumulatively:\n${lines}`
+      }
+    }
+
     try {
-      // Fetch full resume context
       const { data, error } = await supabase
         .from('resume_chunkies')
         .select('content')
         .eq('resume_id', activeResumeId)
 
       if (error) throw error
-      const fullContext = data.map(d => d.content).join('\n\n')
+      const fullContext = data.map((d: any) => d.content).join('\n\n')
       setResumeContext(fullContext)
 
       const { latex: generated, guardianResult } = await generateTailoredResume(
@@ -318,11 +337,11 @@ const SidePanel: React.FC = () => {
         selectedGaps,
         selectedKeywords,
         fullContext,
-        feedback
+        cumulativeFeedback
       )
 
       if (guardianResult && !guardianResult.safe) {
-        const highViolations = guardianResult.violations.filter(v => v.confidence === 'HIGH')
+        const highViolations = guardianResult.violations.filter((v: any) => v.confidence === 'HIGH')
         if (highViolations.length > 0) {
           setWarning(`AI quality check flagged potential issues. Review the resume carefully before using.`)
         }
@@ -331,13 +350,40 @@ const SidePanel: React.FC = () => {
       setGeneratedResume(generated)
       setPdfUrl(null)
 
-      // Auto-save to history
+      // Commit revision to history only on success
+      if (trimmedNote) {
+        setRevisionHistory(updatedHistory)
+      }
+
+      // Auto-save to history + record version
       const { activeHistoryItem: histItem } = useUIStore.getState()
       if (histItem?.id) {
         await supabase.from('analysis_history').update({
           generated_resume: generated,
           updated_at: new Date().toISOString(),
         }).eq('id', histItem.id)
+
+        // Compute the next version number for this history item
+        const { data: { user } } = await supabase.auth.getUser()
+        const { data: latest } = await supabase
+          .from('resume_versions')
+          .select('version_number')
+          .eq('analysis_history_id', histItem.id)
+          .order('version_number', { ascending: false })
+          .limit(1)
+          .maybeSingle()
+        const nextVersion = ((latest?.version_number as number | undefined) ?? 0) + 1
+
+        if (user?.id) {
+          await supabase.from('resume_versions').insert({
+            user_id: user.id,
+            analysis_history_id: histItem.id,
+            version_number: nextVersion,
+            latex: generated,
+            revision_note: trimmedNote ?? null,
+            source: 'extension',
+          })
+        }
       }
     } catch (err: any) {
       if (err instanceof MissingApiKeyError) { goToSettings(); return }
@@ -1049,7 +1095,14 @@ const SidePanel: React.FC = () => {
                       {/* Regenerate with feedback */}
                       <div className="border border-ink-200 bg-ink-50">
                         <div className="px-4 pt-3 pb-2">
-                          <p className="eyebrow text-ink-500 mb-2">Revision notes</p>
+                          <div className="flex items-center justify-between mb-2">
+                            <p className="eyebrow text-ink-500">Revision notes</p>
+                            {revisionHistory.length > 0 && (
+                              <span className="font-mono text-[9px] text-ink-400 tracking-caps uppercase">
+                                {revisionHistory.length} applied
+                              </span>
+                            )}
+                          </div>
                           <textarea
                             value={regenerateNote}
                             onChange={e => setRegenerateNote(e.target.value)}

@@ -1,10 +1,15 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, Save, Trash2, Loader2, Palette, Check, Upload, FileText, AlertCircle } from 'lucide-react';
+import { Sparkles, Save, Trash2, Loader2, Palette, Check, Upload, FileText, AlertCircle, Copy, CheckCheck } from 'lucide-react';
 import { runStylistAgent, runStyleExtractorAgent } from '../lib/agents';
 import { extractPdfStyleData } from '../lib/styleUtils';
 import type { ResumeStyle } from '../lib/types';
 import { supabase } from '../lib/supabase';
+import template1Raw from '../assets/templates/template-1.tex?raw';
+
+const DEFAULT_TEMPLATES = [
+  { id: 'harshibar', name: 'Classic Sans', description: 'Helvetica-style, grey section rules', latex: template1Raw },
+];
 
 interface StylePreset {
   id: string;
@@ -37,7 +42,14 @@ const StylePresets: React.FC<StylePresetsProps> = ({ onStyleApplied }) => {
   const [previewLabel, setPreviewLabel] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [appliedId, setAppliedId] = useState<string | null>(null);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleCopyTemplate = async (id: string, latex: string) => {
+    await navigator.clipboard.writeText(latex);
+    setCopiedId(id);
+    setTimeout(() => setCopiedId(null), 2000);
+  };
 
   useEffect(() => { fetchPresets(); }, []);
 
@@ -272,6 +284,31 @@ const StylePresets: React.FC<StylePresetsProps> = ({ onStyleApplied }) => {
           <p>{error}</p>
         </div>
       )}
+
+      {/* Default templates */}
+      <div className="space-y-2">
+        <p className="eyebrow text-ink-500">Base Templates</p>
+        <div className="space-y-1">
+          {DEFAULT_TEMPLATES.map(t => (
+            <div key={t.id} className="flex items-center gap-2 p-2 border border-ink-200 bg-ink-50">
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-medium text-ink-900">{t.name}</p>
+                <p className="text-[10px] text-ink-400 truncate">{t.description}</p>
+              </div>
+              <button
+                onClick={() => handleCopyTemplate(t.id, t.latex)}
+                className="flex items-center gap-1 px-2 py-1 text-[10px] font-mono uppercase tracking-widest border border-ink-200 hover:border-ink-900 text-ink-500 hover:text-ink-900 transition-all shrink-0"
+                title="Copy LaTeX to clipboard"
+              >
+                {copiedId === t.id
+                  ? <><CheckCheck className="w-3 h-3 text-citrus" /> copied</>
+                  : <><Copy className="w-3 h-3" /> copy</>
+                }
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
 
       {/* Saved presets */}
       {presets.length > 0 && (

@@ -10,6 +10,7 @@ import {
 import { createClient } from '@/lib/supabase/client'
 import { DEFAULT_RESUME_STYLE } from '@/lib/types'
 import type { ResumeStyle } from '@/lib/types'
+import { DEFAULT_TEMPLATES } from '@/lib/defaultTemplates'
 
 interface Props {
   historyId: string
@@ -139,6 +140,12 @@ export default function ResumeEditor(props: Props) {
     }
   }, [])
 
+  // Auto-compile on first load
+  useEffect(() => {
+    if (props.initialLatex.trim()) void compile(props.initialLatex)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   // Load presets lazily when style rail first opened
   useEffect(() => {
     if (styleCollapsed || presetsLoaded) return
@@ -156,6 +163,24 @@ export default function ResumeEditor(props: Props) {
         })
     })
   }, [styleCollapsed, presetsLoaded])
+
+  // Persist a generated/edited resume as a new version row
+  const recordVersion = useCallback(async (latexSource: string, revisionNote: string | null) => {
+    try {
+      await fetch('/api/resume/version', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          historyId: props.historyId,
+          latex: latexSource,
+          revisionNote,
+          source: 'website',
+        }),
+      })
+    } catch (err) {
+      console.warn('Version write failed (non-blocking):', err)
+    }
+  }, [props.historyId])
 
   const handleModify = async () => {
     if (!instruction.trim()) return
@@ -179,10 +204,12 @@ export default function ResumeEditor(props: Props) {
       if (!res.ok) throw new Error((json as any).error || `Server error ${res.status}`)
       const modified: string = (json as any).latex
       if (!modified) throw new Error('Empty response from server')
-      setEdits(prev => [{ id: crypto.randomUUID(), instruction: instruction.trim(), at: Date.now() }, ...prev])
+      const editNote = instruction.trim()
+      setEdits(prev => [{ id: crypto.randomUUID(), instruction: editNote, at: Date.now() }, ...prev])
       setLatex(modified)
       setInstruction('')
       void compile(modified)
+      void recordVersion(modified, `AI edit: ${editNote}`)
     } catch (err: unknown) {
       setModifyError(err instanceof Error ? err.message : 'Modification failed')
     } finally {
@@ -206,6 +233,7 @@ export default function ResumeEditor(props: Props) {
       if (!restyled) throw new Error('Empty response from server')
       setLatex(restyled)
       void compile(restyled)
+      void recordVersion(restyled, 'Re-style applied')
       setShowSavePreset(true)
       setAppliedPresetId(null)
     } catch (err: unknown) {
@@ -318,6 +346,7 @@ export default function ResumeEditor(props: Props) {
             setLatex(newLatex)
             setCurrentNode(null)
             void compile(newLatex)
+            void recordVersion(newLatex, 'Regenerated from analysis')
           } else if (eventType === 'error') throw new Error(parsed.error || 'Generation failed')
         }
       }
@@ -782,6 +811,26 @@ export default function ResumeEditor(props: Props) {
                     >
                       <span className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all ${style.showIcons ? 'left-4.5' : 'left-0.5'}`} />
                     </button>
+                  </div>
+
+                  {/* Default templates */}
+                  <div>
+                    <p className="font-mono text-[9px] text-ink-400 tracking-caps uppercase mb-2">base templates</p>
+                    <div className="space-y-1">
+                      {DEFAULT_TEMPLATES.map(t => (
+                        <button
+                          key={t.id}
+                          onClick={() => { setLatex(t.latex); void compile(t.latex) }}
+                          disabled={busy}
+                          className="w-full flex items-start gap-2 p-2 rounded-sm border border-ink-200 hover:border-ink-900 bg-white text-left transition-all disabled:opacity-40"
+                        >
+                          <div className="flex-1 min-w-0">
+                            <p className="text-[11px] font-medium text-ink-800">{t.name}</p>
+                            <p className="text-[10px] text-ink-400 truncate">{t.description}</p>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
                   </div>
 
                   {/* Re-style button */}

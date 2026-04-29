@@ -3,14 +3,9 @@ import { getMatchLevel } from '@/lib/matchLevel'
 import { notFound, redirect } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, ArrowUpRight, Check, Pencil } from 'lucide-react'
-
-const STATUS_STYLE: Record<string, string> = {
-  Evaluating:   'border-ink-300 text-ink-500',
-  Applied:      'border-sky text-sky bg-sky/5',
-  Interviewing: 'border-ink-900 text-ink-900 bg-ink-900/5',
-  Offer:        'border-citrus text-ink-900 bg-citrus',
-  Rejected:     'border-flare text-flare bg-flare/5',
-}
+import StatusDropdown from '@/components/StatusDropdown'
+import HistoryResumePreview from '@/components/HistoryResumePreview'
+import ResumeVersionsList from '@/components/ResumeVersionsList'
 
 export default async function HistoryDetailPage({ params }: { params: { id: string } }) {
   const supabase = createClient()
@@ -61,9 +56,7 @@ export default async function HistoryDetailPage({ params }: { params: { id: stri
           </div>
         </div>
         <div className="lg:col-span-4 flex flex-col items-start lg:items-end gap-3">
-          <span className={`font-mono text-[11px] tracking-caps uppercase px-4 py-2 border ${STATUS_STYLE[item.status] || STATUS_STYLE.Evaluating}`}>
-            {item.status.toLowerCase()}
-          </span>
+          <StatusDropdown id={item.id} initial={item.status} />
           {item.generated_resume && (
             <Link
               href={`/dashboard/history/${item.id}/edit`}
@@ -195,16 +188,18 @@ export default async function HistoryDetailPage({ params }: { params: { id: stri
               <span className="font-mono text-[10px] text-ink-500 tracking-caps uppercase bg-citrus text-ink-900 px-2 py-0.5">available</span>
             </div>
           </div>
-          <div className="relative p-6 bg-white border border-ink-200">
-            <div
-              className="text-[13px] text-ink-600 max-h-64 overflow-hidden"
-              dangerouslySetInnerHTML={{ __html: item.generated_resume }}
-            />
-            <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-white to-transparent pointer-events-none" />
+          <HistoryResumePreview source={item.generated_resume} />
+        </div>
+      )}
+
+      {/* Version history */}
+      {item.generated_resume && (
+        <div className="mb-16">
+          <div className="flex items-baseline justify-between border-b border-ink-900 pb-3 mb-5">
+            <p className="font-mono text-[10px] text-crimson-500 tracking-caps uppercase">version history</p>
+            <span className="font-mono text-[10px] text-ink-500 tracking-caps uppercase">all generated versions</span>
           </div>
-          <p className="text-center text-[11px] font-mono tracking-caps uppercase text-ink-400 mt-4">
-            download the full .docx from the extension's activity log
-          </p>
+          <ResumeVersionsList historyId={item.id} />
         </div>
       )}
 
