@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowRight, Check, X, Plus, Linkedin, Github, Globe } from 'lucide-react'
+import { ArrowRight, Check, X, Plus, Link, Code2, Globe } from 'lucide-react'
 import { useProfile, computeCompleteness } from '../hooks/useProfile'
 import type { UserProfile } from '../hooks/useProfile'
 
@@ -389,8 +389,8 @@ const ProfileView: React.FC<Props> = ({ userId, onBack }) => {
         <section className="space-y-4">
           <p className="font-mono text-[9px] text-ink-400 tracking-caps uppercase border-b border-ink-100 pb-1.5">links</p>
           {[
-            { key: 'linkedin_url' as const, label: 'LinkedIn', icon: <Linkedin className="w-3.5 h-3.5" />, placeholder: 'linkedin.com/in/…' },
-            { key: 'github_url' as const, label: 'GitHub', icon: <Github className="w-3.5 h-3.5" />, placeholder: 'github.com/…' },
+            { key: 'linkedin_url' as const, label: 'LinkedIn', icon: <Link className="w-3.5 h-3.5" />, placeholder: 'linkedin.com/in/…' },
+            { key: 'github_url' as const, label: 'GitHub', icon: <Code2 className="w-3.5 h-3.5" />, placeholder: 'github.com/…' },
             { key: 'portfolio_url' as const, label: 'Portfolio', icon: <Globe className="w-3.5 h-3.5" />, placeholder: 'yoursite.com' },
           ].map(({ key, label, icon, placeholder }) => (
             <Field key={key} label={label}>

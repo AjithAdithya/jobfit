@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { extractTextFromPdf } from '@/lib/pdf'
 import { chunkText } from '@/lib/processor'
 import { generateEmbeddings } from '@/lib/graph/voyage'
+import { extractProfileFromResume } from '@/lib/graph/profileExtractor'
 
 const MAX_SIZE = 5 * 1024 * 1024 // 5 MB
 
@@ -68,6 +69,27 @@ export async function POST(req: NextRequest) {
     }))
     const { error: chunksError } = await supabase.from('resume_chunkies').insert(chunkRows)
     if (chunksError) throw chunksError
+
+    // 7. Seed profile from resume — only if this is the user's first resume and no profile exists yet
+    const { count: resumeCount } = await supabase
+      .from('resumes')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+    const { data: existingProfile } = await supabase
+      .from('user_profiles')
+      .select('user_id')
+      .eq('user_id', user.id)
+      .single()
+
+    if (resumeCount === 1 && !existingProfile) {
+      // Fire-and-forget — don't block the response
+      extractProfileFromResume(text)
+        .then(fields => {
+          const row = { ...fields, user_id: user.id, updated_at: new Date().toISOString() }
+          return supabase.from('user_profiles').upsert(row, { onConflict: 'user_id' })
+        })
+        .catch(err => console.warn('Profile seed failed (non-fatal):', err))
+    }
 
     return NextResponse.json({
       id: resume.id,

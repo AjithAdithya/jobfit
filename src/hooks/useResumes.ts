@@ -4,6 +4,7 @@ import pdfjsWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 import { supabase } from '../lib/supabase';
 import { chunkText } from '../lib/processor';
 import { generateEmbeddings } from '../lib/voyage';
+import { extractProfileFromResume } from '../lib/profileExtractor';
 
 // Use the locally bundled worker via Vite's ?url import
 pdfjs.GlobalWorkerOptions.workerSrc = pdfjsWorker;
@@ -86,6 +87,21 @@ export const useResumes = () => {
         .insert(chunkData);
 
       if (chunksError) throw chunksError;
+
+      // Seed profile from resume — only if this is the first resume and no profile exists yet
+      const [{ count: resumeCount }, { data: existingProfile }] = await Promise.all([
+        supabase.from('resumes').select('*', { count: 'exact', head: true }).eq('user_id', user.id),
+        supabase.from('user_profiles').select('user_id').eq('user_id', user.id).single(),
+      ]);
+
+      if (resumeCount === 1 && !existingProfile) {
+        extractProfileFromResume(text)
+          .then(fields => {
+            const row = { ...fields, user_id: user.id, updated_at: new Date().toISOString() };
+            return supabase.from('user_profiles').upsert(row, { onConflict: 'user_id' });
+          })
+          .catch(err => console.warn('Profile seed failed (non-fatal):', err));
+      }
 
       console.log('Resume processing complete!');
       return resume;
