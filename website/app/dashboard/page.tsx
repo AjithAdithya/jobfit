@@ -3,6 +3,9 @@ import { getMatchLevel } from '@/lib/matchLevel'
 import Link from 'next/link'
 import { ArrowUpRight, Pencil } from 'lucide-react'
 
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 const STATUS_STYLE: Record<string, string> = {
   Evaluating:   'border-ink-300 text-ink-500',
   Applied:      'border-sky text-sky bg-sky/5',

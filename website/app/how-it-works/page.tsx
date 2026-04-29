@@ -162,10 +162,76 @@ export default function HowItWorksPage() {
         </div>
       </section>
 
+      {/* ── Scoring model ── */}
+      <section className="py-20 lg:py-24 border-t border-ink-900">
+        <div className="max-w-[1280px] mx-auto px-6 lg:px-10">
+          <SectionLabel num="05" label="scoring model" />
+          <h2 className="font-chunk text-big text-ink-900 max-w-3xl mb-4">
+            how the <span className="serif-accent text-crimson-500">match score</span> is built.
+          </h2>
+          <p className="text-[16px] text-ink-500 italic font-serif max-w-2xl mb-12">
+            nine dimensions, weighted, then capped. not a vibe — a rubric.
+          </p>
+
+          {/* Weights table */}
+          <div className="border-t border-l border-ink-900 mb-12">
+            {[
+              { num: '01', name: 'hard skills overlap',          weight: 25, desc: 'must-have technical skills demonstrably present in the resume. adjacent skills count partial. missing any must-have caps the final score at 65.' },
+              { num: '02', name: 'years of relevant experience', weight: 15, desc: 'years of experience in the same role family vs jd requirement. curve, not cliff: at-target = 100, 1yr short = 80, 2yr = 55, 3+ short = 30.' },
+              { num: '03', name: 'responsibility overlap',       weight: 15, desc: 'embedding-based comparison of past duties to the jd’s "what you’ll do". this is the "have they actually done this work" signal.' },
+              { num: '04', name: 'quantified impact',            weight: 10, desc: 'count of metric-bearing bullets, plus a bonus when the metric type matches the jd outcome (e.g. "improve conversion" + a conversion-lift number).' },
+              { num: '05', name: 'domain / industry match',      weight: 10, desc: 'same vertical = 100, adjacent = 70, transferable = 40, unrelated = 15.' },
+              { num: '06', name: 'seniority alignment',          weight: 10, desc: 'ic level vs jd level — same level = 100, one off = 60, two+ off = 25. under-leveling penalised harder than over-leveling.' },
+              { num: '07', name: 'soft skills & leadership',     weight: 5,  desc: 'mentorship, cross-functional ownership, exec-presentation signals. only material if the jd explicitly asks for them.' },
+              { num: '08', name: 'education & certifications',   weight: 5,  desc: 'required degree or cert met = 100, missing required = 0. preferred items contribute partial credit.' },
+              { num: '09', name: 'location / work auth',         weight: 5,  desc: 'timezone, on-site requirement, visa needs. a hard auth blocker caps the final score at 40 and surfaces a warning.' },
+            ].map(row => (
+              <div key={row.num} className="grid grid-cols-12 gap-4 items-baseline border-r border-b border-ink-900 px-6 py-5 bg-cream">
+                <span className="col-span-1 font-mono text-[10px] text-ink-400 tracking-caps uppercase">№ {row.num}</span>
+                <h4 className="col-span-5 font-chunk text-[18px] tracking-tight text-ink-900">{row.name}</h4>
+                <span className="col-span-1 num font-chunk text-[28px] leading-none tracking-tight text-crimson-500">{row.weight}<span className="text-[16px] text-ink-400">%</span></span>
+                <p className="col-span-5 text-[13px] text-ink-600 leading-relaxed">{row.desc}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Caps */}
+          <div className="grid md:grid-cols-2 gap-8 mb-8">
+            <div>
+              <p className="font-mono text-[11px] text-crimson-500 tracking-caps uppercase mb-3">composite</p>
+              <h3 className="font-chunk text-[28px] tracking-tight text-ink-900 mb-3">weighted sum, then capped</h3>
+              <p className="text-[14px] text-ink-600 leading-relaxed">
+                each dimension is scored 0&ndash;100 by claude with a structured rubric. the host computes the
+                weighted average client-side, so weights stay legible, deterministic, and tunable per role family without prompt edits.
+              </p>
+            </div>
+            <div>
+              <p className="font-mono text-[11px] text-crimson-500 tracking-caps uppercase mb-3">caps &amp; guardrails</p>
+              <ul className="space-y-2 text-[13px] text-ink-700">
+                {[
+                  ['missing must-have skill',     'final ≤ 65'],
+                  ['missing required cert',       'final ≤ 70'],
+                  ['3+ years short on experience','final ≤ 70'],
+                  ['visa / work-auth blocker',    'final ≤ 40 + warning'],
+                  ['no quantified impact',        '−5 final'],
+                  ['jd under 100 words',          'flagged low confidence'],
+                ].map(([trigger, effect]) => (
+                  <li key={trigger} className="flex items-baseline gap-3 border-b border-ink-200 pb-2">
+                    <span className="text-crimson-500 font-mono text-[10px] mt-0.5">→</span>
+                    <span className="flex-1">{trigger}</span>
+                    <span className="font-mono text-[10px] text-ink-500 tracking-caps uppercase">{effect}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ── Privacy architecture ── */}
       <section className="py-20 lg:py-24 border-t border-ink-900">
         <div className="max-w-[1280px] mx-auto px-6 lg:px-10">
-          <SectionLabel num="05" label="privacy architecture" />
+          <SectionLabel num="06" label="privacy architecture" />
           <h2 className="font-chunk text-big text-ink-900 max-w-3xl mb-12">
             three <span className="serif-accent text-crimson-500">boundaries</span> of data.
           </h2>

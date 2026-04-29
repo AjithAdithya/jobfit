@@ -7,6 +7,9 @@ import StatusDropdown from '@/components/StatusDropdown'
 import HistoryResumePreview from '@/components/HistoryResumePreview'
 import ResumeVersionsList from '@/components/ResumeVersionsList'
 
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 export default async function HistoryDetailPage({ params }: { params: { id: string } }) {
   const supabase = createClient()
   const { data: { user } } = await supabase.auth.getUser()

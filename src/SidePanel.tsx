@@ -232,7 +232,15 @@ const SidePanel: React.FC = () => {
       }
 
       // Auto-save to history — upsert on URL so each job gets one row (latest wins)
-      if (user && activeResumeId && jobContext) {
+      if (!user) {
+        console.warn('[analysis] skipping history save — no authenticated user')
+        setWarning('Sign in to save analysis history.')
+      } else if (!activeResumeId) {
+        console.warn('[analysis] skipping history save — no active resume selected')
+        setWarning('Pick an active resume so analyses can be saved to history.')
+      } else if (!jobContext) {
+        console.warn('[analysis] skipping history save — no job context')
+      } else {
         const payload = {
           user_id: user.id,
           resume_id: activeResumeId,
@@ -248,43 +256,54 @@ const SidePanel: React.FC = () => {
         }
 
         let saved: any = null
+        let dbError: any = null
         const isRealUrl = jobContext.url && jobContext.url !== 'manual'
 
         if (isRealUrl) {
-          // Check for an existing row for this user + URL
-          const { data: existing } = await supabase
+          const { data: existing, error: selErr } = await supabase
             .from('analysis_history')
             .select('id, status')
             .eq('user_id', user.id)
             .eq('job_url', jobContext.url)
             .maybeSingle()
+          if (selErr) console.error('[analysis] history select failed:', selErr)
 
           if (existing) {
-            const { data } = await supabase
+            const { data, error } = await supabase
               .from('analysis_history')
               .update({ ...payload, status: existing.status ?? 'Evaluating' })
               .eq('id', existing.id)
               .select()
               .single()
             saved = data
+            dbError = error
           } else {
-            const { data } = await supabase
+            const { data, error } = await supabase
               .from('analysis_history')
               .insert(payload)
               .select()
               .single()
             saved = data
+            dbError = error
           }
         } else {
-          const { data } = await supabase
+          const { data, error } = await supabase
             .from('analysis_history')
             .insert(payload)
             .select()
             .single()
           saved = data
+          dbError = error
         }
 
-        if (saved) useUIStore.getState().setActiveHistory(saved)
+        if (dbError) {
+          console.error('[analysis] history write failed:', dbError)
+          setError(`Couldn't save analysis to history: ${dbError.message || dbError.code || 'unknown error'}`)
+        } else if (saved) {
+          useUIStore.getState().setActiveHistory(saved)
+        } else {
+          console.warn('[analysis] history write returned no row and no error')
+        }
       }
       return true
     } catch (err: any) {
