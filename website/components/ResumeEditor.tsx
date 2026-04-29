@@ -374,11 +374,11 @@ export default function ResumeEditor(props: Props) {
           {!contextCollapsed && (
             <aside className="w-64 shrink-0 sticky top-24">
               <div className="border border-ink-200 rounded-md bg-cream text-[12px] max-h-[calc(100vh-160px)] overflow-y-auto">
-                <div className="flex items-center justify-between px-3 py-2 border-b border-ink-100">
-                  <span className="font-mono text-[9px] text-ink-400 tracking-caps uppercase flex items-center gap-1.5">
+                <div className="flex items-center justify-between px-3 py-2.5 border-b border-ink-200 bg-ink-900">
+                  <span className="font-mono text-[9px] text-cream/70 tracking-caps uppercase flex items-center gap-1.5">
                     <FileText className="w-3 h-3" /> context
                   </span>
-                  <button onClick={() => setContextCollapsed(true)} className="text-ink-400 hover:text-ink-900 transition-colors">
+                  <button onClick={() => setContextCollapsed(true)} className="text-cream/50 hover:text-cream transition-colors">
                     <ChevronLeft className="w-3.5 h-3.5" />
                   </button>
                 </div>
@@ -454,23 +454,23 @@ export default function ResumeEditor(props: Props) {
           <main className="flex-1 min-w-0">
             {/* Collapsed panel toggles */}
             {(contextCollapsed || styleCollapsed) && (
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2">
+              <div className="flex items-center justify-between mb-4">
+                <div>
                   {contextCollapsed && (
                     <button
                       onClick={() => setContextCollapsed(false)}
-                      className="flex items-center gap-1.5 text-[9px] font-mono tracking-caps uppercase text-ink-500 hover:text-ink-900 border border-ink-200 hover:border-ink-900 px-2.5 py-1 rounded-sm transition-colors"
+                      className="inline-flex items-center gap-2 px-4 py-2.5 border border-ink-300 text-ink-700 text-[13px] rounded-md hover:border-ink-900 hover:text-ink-900 transition-colors"
                     >
-                      <ChevronRight className="w-3 h-3" /> context
+                      <ChevronRight className="w-4 h-4" /> context
                     </button>
                   )}
                 </div>
                 {styleCollapsed && (
                   <button
                     onClick={() => setStyleCollapsed(false)}
-                    className="flex items-center gap-1.5 text-[9px] font-mono tracking-caps uppercase text-ink-500 hover:text-ink-900 border border-ink-200 hover:border-ink-900 px-2.5 py-1 rounded-sm transition-colors"
+                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-ink-900 text-cream font-medium text-[13px] rounded-md hover:bg-crimson-500 transition-colors"
                   >
-                    style <ChevronRight className="w-3 h-3" />
+                    <Palette className="w-4 h-4" /> style
                   </button>
                 )}
               </div>
@@ -490,8 +490,21 @@ export default function ResumeEditor(props: Props) {
                 </div>
               )}
 
-              {/* Source pane — collapsible */}
-              {!sourceCollapsed && (
+              {/* Source — thin crimson vertical tab when collapsed, full pane when open */}
+              {sourceCollapsed ? (
+                <button
+                  onClick={() => setSourceCollapsed(false)}
+                  title="Show source"
+                  className="w-8 shrink-0 bg-crimson-500 hover:bg-crimson-600 transition-colors flex items-center justify-center border-r border-crimson-600"
+                >
+                  <span
+                    className="font-mono text-[9px] text-white tracking-widest uppercase select-none"
+                    style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}
+                  >
+                    source
+                  </span>
+                </button>
+              ) : (
                 <div className="flex flex-col w-1/2 border-r border-ink-200">
                   <div className="px-3 py-1.5 border-b border-ink-200 bg-ink-50 flex items-center justify-between">
                     <span className="font-mono text-[9px] text-ink-400 tracking-caps uppercase">source</span>
@@ -504,10 +517,10 @@ export default function ResumeEditor(props: Props) {
                       </button>
                       <button
                         onClick={() => setSourceCollapsed(true)}
-                        className="flex items-center gap-1 px-2 py-0.5 text-[9px] font-mono tracking-caps uppercase text-ink-400 hover:text-ink-900 hover:bg-ink-100 rounded transition-colors"
+                        className="p-1 text-ink-400 hover:text-ink-900 hover:bg-ink-100 rounded transition-colors"
                         title="Hide source"
                       >
-                        <ChevronLeft className="w-2.5 h-2.5" />
+                        <ChevronLeft className="w-3 h-3" />
                       </button>
                     </div>
                   </div>
@@ -522,20 +535,10 @@ export default function ResumeEditor(props: Props) {
                 </div>
               )}
 
-              {/* Preview pane — expands when source is hidden */}
-              <div className={`flex flex-col ${sourceCollapsed ? 'w-full' : 'w-1/2'}`}>
+              {/* Preview pane — full width when source is collapsed */}
+              <div className="flex flex-col flex-1 min-w-0">
                 <div className="px-3 py-1.5 border-b border-ink-200 bg-ink-50 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    {sourceCollapsed && (
-                      <button
-                        onClick={() => setSourceCollapsed(false)}
-                        className="flex items-center gap-1 px-2 py-0.5 text-[9px] font-mono tracking-caps uppercase text-ink-500 hover:text-ink-900 hover:bg-ink-100 rounded transition-colors"
-                      >
-                        <ChevronRight className="w-2.5 h-2.5" /> source
-                      </button>
-                    )}
-                    <span className="font-mono text-[9px] text-ink-400 tracking-caps uppercase">preview</span>
-                  </div>
+                  <span className="font-mono text-[9px] text-ink-400 tracking-caps uppercase">preview</span>
                   <button
                     onClick={() => setRecompileKey(k => k + 1)}
                     disabled={busy}
@@ -555,11 +558,11 @@ export default function ResumeEditor(props: Props) {
           {!styleCollapsed && (
             <aside className="w-64 shrink-0 sticky top-24">
               <div className="border border-ink-200 rounded-md bg-cream text-[12px] max-h-[calc(100vh-160px)] overflow-y-auto">
-                <div className="flex items-center justify-between px-3 py-2 border-b border-ink-100">
-                  <span className="font-mono text-[9px] text-ink-400 tracking-caps uppercase flex items-center gap-1.5">
+                <div className="flex items-center justify-between px-3 py-2.5 border-b border-crimson-600 bg-crimson-500">
+                  <span className="font-mono text-[9px] text-white/80 tracking-caps uppercase flex items-center gap-1.5">
                     <Palette className="w-3 h-3" /> style
                   </span>
-                  <button onClick={() => setStyleCollapsed(true)} className="text-ink-400 hover:text-ink-900 transition-colors">
+                  <button onClick={() => setStyleCollapsed(true)} className="text-white/60 hover:text-white transition-colors">
                     <ChevronRight className="w-3.5 h-3.5" />
                   </button>
                 </div>
