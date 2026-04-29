@@ -19,6 +19,8 @@ export default function LatexPreview({ source, className = '' }: Props) {
   const [error, setError] = useState<string | null>(null)
   const prevUrl = useRef<string | null>(null)
 
+  // Deps intentionally empty — compile once per mount.
+  // Parent controls recompilation by incrementing the `key` prop (key={recompileKey}).
   useEffect(() => {
     if (!source.trim() || !isLatex(source)) return
     let cancelled = false
@@ -53,7 +55,8 @@ export default function LatexPreview({ source, className = '' }: Props) {
       })
 
     return () => { cancelled = true }
-  }, [source])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   if (!source.trim()) return null
 
@@ -74,18 +77,16 @@ export default function LatexPreview({ source, className = '' }: Props) {
           {error}
         </pre>
       )}
-      {pdfUrl && (
-        <iframe
-          src={pdfUrl}
-          style={{
-            border: 'none',
-            width: '100%',
-            height: '1100px',
-            display: status === 'done' ? 'block' : 'none',
-            background: 'white',
-          }}
-          title="Resume Preview"
-        />
+      {pdfUrl && status === 'done' && (
+        <object
+          data={pdfUrl}
+          type="application/pdf"
+          style={{ border: 'none', width: '100%', height: '1100px', background: 'white' }}
+        >
+          <a href={pdfUrl} download="resume.pdf" className="block p-4 text-[13px] text-ink-600 underline">
+            Download PDF
+          </a>
+        </object>
       )}
     </div>
   )
