@@ -13,18 +13,16 @@ export async function POST(req: NextRequest) {
     }
 
     // texlive.net — public API run by the TeX Users Group
-    // Accepts url-encoded form body; returns PDF on success, log text on failure.
-    const body = new URLSearchParams({
-      'filecontents[]': latex,
-      'filename[]': 'main.tex',
-      engine: 'pdflatex',
-      return: 'pdf',
-    })
+    // Requires multipart/form-data; filename must be document.tex
+    const body = new FormData()
+    body.append('filecontents[]', latex)
+    body.append('filename[]', 'document.tex')
+    body.append('engine', 'pdflatex')
+    body.append('return', 'pdf')
 
     const upstream = await fetch('https://texlive.net/cgi-bin/latexcgi', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: body.toString(),
+      body,
     })
 
     const ct = upstream.headers.get('content-type') ?? ''
