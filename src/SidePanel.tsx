@@ -435,16 +435,20 @@ const SidePanel: React.FC = () => {
       let { activeHistoryItem: histItem } = useUIStore.getState()
 
       // Fallback: if store was cleared (popup reopen / failed analysis save),
-      // try to recover the row by matching job URL
-      if (!histItem?.id && jobContext?.url && jobContext.url !== 'manual' && user) {
-        const { data: found } = await supabase
+      // try to recover the row by matching job URL. Covers both real URLs and
+      // manual-paste sessions (where url === 'manual'), using title as a tiebreaker.
+      if (!histItem?.id && jobContext?.url && user) {
+        let recoveryQuery = supabase
           .from('analysis_history')
           .select('id')
           .eq('user_id', user.id)
           .eq('job_url', jobContext.url)
           .order('created_at', { ascending: false })
           .limit(1)
-          .maybeSingle()
+        if (jobContext.url === 'manual') {
+          recoveryQuery = recoveryQuery.eq('job_title', jobContext.title) as typeof recoveryQuery
+        }
+        const { data: found } = await recoveryQuery.maybeSingle()
         if (found) {
           histItem = found
           useUIStore.getState().setActiveHistory(found)
@@ -488,9 +492,71 @@ const SidePanel: React.FC = () => {
             }
           }
         }
+      } else if (user && jobContext && analysis) {
+        // Last-resort save: no history row was found via store or URL lookup.
+        // Covers: analysis DB write failure, missing resume at analysis time,
+        // or any other state that left the store empty.
+        // Create a new analysis_history row with generated_resume already set so
+        // the dashboard always shows this resume.
+        const { data: { user: authUser } } = await supabase.auth.getUser()
+        if (authUser) {
+          // One more attempt — search by title+url in case the URL lookup above
+          // missed it (e.g. user was unauthenticated during the earlier recovery attempt).
+          const { data: lateFound } = await supabase
+            .from('analysis_history')
+            .select('id')
+            .eq('user_id', authUser.id)
+            .eq('job_url', jobContext.url)
+            .eq('job_title', jobContext.title)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle()
+
+          if (lateFound) {
+            const { error: patchErr } = await supabase
+              .from('analysis_history')
+              .update({ generated_resume: generated, updated_at: new Date().toISOString() })
+              .eq('id', lateFound.id)
+            if (!patchErr) {
+              useUIStore.getState().setActiveHistory({ ...lateFound, generated_resume: generated })
+            } else {
+              console.error('[generate] last-resort patch failed:', patchErr)
+              setWarning('Resume generated but could not be saved — check your connection.')
+            }
+          } else {
+            // No history row exists at all — create one now with the resume included.
+            const { data: inserted, error: insertErr } = await supabase
+              .from('analysis_history')
+              .insert({
+                user_id: authUser.id,
+                resume_id: activeResumeId,
+                job_title: jobContext.title,
+                job_url: jobContext.url,
+                site_name: jobContext.siteName || 'Unknown',
+                score: analysis.score,
+                matches: analysis.matches,
+                gaps: analysis.gaps,
+                keywords: analysis.keywords,
+                selected_gaps: selectedGaps,
+                selected_keywords: selectedKeywords,
+                generated_resume: generated,
+                status: 'Evaluating',
+              })
+              .select()
+              .single()
+            if (insertErr) {
+              console.error('[generate] last-resort insert failed:', insertErr)
+              setWarning('Resume generated but could not be saved — check your connection.')
+            } else {
+              useUIStore.getState().setActiveHistory(inserted)
+            }
+          }
+        } else {
+          setWarning('Resume generated but not saved — sign in to persist your results.')
+        }
       } else {
-        console.warn('[generate] no history item linked — generated resume not saved to Supabase')
-        setWarning('Resume generated but not saved to history — re-run the job analysis first.')
+        console.warn('[generate] cannot save resume — missing user, jobContext, or analysis data')
+        setWarning('Resume generated but not saved — re-run the job analysis first.')
       }
     } catch (err: any) {
       if (err instanceof MissingApiKeyError) { goToSettings(); return }
