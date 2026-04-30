@@ -3,9 +3,11 @@ import { supabase } from '../lib/supabase'
 
 export interface UserProfile {
   user_id: string
+  email: string | null
   full_name: string | null
   headline: string | null
   bio: string | null
+  professional_summary: string | null
   target_roles: string[]
   target_industries: string[]
   job_type: string | null
@@ -25,7 +27,7 @@ export interface UserProfile {
 }
 
 const SCORED_FIELDS: (keyof UserProfile)[] = [
-  'full_name', 'headline', 'bio',
+  'full_name', 'headline', 'bio', 'professional_summary',
   'target_roles', 'target_industries',
   'job_type', 'remote_preference',
   'seniority_level', 'years_of_experience',

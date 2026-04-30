@@ -299,7 +299,7 @@ ${ATS_GUIDELINES}
 
 OUTPUT FORMAT — complete LaTeX document using EXACTLY this structure. Skip any section not relevant to the user's background, but keep the same formatting and spacing for consistency. Use the user profile section to populate the header and summary, but only include details that are present in the resume context. Tailor the content to address the selected gaps and keywords, weaving them naturally into the bullet points and summary. Use metrics from the resume context to enhance impact where possible. DO NOT fabricate metrics or use generic statements without evidence in the resume context.:
 \\documentclass[10pt]{article}
-\\usepackage[top=0.65in,bottom=0.65in,left=0.7in,right=0.7in]{geometry}
+\\usepackage[top=0.4in,bottom=0.4in,left=0.5in,right=0.5in]{geometry}
 \\pagestyle{empty}
 \\setlength{\\parindent}{0pt}
 \\setlength{\\parskip}{3pt}
@@ -308,16 +308,16 @@ OUTPUT FORMAT — complete LaTeX document using EXACTLY this structure. Skip any
 
 \\begin{center}
 {\\Large\\textbf{FULL NAME}}\\\\[2pt]
-email \\quad|\\quad phone \\quad|\\quad City, ST \\quad|\\quad LinkedIn URL \\quad|\\quad GitHub URL \\quad|\\quad Portfolio URL
+email \\quad| phone \\quad| City, ST \\quad| LinkedIn URL |\\quad GitHub URL \\quad| Portfolio URL
 \\end{center}
-\\noindent\\rule{\\linewidth}{0.5pt}
+\\noindent\\rule{\\linewidth}{0.2pt}
 
-\\vspace{2pt}\\noindent\\textbf{\\large PROFESSIONAL SUMMARY}\\\\[-2pt]
-\\noindent\\rule{\\linewidth}{0.3pt}\\\\[2pt]
+\\vspace{1pt}\\noindent\\textbf{\\large PROFESSIONAL SUMMARY}\\\\[-2pt]
+\\noindent\\rule{\\linewidth}{0.2pt}\\\\[2pt]
 Summary.
 
-\\vspace{4pt}\\noindent\\textbf{\\large EXPERIENCE}\\\\[-2pt]
-\\noindent\\rule{\\linewidth}{0.3pt}
+\\vspace{3pt}\\noindent\\textbf{\\large EXPERIENCE}\\\\[-2pt]
+\\noindent\\rule{\\linewidth}{0.2pt}
 
 \\noindent\\textbf{Job Title} \\hfill \\textit{Month Year -- Present}\\\\
 \\textit{Company, City, ST}
@@ -325,14 +325,14 @@ Summary.
   \\item Bullet with metric.
 \\end{itemize}
 
-\\vspace{4pt}\\noindent\\textbf{\\large EDUCATION}\\\\[-2pt]
-\\noindent\\rule{\\linewidth}{0.3pt}
+\\vspace{3pt}\\noindent\\textbf{\\large EDUCATION}\\\\[-2pt]
+\\noindent\\rule{\\linewidth}{0.2pt}
 
 \\noindent\\textbf{Degree} \\hfill \\textit{Year}\\\\
 \\textit{University}
 
-\\vspace{4pt}\\noindent\\textbf{\\large SKILLS}\\\\[-2pt]
-\\noindent\\rule{\\linewidth}{0.3pt}
+\\vspace{3pt}\\noindent\\textbf{\\large SKILLS}\\\\[-2pt]
+\\noindent\\rule{\\linewidth}{0.2pt}
 
 \\noindent\\textbf{Category:} skill1, skill2
 

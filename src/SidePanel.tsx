@@ -1386,7 +1386,7 @@ const SidePanel: React.FC = () => {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
             >
-              <ProfileView userId={user.id} onBack={() => setView('dashboard')} activeResumeId={activeResumeId} activeResumeName={activeResumeName} />
+              <ProfileView userId={user.id} onBack={() => setView('dashboard')} activeResumeId={activeResumeId} activeResumeName={activeResumeName} userEmail={user.email} />
             </motion.div>
           )}
           {currentView === 'cover_letter' && analysis && jobContext && (
