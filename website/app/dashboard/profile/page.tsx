@@ -23,7 +23,7 @@ export default async function ProfilePage() {
   const initial = (user.email ?? '?')[0].toUpperCase()
 
   return (
-    <div className="max-w-[720px] mx-auto px-6 lg:px-10">
+    <div className="max-w-[720px] mx-auto px-4 sm:px-6 lg:px-10">
 
       <Link href="/dashboard" className="inline-flex items-center gap-2 text-[14px] text-ink-500 hover:text-ink-900 transition-colors mb-12">
         <ArrowLeft className="w-4 h-4" /> back to dashboard

@@ -9,7 +9,8 @@ export type AgentName =
   | 'cover_letter'
   | 'guardian'
   | 'haiku_prefilter'
-  | 'planner';
+  | 'planner'
+  | 'hard_reqs_checker';
 
 const MODEL_COSTS: Record<string, { input: number; output: number }> = {
   'claude-haiku-4-5':          { input: 1.0e-6,  output: 5.0e-6  },

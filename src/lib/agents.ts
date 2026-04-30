@@ -278,7 +278,7 @@ export async function runJobMatchAnalysis(
 
 // ─── Writer ───────────────────────────────────────────────────────────────
 
-const WRITER_SYSTEM_PROMPT = `You are an expert resume writer for 2026. Produce a complete, standalone LaTeX resume document tailored for a specific job.
+const WRITER_SYSTEM_PROMPT = `You are an expert resume writer . Produce a complete, standalone LaTeX resume document tailored for a specific job.
 
 RULES:
 1. DO NOT fabricate or invent work experience, degrees, or metrics not in the source context.
@@ -297,7 +297,7 @@ LATEX SAFETY — these characters MUST be escaped or the document will fail to c
 
 ${ATS_GUIDELINES}
 
-OUTPUT FORMAT — complete LaTeX document using EXACTLY this structure:
+OUTPUT FORMAT — complete LaTeX document using EXACTLY this structure. Skip any section not relevant to the user's background, but keep the same formatting and spacing for consistency. Use the user profile section to populate the header and summary, but only include details that are present in the resume context. Tailor the content to address the selected gaps and keywords, weaving them naturally into the bullet points and summary. Use metrics from the resume context to enhance impact where possible. DO NOT fabricate metrics or use generic statements without evidence in the resume context.:
 \\documentclass[10pt]{article}
 \\usepackage[top=0.65in,bottom=0.65in,left=0.7in,right=0.7in]{geometry}
 \\pagestyle{empty}
@@ -308,7 +308,7 @@ OUTPUT FORMAT — complete LaTeX document using EXACTLY this structure:
 
 \\begin{center}
 {\\Large\\textbf{FULL NAME}}\\\\[2pt]
-email \\quad|\\quad phone \\quad|\\quad City, ST
+email \\quad|\\quad phone \\quad|\\quad City, ST \\quad|\\quad LinkedIn URL \\quad|\\quad GitHub URL \\quad|\\quad Portfolio URL
 \\end{center}
 \\noindent\\rule{\\linewidth}{0.5pt}
 
@@ -340,13 +340,42 @@ Summary.
 
 Output ONLY raw LaTeX starting with \\documentclass. No markdown fences, no explanation.`;
 
+export interface ResumeUserProfile {
+  full_name?: string | null;
+  headline?: string | null;
+  bio?: string | null;
+  location?: string | null;
+  linkedin_url?: string | null;
+  github_url?: string | null;
+  portfolio_url?: string | null;
+  target_roles?: string[];
+  seniority_level?: string | null;
+  years_of_experience?: number | null;
+}
+
+function buildProfileSection(profile: ResumeUserProfile): string {
+  const lines: string[] = [];
+  if (profile.full_name)          lines.push(`Name: ${profile.full_name}`);
+  if (profile.headline)           lines.push(`Headline: ${profile.headline}`);
+  if (profile.bio)                lines.push(`Bio: ${profile.bio}`);
+  if (profile.location)           lines.push(`Location: ${profile.location}`);
+  if (profile.linkedin_url)       lines.push(`LinkedIn: ${profile.linkedin_url}`);
+  if (profile.github_url)         lines.push(`GitHub: ${profile.github_url}`);
+  if (profile.portfolio_url)      lines.push(`Portfolio: ${profile.portfolio_url}`);
+  if (profile.target_roles?.length) lines.push(`Target Roles: ${profile.target_roles.join(', ')}`);
+  if (profile.seniority_level)    lines.push(`Seniority: ${profile.seniority_level}`);
+  if (profile.years_of_experience != null) lines.push(`Years of Experience: ${profile.years_of_experience}`);
+  return lines.length ? `\nUSER PROFILE (use for header, contact info, and summary framing):\n${lines.join('\n')}\n` : '';
+}
+
 export async function generateTailoredResume(
   jobContext: { title: string; url: string },
   selectedGaps: string[],
   selectedKeywords: string[],
   userResumeContext: string,
   userFeedback?: string,
-  companyContext?: string
+  companyContext?: string,
+  userProfile?: ResumeUserProfile | null
 ): Promise<{ latex: string; guardianResult?: GuardianResult }> {
   const feedbackSection = userFeedback?.trim()
     ? `\nUSER REVISION REQUEST — apply these changes:\n${userFeedback.trim()}\n`
@@ -354,6 +383,7 @@ export async function generateTailoredResume(
   const companySection = companyContext?.trim()
     ? `\nCOMPANY CONTEXT (tailor tone and emphasis):\n${companyContext.trim()}\n`
     : '';
+  const profileSection = userProfile ? buildProfileSection(userProfile) : '';
 
   const prompt = `
 JOB TITLE:
@@ -362,7 +392,7 @@ ${jobContext.title}
 TARGET IMPROVEMENTS:
 - Addressed Gaps: ${selectedGaps.join(', ')}
 - Target Keywords: ${selectedKeywords.join(', ')}
-${feedbackSection}${companySection}
+${feedbackSection}${companySection}${profileSection}
 USER'S EXISTING RESUME CONTEXT:
 ${userResumeContext}
 

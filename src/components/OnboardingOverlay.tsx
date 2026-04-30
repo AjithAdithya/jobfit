@@ -7,8 +7,10 @@ import {
 import { validateAnthropicKey, validateVoyageKey } from '../lib/keyValidator'
 import type { KeyStatus } from '../lib/keyValidator'
 import { useResumes } from '../hooks/useResumes'
+import { supabase } from '../lib/supabase'
 
 interface Props {
+  userId: string
   onComplete: (goToProfile: boolean) => void
 }
 
@@ -43,11 +45,7 @@ const slideVariants = {
   exit: { x: -40, opacity: 0 },
 }
 
-const completeOnboarding = (cb: () => void) => {
-  chrome.storage.local.set({ jobfit_onboarding_v1: true }, cb)
-}
-
-export default function OnboardingOverlay({ onComplete }: Props) {
+export default function OnboardingOverlay({ userId, onComplete }: Props) {
   const [stepIndex, setStepIndex] = useState(0)
   const step = STEPS[stepIndex]
 
@@ -370,14 +368,26 @@ export default function OnboardingOverlay({ onComplete }: Props) {
                 </div>
 
                 <button
-                  onClick={() => completeOnboarding(() => onComplete(true))}
+                  onClick={async () => {
+                  await supabase.from('user_profiles').upsert(
+                    { user_id: userId, onboarding_completed: true },
+                    { onConflict: 'user_id' }
+                  )
+onComplete(true)
+                }}
                   className="w-full flex items-center justify-center gap-2 p-4 bg-crimson-500 hover:bg-crimson-600 text-cream font-bold uppercase tracking-widest text-[10px] transition-all active:scale-95"
                 >
                   complete profile <ArrowRight className="w-3 h-3" />
                 </button>
 
                 <button
-                  onClick={() => completeOnboarding(() => onComplete(false))}
+                  onClick={async () => {
+                  await supabase.from('user_profiles').upsert(
+                    { user_id: userId, onboarding_completed: true },
+                    { onConflict: 'user_id' }
+                  )
+onComplete(false)
+                }}
                   className="w-full text-[10px] font-mono text-ink-400 hover:text-ink-700 transition-colors py-1"
                 >
                   i'll do this later

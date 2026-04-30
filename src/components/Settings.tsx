@@ -156,6 +156,18 @@ const Settings: React.FC<SettingsProps> = ({ highlightKeys = false }) => {
     if (!user || deleteConfirmText !== 'DELETE') return;
     setDeleting(true);
     await deleteAllUserData(user.id);
+
+    // Revoke the Google OAuth grant so the app is removed from the user's Google account
+    const stored = await chrome.storage.local.get('google_drive_token');
+    const providerToken = stored.google_drive_token;
+    if (providerToken) {
+      try {
+        await fetch(`https://oauth2.googleapis.com/revoke?token=${providerToken}`, { method: 'POST' });
+      } catch {
+        // Ignore — token may already be expired; Supabase auth deletion handles the identity record
+      }
+    }
+
     chrome.storage.local.remove(['jobfit_anthropic_key', 'jobfit_voyage_key']);
     setDeleting(false);
     signOut();

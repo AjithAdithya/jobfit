@@ -23,7 +23,7 @@ export default async function SettingsPage() {
   const initial = (user.email ?? '?')[0].toUpperCase()
 
   return (
-    <div className="max-w-2xl mx-auto px-6 space-y-8">
+    <div className="max-w-2xl mx-auto px-4 sm:px-6 space-y-8">
       <h1 className="font-chunk text-3xl text-ink-900">settings</h1>
 
       {/* Profile */}

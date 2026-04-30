@@ -7,6 +7,7 @@ import StatusDropdown from '@/components/StatusDropdown'
 import HistoryResumePreview from '@/components/HistoryResumePreview'
 import ResumeVersionsList from '@/components/ResumeVersionsList'
 import MissingRequirementsRibbon from '@/components/MissingRequirementsRibbon'
+import HardRequirementsRibbon from '@/components/HardRequirementsRibbon'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -33,38 +34,38 @@ export default async function HistoryDetailPage({ params }: { params: { id: stri
   const selectedKeywords: string[] = item.selected_keywords || []
 
   return (
-    <div className="max-w-[1100px] mx-auto px-6 lg:px-10">
+    <div className="max-w-[1100px] mx-auto px-4 sm:px-6 lg:px-10">
 
       {/* Back */}
-      <Link href="/dashboard" className="inline-flex items-center gap-2 text-[14px] text-ink-500 hover:text-ink-900 transition-colors mb-12">
+      <Link href="/dashboard" className="inline-flex items-center gap-2 text-[14px] text-ink-500 hover:text-ink-900 transition-colors mb-8 lg:mb-12">
         <ArrowLeft className="w-4 h-4" /> back to dashboard
       </Link>
 
       {/* Header */}
-      <div className="grid lg:grid-cols-12 gap-8 mb-16 items-end">
+      <div className="grid lg:grid-cols-12 gap-6 lg:gap-8 mb-10 lg:mb-16 lg:items-end">
         <div className="lg:col-span-8">
           <p className="font-mono text-[11px] text-crimson-500 tracking-caps uppercase mb-4">№ job · {new Date(item.created_at).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }).toLowerCase()}</p>
-          <h1 className="font-chunk text-[clamp(2.5rem,6vw,4.5rem)] leading-[1.02] tracking-tightest text-ink-900">
+          <h1 className="font-chunk text-[clamp(2rem,7vw,4.5rem)] leading-[1.02] tracking-tightest text-ink-900 break-words">
             {item.job_title}
           </h1>
-          <div className="mt-3 flex flex-wrap items-center gap-3 text-[14px] text-ink-500">
+          <div className="mt-3 flex flex-wrap items-center gap-2 sm:gap-3 text-[14px] text-ink-500">
             <span>{item.site_name}</span>
             {item.job_url && (
               <>
                 <span className="text-ink-300">·</span>
-                <a href={item.job_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 hover:text-crimson-500 transition-colors">
-                  view posting <ArrowUpRight className="w-3 h-3" />
+                <a href={item.job_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 hover:text-crimson-500 transition-colors break-all">
+                  view posting <ArrowUpRight className="w-3 h-3 shrink-0" />
                 </a>
               </>
             )}
           </div>
         </div>
-        <div className="lg:col-span-4 flex flex-col items-start lg:items-end gap-3">
+        <div className="lg:col-span-4 flex flex-col sm:flex-row lg:flex-col items-stretch sm:items-start lg:items-end gap-3">
           <StatusDropdown id={item.id} initial={item.status} />
           {item.generated_resume && (
             <Link
               href={`/dashboard/history/${item.id}/edit`}
-              className="inline-flex items-center gap-2 px-5 py-2.5 bg-ink-900 text-cream font-medium text-[13px] rounded-md hover:bg-crimson-500 transition-colors"
+              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-ink-900 text-cream font-medium text-[13px] rounded-md hover:bg-crimson-500 transition-colors whitespace-nowrap"
             >
               <Pencil className="w-3.5 h-3.5" /> open resume editor
             </Link>
@@ -72,21 +73,24 @@ export default async function HistoryDetailPage({ params }: { params: { id: stri
         </div>
       </div>
 
-      {/* Missing requirements ribbon */}
+      {/* Hard requirements ribbon — mandatory qualifications missing from resume */}
+      <HardRequirementsRibbon requirements={item.hard_requirements || []} />
+
+      {/* Missing requirements ribbon — general gaps mapped to categories */}
       <MissingRequirementsRibbon gaps={gaps.filter(g => !selectedGaps.includes(g))} />
 
       {/* Compatibility card */}
-      <div className="relative border border-ink-900 bg-ink-900 text-cream p-10 lg:p-14 mb-16">
+      <div className="relative border border-ink-900 bg-ink-900 text-cream p-6 sm:p-10 lg:p-14 mb-10 lg:mb-16">
         <p className="font-mono text-[10px] text-citrus tracking-caps uppercase mb-4">compatibility</p>
-        <div className="grid grid-cols-12 gap-6 items-end">
-          <div className="col-span-8">
-            <h2 className="font-chunk text-[clamp(2.5rem,6vw,5rem)] leading-[0.98] tracking-tight text-cream">
+        <div className="grid grid-cols-12 gap-4 sm:gap-6 items-end">
+          <div className="col-span-12 sm:col-span-8">
+            <h2 className="font-chunk text-[clamp(2rem,7vw,5rem)] leading-[0.98] tracking-tight text-cream">
               {level.label.split(' ')[0]} <span className="serif-accent" style={{ color: level.hex }}>{level.label.split(' ').slice(1).join(' ') || 'fit'}</span>
             </h2>
-            <p className="text-[16px] italic font-serif text-cream/70 mt-2">{level.subtitle}</p>
+            <p className="text-[14px] sm:text-[16px] italic font-serif text-cream/70 mt-2">{level.subtitle}</p>
           </div>
-          <div className="col-span-4 text-right">
-            <span className="num font-chunk text-[clamp(4rem,10vw,7.5rem)] leading-none tracking-tightest text-cream">{item.score}</span>
+          <div className="col-span-12 sm:col-span-4 text-left sm:text-right">
+            <span className="num font-chunk text-[clamp(3.5rem,12vw,7.5rem)] leading-none tracking-tightest text-cream">{item.score}</span>
             <span className="num text-[16px] text-cream/50 ml-1">/100</span>
           </div>
         </div>
@@ -111,7 +115,7 @@ export default async function HistoryDetailPage({ params }: { params: { id: stri
       </div>
 
       {/* Strengths + Gaps */}
-      <div className="grid md:grid-cols-2 gap-8 mb-16">
+      <div className="grid md:grid-cols-2 gap-8 mb-10 lg:mb-16">
         {/* Matching strengths */}
         <div>
           <div className="flex items-baseline justify-between border-b border-ink-900 pb-3 mb-5">

@@ -14,8 +14,8 @@ function SectionLabel({ num, label }: { num: string; label: string }) {
 
 function DataRow({ stored, item, location }: { stored: boolean; item: string; location: string }) {
   return (
-    <div className="grid grid-cols-12 gap-4 py-4 border-b border-ink-200 items-center">
-      <div className="col-span-1">
+    <div className="flex items-start gap-3 py-4 border-b border-ink-200">
+      <div className="shrink-0 mt-0.5">
         {stored ? (
           <div className="w-5 h-5 rounded-full bg-citrus flex items-center justify-center">
             <Check className="w-3 h-3 text-ink-900 stroke-[3]" />
@@ -26,8 +26,10 @@ function DataRow({ stored, item, location }: { stored: boolean; item: string; lo
           </div>
         )}
       </div>
-      <div className="col-span-6 text-[15px] text-ink-900">{item}</div>
-      <div className="col-span-5 font-mono text-[11px] text-ink-500 tracking-caps uppercase text-right">{location}</div>
+      <div className="flex-1 flex flex-col sm:flex-row sm:items-center gap-0.5 sm:gap-4 min-w-0">
+        <div className="flex-1 text-[15px] text-ink-900">{item}</div>
+        <div className="font-mono text-[11px] text-ink-500 tracking-caps uppercase sm:text-right shrink-0">{location}</div>
+      </div>
     </div>
   )
 }
@@ -39,7 +41,7 @@ export default function PrivacyPage() {
 
       {/* Hero */}
       <section className="pt-32 pb-16 lg:pt-40 lg:pb-20">
-        <div className="max-w-[1100px] mx-auto px-6 lg:px-10">
+        <div className="max-w-[1100px] mx-auto px-4 sm:px-6 lg:px-10">
           <SectionLabel num="01" label="privacy" />
           <h1 className="font-chunk text-[clamp(3rem,8vw,7rem)] leading-[0.98] tracking-tightest text-ink-900">
             your data.<br />
@@ -53,8 +55,8 @@ export default function PrivacyPage() {
 
       {/* BYOK editorial callout */}
       <section className="py-16 border-t border-ink-900">
-        <div className="max-w-[1100px] mx-auto px-6 lg:px-10">
-          <div className="border border-ink-900 bg-ink-900 text-cream p-10 lg:p-14">
+        <div className="max-w-[1100px] mx-auto px-4 sm:px-6 lg:px-10">
+          <div className="border border-ink-900 bg-ink-900 text-cream p-6 sm:p-10 lg:p-14">
             <p className="font-mono text-[11px] text-citrus tracking-caps uppercase mb-6">the principle · BYOK</p>
             <h2 className="font-chunk text-[clamp(2rem,5vw,4rem)] leading-[1.05] tracking-tight mb-6">
               bring your own<br />
@@ -69,7 +71,7 @@ export default function PrivacyPage() {
 
       {/* Data inventory */}
       <section className="py-20 lg:py-24 border-t border-ink-900">
-        <div className="max-w-[1100px] mx-auto px-6 lg:px-10">
+        <div className="max-w-[1100px] mx-auto px-4 sm:px-6 lg:px-10">
           <SectionLabel num="02" label="data inventory" />
           <h2 className="font-chunk text-big text-ink-900 mb-10 max-w-3xl">
             what's <span className="serif-accent text-crimson-500">stored</span>.<br />
@@ -77,10 +79,10 @@ export default function PrivacyPage() {
           </h2>
 
           <div className="border-t border-ink-900">
-            <div className="grid grid-cols-12 gap-4 py-3 border-b border-ink-900">
-              <div className="col-span-1" />
-              <div className="col-span-6 font-mono text-[10px] text-ink-500 tracking-caps uppercase">data</div>
-              <div className="col-span-5 font-mono text-[10px] text-ink-500 tracking-caps uppercase text-right">location</div>
+            <div className="hidden sm:flex items-center gap-4 py-3 border-b border-ink-900">
+              <div className="w-5 shrink-0" />
+              <div className="flex-1 font-mono text-[10px] text-ink-500 tracking-caps uppercase">data</div>
+              <div className="font-mono text-[10px] text-ink-500 tracking-caps uppercase text-right">location</div>
             </div>
             <DataRow stored item="Anthropic API key" location="browser only" />
             <DataRow stored item="Voyage AI key" location="browser only" />
@@ -100,7 +102,7 @@ export default function PrivacyPage() {
 
       {/* Supabase */}
       <section className="py-20 lg:py-24 border-t border-ink-900">
-        <div className="max-w-[1100px] mx-auto px-6 lg:px-10">
+        <div className="max-w-[1100px] mx-auto px-4 sm:px-6 lg:px-10">
           <SectionLabel num="03" label="your supabase project" />
           <div className="grid lg:grid-cols-12 gap-10">
             <div className="lg:col-span-6">
@@ -129,7 +131,7 @@ export default function PrivacyPage() {
 
       {/* Permissions */}
       <section className="py-20 lg:py-24 border-t border-ink-900">
-        <div className="max-w-[1100px] mx-auto px-6 lg:px-10">
+        <div className="max-w-[1100px] mx-auto px-4 sm:px-6 lg:px-10">
           <SectionLabel num="04" label="chrome permissions" />
           <h2 className="font-chunk text-big text-ink-900 mb-10 max-w-3xl">
             minimal permissions, <span className="serif-accent text-crimson-500">justified</span>.
@@ -142,11 +144,11 @@ export default function PrivacyPage() {
               { perm: 'sidePanel', reason: 'Display the JobFit UI in Chrome\'s built-in side panel.' },
               { perm: 'identity', reason: 'Used for Google OAuth sign-in via Supabase.' },
             ].map(p => (
-              <div key={p.perm} className="grid grid-cols-12 gap-4 py-4 border-b border-ink-200 items-start">
-                <div className="col-span-3">
+              <div key={p.perm} className="flex flex-col sm:flex-row sm:items-start gap-2 sm:gap-6 py-4 border-b border-ink-200">
+                <div className="sm:w-40 shrink-0">
                   <code className="font-mono text-[13px] text-crimson-500 bg-crimson-50 px-2 py-1 rounded-sm">{p.perm}</code>
                 </div>
-                <div className="col-span-9 text-[15px] text-ink-700">{p.reason}</div>
+                <div className="flex-1 text-[15px] text-ink-700">{p.reason}</div>
               </div>
             ))}
           </div>
@@ -155,7 +157,7 @@ export default function PrivacyPage() {
 
       {/* Delete */}
       <section className="py-20 lg:py-24 border-t border-ink-900 bg-ink-900 text-cream">
-        <div className="max-w-[1100px] mx-auto px-6 lg:px-10">
+        <div className="max-w-[1100px] mx-auto px-4 sm:px-6 lg:px-10">
           <div className="flex items-center gap-3 mb-6">
             <span className="font-mono text-[11px] text-citrus tracking-caps uppercase">№ 05</span>
             <span className="h-px bg-cream/30 flex-1 max-w-[80px]" />
@@ -171,7 +173,7 @@ export default function PrivacyPage() {
       </section>
 
       <section className="py-16">
-        <div className="max-w-[1100px] mx-auto px-6 lg:px-10 text-center">
+        <div className="max-w-[1100px] mx-auto px-4 sm:px-6 lg:px-10 text-center">
           <p className="font-mono text-[10px] text-ink-400 tracking-caps uppercase">
             last updated · {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
           </p>

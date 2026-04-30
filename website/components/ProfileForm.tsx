@@ -189,8 +189,8 @@ export default function ProfileForm({ initial, userId }: { initial: Partial<User
       {resumes.length > 0 && (
         <div className="border border-ink-200 bg-white p-6">
           <p className="font-mono text-[10px] text-ink-400 tracking-caps uppercase mb-4">extract from resume</p>
-          <div className="flex items-center gap-3">
-            <div className="p-3 bg-ink-100 shrink-0">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+            <div className="hidden sm:flex p-3 bg-ink-100 shrink-0">
               <FileText className="w-5 h-5 text-ink-500" />
             </div>
             <div className="relative flex-1">
@@ -208,7 +208,7 @@ export default function ProfileForm({ initial, userId }: { initial: Partial<User
             <button
               onClick={handleExtract}
               disabled={extracting || !selectedResumeId}
-              className="shrink-0 flex items-center gap-2 px-5 py-3 bg-ink-900 hover:bg-crimson-500 disabled:opacity-50 text-cream text-[12px] font-mono tracking-caps uppercase transition-colors"
+              className="shrink-0 flex items-center justify-center gap-2 px-5 py-3 bg-ink-900 hover:bg-crimson-500 disabled:opacity-50 text-cream text-[12px] font-mono tracking-caps uppercase transition-colors"
             >
               {extracting
                 ? <><Loader2 className="w-4 h-4 animate-spin" /> extracting…</>

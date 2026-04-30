@@ -61,16 +61,16 @@ export default async function DashboardPage() {
   const profileBarColor = completenessColor(profileCompleteness)
 
   return (
-    <div className="max-w-[1280px] mx-auto px-6 lg:px-10">
+    <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-10">
 
       {/* Header */}
-      <div className="grid lg:grid-cols-12 gap-8 items-end mb-16">
+      <div className="grid lg:grid-cols-12 gap-6 lg:gap-8 lg:items-end mb-10 lg:mb-16">
         <div className="lg:col-span-8">
           <p className="font-mono text-[11px] text-crimson-500 tracking-caps uppercase mb-4">№ 01 — dashboard</p>
-          <h1 className="font-chunk text-[clamp(3rem,7vw,6rem)] leading-[0.98] tracking-tightest text-ink-900">
+          <h1 className="font-chunk text-[clamp(2.5rem,9vw,6rem)] leading-[0.98] tracking-tightest text-ink-900 break-words">
             hey, <span className="serif-accent text-crimson-500">{name}</span>.
           </h1>
-          <p className="mt-4 text-[16px] text-ink-500 italic font-serif">here's your job search, at a glance.</p>
+          <p className="mt-4 text-[15px] sm:text-[16px] text-ink-500 italic font-serif">here's your job search, at a glance.</p>
         </div>
         <div className="lg:col-span-4 flex items-center justify-start lg:justify-end gap-2">
           <span className="w-1.5 h-1.5 rounded-full bg-crimson-500 animate-pulse" />
@@ -79,33 +79,33 @@ export default async function DashboardPage() {
       </div>
 
       {/* Stats — editorial */}
-      <div className="grid md:grid-cols-4 border-t border-l border-ink-900 mb-12">
+      <div className="grid grid-cols-2 md:grid-cols-4 border-t border-l border-ink-900 mb-10 lg:mb-12">
         {[
           { num: '01', value: String(items.length).padStart(2, '0'), label: 'jobs analyzed' },
           { num: '02', value: String(avgScore).padStart(2, '0'), label: 'avg match', suffix: '/100' },
           { num: '03', value: String(statusCounts.Interviewing || 0).padStart(2, '0'), label: 'interviewing' },
           { num: '04', value: String(resumeCount).padStart(2, '0'), label: 'resumes in vault' },
         ].map(stat => (
-          <div key={stat.num} className="border-r border-b border-ink-900 p-8 bg-cream">
-            <p className="font-mono text-[10px] text-ink-400 tracking-caps uppercase mb-6">№ {stat.num}</p>
+          <div key={stat.num} className="border-r border-b border-ink-900 p-5 sm:p-6 lg:p-8 bg-cream">
+            <p className="font-mono text-[9px] sm:text-[10px] text-ink-400 tracking-caps uppercase mb-3 sm:mb-6">№ {stat.num}</p>
             <div className="flex items-baseline gap-1">
-              <span className="font-chunk text-[clamp(3rem,6vw,5rem)] leading-none tracking-tightest text-ink-900">{stat.value}</span>
-              {stat.suffix && <span className="num text-[16px] text-ink-400">{stat.suffix}</span>}
+              <span className="font-chunk text-[clamp(2rem,8vw,5rem)] leading-none tracking-tightest text-ink-900">{stat.value}</span>
+              {stat.suffix && <span className="num text-[12px] sm:text-[16px] text-ink-400">{stat.suffix}</span>}
             </div>
-            <p className="font-mono text-[10px] text-ink-500 tracking-caps uppercase mt-4">{stat.label}</p>
+            <p className="font-mono text-[9px] sm:text-[10px] text-ink-500 tracking-caps uppercase mt-3 sm:mt-4">{stat.label}</p>
           </div>
         ))}
       </div>
 
       {/* Profile card */}
-      <Link href="/dashboard/profile" className="block mb-12 group">
-        <div className="border border-ink-200 hover:border-ink-900 transition-colors p-8 flex items-center gap-6">
+      <Link href="/dashboard/profile" className="block mb-10 lg:mb-12 group">
+        <div className="border border-ink-200 hover:border-ink-900 transition-colors p-5 sm:p-6 lg:p-8 flex items-center gap-4 sm:gap-6">
           {/* Avatar */}
           <div className="shrink-0">
             {avatarUrl ? (
-              <img src={avatarUrl} alt="profile" className="w-14 h-14 rounded-full object-cover border border-ink-200" referrerPolicy="no-referrer" />
+              <img src={avatarUrl} alt="profile" className="w-12 h-12 sm:w-14 sm:h-14 rounded-full object-cover border border-ink-200" referrerPolicy="no-referrer" />
             ) : (
-              <div className="w-14 h-14 rounded-full bg-ink-900 text-cream flex items-center justify-center font-chunk text-xl">
+              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-ink-900 text-cream flex items-center justify-center font-chunk text-lg sm:text-xl">
                 {(user.email ?? '?')[0].toUpperCase()}
               </div>
             )}
@@ -117,7 +117,7 @@ export default async function DashboardPage() {
               <p className="font-mono text-[10px] text-ink-400 tracking-caps uppercase">candidate profile</p>
               <span className="font-mono text-[10px] text-ink-500 num">{profileCompleteness}%</span>
             </div>
-            <p className="font-chunk text-[22px] tracking-tight text-ink-900 leading-none mb-3 truncate">
+            <p className="font-chunk text-[18px] sm:text-[22px] tracking-tight text-ink-900 leading-tight mb-3 truncate">
               {profile?.headline ?? (profile ? 'add a headline' : 'complete your profile')}
             </p>
             <div className="h-1 bg-ink-100 w-full">
@@ -133,7 +133,7 @@ export default async function DashboardPage() {
             )}
           </div>
 
-          <ArrowRight className="w-5 h-5 text-ink-300 group-hover:text-ink-900 transition-colors shrink-0" />
+          <ArrowRight className="w-5 h-5 text-ink-300 group-hover:text-ink-900 transition-colors shrink-0 hidden sm:block" />
         </div>
       </Link>
 
@@ -154,14 +154,14 @@ export default async function DashboardPage() {
 
       {/* Recent */}
       <div>
-        <div className="flex items-baseline justify-between mb-6">
+        <div className="flex items-baseline justify-between mb-6 gap-4">
           <div>
             <p className="font-mono text-[10px] text-crimson-500 tracking-caps uppercase mb-2">№ 02</p>
-            <h2 className="font-chunk text-[clamp(2rem,4vw,3rem)] tracking-tight text-ink-900">
+            <h2 className="font-chunk text-[clamp(1.75rem,5vw,3rem)] tracking-tight text-ink-900">
               recent <span className="serif-accent text-crimson-500">activity</span>
             </h2>
           </div>
-          <span className="font-mono text-[10px] text-ink-400 tracking-caps uppercase">{items.length} total</span>
+          <span className="font-mono text-[10px] text-ink-400 tracking-caps uppercase shrink-0">{items.length} total</span>
         </div>
 
         {items.length === 0 ? (
@@ -177,35 +177,43 @@ export default async function DashboardPage() {
                 <Link
                   key={item.id}
                   href={`/dashboard/history/${item.id}`}
-                  className="grid grid-cols-12 gap-4 items-center py-6 border-b border-ink-200 hover:bg-ink-50 transition-colors px-4 -mx-4 group"
+                  className="block md:grid md:grid-cols-12 md:gap-4 md:items-center py-5 md:py-6 border-b border-ink-200 hover:bg-ink-50 transition-colors px-4 -mx-4 group"
                 >
-                  {/* Score */}
-                  <div className="col-span-1 flex items-center gap-2">
+                  {/* Mobile: stacked card. Desktop: 12-col grid */}
+
+                  {/* Top row on mobile: score + status */}
+                  <div className="md:col-span-1 flex items-center gap-2 md:gap-2 mb-2 md:mb-0">
                     <div
-                      className="w-2.5 h-2.5 rounded-full"
+                      className="w-2.5 h-2.5 rounded-full shrink-0"
                       style={{ background: `linear-gradient(135deg, ${level.gradientFrom}, ${level.gradientTo})` }}
                     />
-                    <span className="num font-chunk text-[28px] leading-none tracking-tight text-ink-900">{item.score}</span>
+                    <span className="num font-chunk text-[24px] md:text-[28px] leading-none tracking-tight text-ink-900">{item.score}</span>
+                    <span className="md:hidden font-serif italic text-[12px] text-crimson-500 ml-2">
+                      {level.label.toLowerCase()}
+                    </span>
+                    <span className="md:hidden font-mono text-[9px] text-ink-400 tracking-caps uppercase ml-auto">
+                      {new Date(item.created_at).toLocaleDateString('en-US', { month: 'short', day: '2-digit' })}
+                    </span>
                   </div>
 
                   {/* Title + company */}
-                  <div className="col-span-6">
-                    <h3 className="font-chunk text-[22px] tracking-tight text-ink-900 truncate">{item.job_title}</h3>
-                    <p className="text-[13px] text-ink-500 mt-0.5">{item.site_name}</p>
+                  <div className="md:col-span-6 mb-3 md:mb-0">
+                    <h3 className="font-chunk text-[18px] md:text-[22px] tracking-tight text-ink-900 truncate">{item.job_title}</h3>
+                    <p className="text-[12px] md:text-[13px] text-ink-500 mt-0.5 truncate">{item.site_name}</p>
                   </div>
 
-                  {/* Level label */}
-                  <div className="col-span-2 font-serif italic text-[14px] text-crimson-500">
+                  {/* Level label — desktop only */}
+                  <div className="hidden md:block md:col-span-2 font-serif italic text-[14px] text-crimson-500">
                     {level.label.toLowerCase()}
                   </div>
 
-                  {/* Date */}
-                  <div className="col-span-1 font-mono text-[10px] text-ink-400 tracking-caps uppercase">
+                  {/* Date — desktop only */}
+                  <div className="hidden md:block md:col-span-1 font-mono text-[10px] text-ink-400 tracking-caps uppercase">
                     {new Date(item.created_at).toLocaleDateString('en-US', { month: 'short', day: '2-digit' })}
                   </div>
 
-                  {/* Status */}
-                  <div className="col-span-2 flex items-center justify-end gap-2">
+                  {/* Status badges */}
+                  <div className="md:col-span-2 flex items-center md:justify-end gap-2 flex-wrap">
                     {item.generated_resume && (
                       <span
                         title="Has tailored resume — click row to open and edit"
@@ -214,10 +222,10 @@ export default async function DashboardPage() {
                         <Pencil className="w-3 h-3" /> resume
                       </span>
                     )}
-                    <span className={`font-mono text-[10px] tracking-caps uppercase px-3 py-1 border ${STATUS_STYLE[item.status] || STATUS_STYLE.Evaluating}`}>
+                    <span className={`font-mono text-[10px] tracking-caps uppercase px-2 sm:px-3 py-1 border ${STATUS_STYLE[item.status] || STATUS_STYLE.Evaluating}`}>
                       {item.status.toLowerCase()}
                     </span>
-                    <ArrowUpRight className="w-4 h-4 text-ink-300 group-hover:text-ink-900 transition-colors" />
+                    <ArrowUpRight className="w-4 h-4 text-ink-300 group-hover:text-ink-900 transition-colors hidden md:block" />
                   </div>
                 </Link>
               )

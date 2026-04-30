@@ -9,7 +9,7 @@ import { ArrowUpRight, ArrowRight } from 'lucide-react'
    ============================================================ */
 function ExtensionMockup() {
   return (
-    <div className="relative w-[380px] bg-cream border border-ink-900 shadow-print-xl" style={{ fontFamily: 'Poppins, sans-serif' }}>
+    <div className="relative w-full bg-cream border border-ink-900 shadow-print-xl" style={{ fontFamily: 'Poppins, sans-serif' }}>
       {/* Header strip */}
       <div className="flex items-center justify-between px-5 py-4 border-b border-ink-200">
         <div className="flex items-center gap-2.5">
@@ -110,9 +110,9 @@ export default function HomePage() {
       <Navbar />
 
       {/* ── HERO ── */}
-      <section className="pt-32 pb-24 lg:pt-40 lg:pb-32 relative">
-        <div className="max-w-[1280px] mx-auto px-6 lg:px-10">
-          <div className="grid lg:grid-cols-12 gap-12 lg:gap-8 items-start">
+      <section className="pt-28 pb-16 lg:pt-40 lg:pb-32 relative">
+        <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-10">
+          <div className="grid lg:grid-cols-12 gap-10 lg:gap-8 items-start">
 
             {/* Left — copy */}
             <div className="lg:col-span-7 relative">
@@ -161,10 +161,10 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* Right — mockup (let it hang into gutter) */}
+            {/* Right — mockup */}
             <div className="lg:col-span-5 flex justify-center lg:justify-end lg:-mr-6">
-              <div className="relative">
-                <div className="absolute -top-6 -left-6 font-mono text-[10px] text-ink-400 tracking-caps uppercase">
+              <div className="relative w-full max-w-[380px]">
+                <div className="hidden sm:block absolute -top-6 -left-6 font-mono text-[10px] text-ink-400 tracking-caps uppercase">
                   fig. 01 · the extension
                 </div>
                 <ExtensionMockup />
@@ -176,7 +176,7 @@ export default function HomePage() {
 
       {/* ── STATS STRIP ── */}
       <section className="border-y border-ink-900 bg-ink-900 text-cream py-10">
-        <div className="max-w-[1280px] mx-auto px-6 lg:px-10">
+        <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-10">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             {[
               { num: '10', label: 'match levels' },
@@ -198,8 +198,8 @@ export default function HomePage() {
       </section>
 
       {/* ── THE SIX FEATURES — editorial grid ── */}
-      <section className="py-24 lg:py-32">
-        <div className="max-w-[1280px] mx-auto px-6 lg:px-10">
+      <section className="py-16 lg:py-32">
+        <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-10">
           <div className="grid lg:grid-cols-12 gap-8 mb-16">
             <div className="lg:col-span-5">
               <p className="font-mono text-[11px] text-crimson-500 tracking-caps uppercase mb-4">№ 02 — the toolkit</p>
@@ -225,7 +225,7 @@ export default function HomePage() {
               { num: '05', title: 'Activity log', accent: 'the whole pipeline, visible', desc: 'Evaluating. Applied. Interviewing. Offer. Rejected. Five status columns, one page, every job you\'ve ever touched.' },
               { num: '06', title: 'Privacy by design', accent: 'BYOK, always', desc: 'Your Anthropic and Voyage keys live in chrome.storage.local. API calls go from your browser, directly to the provider. We\'re never in the loop.' },
             ].map(f => (
-              <div key={f.num} className="border-r border-b border-ink-900 p-8 lg:p-10 hover:bg-ink-900 hover:text-cream transition-colors group cursor-default">
+              <div key={f.num} className="border-r border-b border-ink-900 p-5 sm:p-8 lg:p-10 hover:bg-ink-900 hover:text-cream transition-colors group cursor-default">
                 <div className="font-mono text-[11px] text-ink-400 tracking-caps uppercase mb-6 group-hover:text-cream/60">№ {f.num}</div>
                 <h3 className="font-chunk text-[28px] leading-tight tracking-tight text-ink-900 group-hover:text-cream mb-2">
                   {f.title}
@@ -243,8 +243,8 @@ export default function HomePage() {
       </section>
 
       {/* ── HOW IT WORKS — editorial three-step ── */}
-      <section className="py-24 lg:py-32 bg-ink-900 text-cream">
-        <div className="max-w-[1280px] mx-auto px-6 lg:px-10">
+      <section className="py-16 lg:py-32 bg-ink-900 text-cream">
+        <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-10">
           <div className="mb-16">
             <p className="font-mono text-[11px] text-citrus tracking-caps uppercase mb-4">№ 03 — the workflow</p>
             <h2 className="font-chunk text-big">
@@ -283,8 +283,8 @@ export default function HomePage() {
       </section>
 
       {/* ── PULL QUOTE ── */}
-      <section className="py-24 lg:py-32">
-        <div className="max-w-[1100px] mx-auto px-6 lg:px-10">
+      <section className="py-16 lg:py-32">
+        <div className="max-w-[1100px] mx-auto px-4 sm:px-6 lg:px-10">
           <p className="font-mono text-[11px] text-ink-400 tracking-caps uppercase mb-8 text-center">№ 04 — principle</p>
           <blockquote className="font-serif italic text-[clamp(2rem,5vw,4rem)] leading-[1.1] text-ink-900 text-center">
             "your keys,<br />
@@ -306,8 +306,8 @@ export default function HomePage() {
       </section>
 
       {/* ── FINAL CTA ── */}
-      <section className="py-24 lg:py-32 border-t border-ink-900">
-        <div className="max-w-[1280px] mx-auto px-6 lg:px-10">
+      <section className="py-16 lg:py-32 border-t border-ink-900">
+        <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-10">
           <div className="grid lg:grid-cols-12 gap-8 items-end">
             <div className="lg:col-span-7">
               <p className="font-mono text-[11px] text-crimson-500 tracking-caps uppercase mb-4">№ 05 — ready?</p>

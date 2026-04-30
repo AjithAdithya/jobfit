@@ -20,7 +20,7 @@ export default function HowItWorksPage() {
 
       {/* ── Hero ── */}
       <section className="pt-32 pb-16 lg:pt-40 lg:pb-20">
-        <div className="max-w-[1280px] mx-auto px-6 lg:px-10">
+        <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-10">
           <SectionLabel num="01" label="architecture" />
           <h1 className="font-chunk text-[clamp(3rem,8vw,7.5rem)] leading-[0.98] tracking-tightest text-ink-900 max-w-5xl">
             how <span className="serif-accent text-crimson-500">jobfit</span>
@@ -34,8 +34,8 @@ export default function HowItWorksPage() {
       </section>
 
       {/* ── System Overview ── */}
-      <section className="py-20 lg:py-24 border-t border-ink-900">
-        <div className="max-w-[1280px] mx-auto px-6 lg:px-10">
+      <section className="py-16 lg:py-24 border-t border-ink-900">
+        <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-10">
           <SectionLabel num="02" label="system components" />
           <h2 className="font-chunk text-big text-ink-900 max-w-3xl mb-12">
             four <span className="serif-accent text-crimson-500">things</span> stitched together.
@@ -48,7 +48,7 @@ export default function HowItWorksPage() {
               { num: '03', name: 'claude ai', sub: 'Haiku + Sonnet', desc: 'Haiku for analysis and style extraction. Sonnet for generation.' },
               { num: '04', name: 'voyage ai', sub: 'resume-2 model', desc: 'Semantic embeddings, specifically trained on resume corpora.' },
             ].map(c => (
-              <div key={c.num} className="border-r border-b border-ink-900 p-8 bg-cream">
+              <div key={c.num} className="border-r border-b border-ink-900 p-5 sm:p-8 bg-cream">
                 <p className="font-mono text-[10px] text-ink-400 tracking-caps uppercase mb-4">№ {c.num}</p>
                 <h3 className="font-chunk text-[24px] tracking-tight text-ink-900">{c.name}</h3>
                 <p className="font-serif italic text-[15px] text-crimson-500 mt-1">{c.sub}</p>
@@ -60,15 +60,15 @@ export default function HowItWorksPage() {
       </section>
 
       {/* ── Two flows ── */}
-      <section className="py-20 lg:py-24 border-t border-ink-900">
-        <div className="max-w-[1280px] mx-auto px-6 lg:px-10">
+      <section className="py-16 lg:py-24 border-t border-ink-900">
+        <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-10">
           <SectionLabel num="03" label="the pipeline" />
-          <h2 className="font-chunk text-big text-ink-900 max-w-3xl mb-16">
+          <h2 className="font-chunk text-big text-ink-900 max-w-3xl mb-12 lg:mb-16">
             two <span className="serif-accent text-crimson-500">flows</span>.<br />
             one-time &amp; on-demand.
           </h2>
 
-          <div className="grid lg:grid-cols-2 gap-16 lg:gap-24">
+          <div className="grid lg:grid-cols-2 gap-10 lg:gap-24">
 
             {/* Flow 1 */}
             <div>
@@ -129,8 +129,8 @@ export default function HowItWorksPage() {
       </section>
 
       {/* ── Agents ── */}
-      <section className="py-20 lg:py-24 border-t border-ink-900 bg-ink-900 text-cream">
-        <div className="max-w-[1280px] mx-auto px-6 lg:px-10">
+      <section className="py-16 lg:py-24 border-t border-ink-900 bg-ink-900 text-cream">
+        <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-10">
           <div className="flex items-center gap-3 mb-6">
             <span className="font-mono text-[11px] text-citrus tracking-caps uppercase">№ 04</span>
             <span className="h-px bg-cream/30 flex-1 max-w-[80px]" />
@@ -150,7 +150,7 @@ export default function HowItWorksPage() {
               { name: 'style extractor', model: 'claude haiku', desc: 'Reads font, size, spacing from a template PDF. Produces matching ResumeStyle.' },
               { name: 'embedding pipeline', model: 'voyage resume-2', desc: 'Not an LLM — chunks your resume into dense semantic vectors for similarity search.' },
             ].map(agent => (
-              <div key={agent.name} className="p-8 bg-ink-900">
+              <div key={agent.name} className="p-5 sm:p-8 bg-ink-900">
                 <p className="font-mono text-[10px] text-citrus tracking-caps uppercase mb-3">{agent.model}</p>
                 <h3 className="font-chunk text-[24px] tracking-tight text-cream mb-3">
                   {agent.name}
@@ -163,8 +163,8 @@ export default function HowItWorksPage() {
       </section>
 
       {/* ── Scoring model ── */}
-      <section className="py-20 lg:py-24 border-t border-ink-900">
-        <div className="max-w-[1280px] mx-auto px-6 lg:px-10">
+      <section className="py-16 lg:py-24 border-t border-ink-900">
+        <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-10">
           <SectionLabel num="05" label="scoring model" />
           <h2 className="font-chunk text-big text-ink-900 max-w-3xl mb-4">
             how the <span className="serif-accent text-crimson-500">match score</span> is built.
@@ -178,7 +178,7 @@ export default function HowItWorksPage() {
             {[
               { num: '01', name: 'hard skills overlap',          weight: 25, desc: 'must-have technical skills demonstrably present in the resume. adjacent skills count partial. missing any must-have caps the final score at 65.' },
               { num: '02', name: 'years of relevant experience', weight: 15, desc: 'years of experience in the same role family vs jd requirement. curve, not cliff: at-target = 100, 1yr short = 80, 2yr = 55, 3+ short = 30.' },
-              { num: '03', name: 'responsibility overlap',       weight: 15, desc: 'embedding-based comparison of past duties to the jd’s "what you’ll do". this is the "have they actually done this work" signal.' },
+              { num: '03', name: 'responsibility overlap',       weight: 15, desc: 'embedding-based comparison of past duties to the jd\'s "what you\'ll do". this is the "have they actually done this work" signal.' },
               { num: '04', name: 'quantified impact',            weight: 10, desc: 'count of metric-bearing bullets, plus a bonus when the metric type matches the jd outcome (e.g. "improve conversion" + a conversion-lift number).' },
               { num: '05', name: 'domain / industry match',      weight: 10, desc: 'same vertical = 100, adjacent = 70, transferable = 40, unrelated = 15.' },
               { num: '06', name: 'seniority alignment',          weight: 10, desc: 'ic level vs jd level — same level = 100, one off = 60, two+ off = 25. under-leveling penalised harder than over-leveling.' },
@@ -186,11 +186,21 @@ export default function HowItWorksPage() {
               { num: '08', name: 'education & certifications',   weight: 5,  desc: 'required degree or cert met = 100, missing required = 0. preferred items contribute partial credit.' },
               { num: '09', name: 'location / work auth',         weight: 5,  desc: 'timezone, on-site requirement, visa needs. a hard auth blocker caps the final score at 40 and surfaces a warning.' },
             ].map(row => (
-              <div key={row.num} className="grid grid-cols-12 gap-4 items-baseline border-r border-b border-ink-900 px-6 py-5 bg-cream">
-                <span className="col-span-1 font-mono text-[10px] text-ink-400 tracking-caps uppercase">№ {row.num}</span>
-                <h4 className="col-span-5 font-chunk text-[18px] tracking-tight text-ink-900">{row.name}</h4>
-                <span className="col-span-1 num font-chunk text-[28px] leading-none tracking-tight text-crimson-500">{row.weight}<span className="text-[16px] text-ink-400">%</span></span>
-                <p className="col-span-5 text-[13px] text-ink-600 leading-relaxed">{row.desc}</p>
+              <div key={row.num} className="border-r border-b border-ink-900 px-4 md:px-6 py-4 md:py-5 bg-cream">
+                {/* Mobile: stacked. Desktop: 12-col grid */}
+                <div className="flex items-baseline gap-3 mb-1 md:hidden">
+                  <span className="font-mono text-[10px] text-ink-400 tracking-caps uppercase">№ {row.num}</span>
+                  <span className="num font-chunk text-[22px] leading-none tracking-tight text-crimson-500">{row.weight}<span className="text-[14px] text-ink-400">%</span></span>
+                </div>
+                <h4 className="font-chunk text-[17px] md:hidden tracking-tight text-ink-900 mb-1">{row.name}</h4>
+                <p className="text-[13px] md:hidden text-ink-600 leading-relaxed">{row.desc}</p>
+                {/* Desktop row */}
+                <div className="hidden md:grid md:grid-cols-12 md:gap-4 md:items-baseline">
+                  <span className="col-span-1 font-mono text-[10px] text-ink-400 tracking-caps uppercase">№ {row.num}</span>
+                  <h4 className="col-span-5 font-chunk text-[18px] tracking-tight text-ink-900">{row.name}</h4>
+                  <span className="col-span-1 num font-chunk text-[28px] leading-none tracking-tight text-crimson-500">{row.weight}<span className="text-[16px] text-ink-400">%</span></span>
+                  <p className="col-span-5 text-[13px] text-ink-600 leading-relaxed">{row.desc}</p>
+                </div>
               </div>
             ))}
           </div>
@@ -229,8 +239,8 @@ export default function HowItWorksPage() {
       </section>
 
       {/* ── Privacy architecture ── */}
-      <section className="py-20 lg:py-24 border-t border-ink-900">
-        <div className="max-w-[1280px] mx-auto px-6 lg:px-10">
+      <section className="py-16 lg:py-24 border-t border-ink-900">
+        <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-10">
           <SectionLabel num="06" label="privacy architecture" />
           <h2 className="font-chunk text-big text-ink-900 max-w-3xl mb-12">
             three <span className="serif-accent text-crimson-500">boundaries</span> of data.
@@ -239,7 +249,7 @@ export default function HowItWorksPage() {
           <div className="grid md:grid-cols-3 border-t border-l border-ink-900">
 
             {/* Browser only */}
-            <div className="border-r border-b border-ink-900 p-8 bg-citrus/20">
+            <div className="border-r border-b border-ink-900 p-5 sm:p-8 bg-citrus/20">
               <p className="font-mono text-[10px] text-ink-900 tracking-caps uppercase mb-3">zone 1 · your browser only</p>
               <h3 className="font-chunk text-[22px] tracking-tight text-ink-900 mb-4">never leaves your machine</h3>
               <ul className="space-y-2">
@@ -253,7 +263,7 @@ export default function HowItWorksPage() {
             </div>
 
             {/* Your Supabase */}
-            <div className="border-r border-b border-ink-900 p-8 bg-sky/15">
+            <div className="border-r border-b border-ink-900 p-5 sm:p-8 bg-sky/15">
               <p className="font-mono text-[10px] text-ink-900 tracking-caps uppercase mb-3">zone 2 · your supabase</p>
               <h3 className="font-chunk text-[22px] tracking-tight text-ink-900 mb-4">data namespaced to you</h3>
               <ul className="space-y-2">
@@ -267,7 +277,7 @@ export default function HowItWorksPage() {
             </div>
 
             {/* Never collected */}
-            <div className="border-r border-b border-ink-900 p-8 bg-ink-900 text-cream">
+            <div className="border-r border-b border-ink-900 p-5 sm:p-8 bg-ink-900 text-cream">
               <p className="font-mono text-[10px] text-citrus tracking-caps uppercase mb-3">zone 3 · never collected</p>
               <h3 className="font-chunk text-[22px] tracking-tight text-cream mb-4">doesn't exist on our end</h3>
               <ul className="space-y-2">

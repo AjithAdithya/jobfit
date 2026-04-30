@@ -80,7 +80,7 @@ export default function HistoryResumePreview({ source }: { source: string }) {
         <iframe
           src={pdfUrl}
           title="Resume PDF"
-          style={{ border: 'none', width: '100%', height: '1100px', display: 'block' }}
+          className="block w-full border-0 h-[70vh] md:h-[900px] lg:h-[1100px]"
         />
       )}
     </div>

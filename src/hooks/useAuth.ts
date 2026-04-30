@@ -54,27 +54,22 @@ export const useAuth = () => {
           interactive: true,
         })
       } catch (flowErr: any) {
-        // User closed the window
+        // User closed the window — not an error
         if (flowErr?.message?.includes('canceled') || flowErr?.message?.includes('cancelled')) {
           return
         }
-        throw new Error(
-          `Auth window failed to open or complete. ` +
-          `Make sure "${redirectUri}" is added to Supabase → Auth → URL Configuration → Redirect URLs.`
-        )
+        console.error('launchWebAuthFlow failed:', flowErr, 'redirectUri:', redirectUri)
+        throw new Error('Sign-in window could not be opened. Please try again.')
       }
 
       if (chrome.runtime.lastError) {
-        throw new Error(chrome.runtime.lastError.message)
+        console.error('chrome.runtime.lastError:', chrome.runtime.lastError.message)
+        throw new Error('Sign-in failed. Please try again.')
       }
 
       if (!redirectUrl) {
-        // Flow closed without redirect — almost always means the redirect URL
-        // isn't in Supabase's allowed list
-        throw new Error(
-          `Sign-in did not complete. The redirect URL is not configured in Supabase.\n\n` +
-          `Add this URL to Supabase → Auth → URL Configuration → Redirect URLs:\n${redirectUri}`
-        )
+        console.error('launchWebAuthFlow returned no redirect URL. redirectUri:', redirectUri)
+        throw new Error('Sign-in did not complete. Please try again.')
       }
 
       const url = new URL(redirectUrl)
@@ -106,10 +101,8 @@ export const useAuth = () => {
         return
       }
 
-      throw new Error(
-        `Auth completed but no code or tokens were returned. ` +
-        `Check that "${redirectUri}" is an exact match in Supabase's allowed redirect URLs.`
-      )
+      console.error('Auth completed but no code or tokens in redirect URL. redirectUri:', redirectUri)
+      throw new Error('Sign-in failed. Please try again.')
     } catch (error: any) {
       console.error('Google Sign-In Error:', error)
       setAuthError(error.message || 'Sign-in failed. Please try again.')

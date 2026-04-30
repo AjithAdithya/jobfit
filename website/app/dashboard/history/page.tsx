@@ -25,7 +25,7 @@ export default async function HistoryPage() {
     : null
 
   return (
-    <div className="max-w-4xl mx-auto px-6">
+    <div className="max-w-4xl mx-auto px-4 sm:px-6">
       <div className="flex items-baseline justify-between mb-8">
         <h1 className="font-chunk text-3xl text-ink-900">history</h1>
         {avgScore !== null && (

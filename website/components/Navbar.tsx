@@ -143,7 +143,7 @@ export default function Navbar() {
                 </button>
 
                 {profileOpen && (
-                  <div className="absolute right-0 top-11 w-56 bg-cream border border-ink-200 rounded-xl shadow-lg overflow-hidden z-50">
+                  <div className="absolute right-0 top-11 w-[min(14rem,calc(100vw-2rem))] bg-cream border border-ink-200 rounded-xl shadow-lg overflow-hidden z-50">
                     <div className="px-4 py-3 border-b border-ink-100">
                       {fullName && (
                         <p className="text-[13px] font-medium text-ink-900 truncate">{fullName}</p>

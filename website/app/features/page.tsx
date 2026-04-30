@@ -21,7 +21,7 @@ export default function FeaturesPage() {
 
       {/* ── Hero ── */}
       <section className="pt-32 pb-16 lg:pt-40 lg:pb-20">
-        <div className="max-w-[1280px] mx-auto px-6 lg:px-10">
+        <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-10">
           <SectionLabel num="01" label="features" />
           <h1 className="font-chunk text-[clamp(3rem,8vw,7.5rem)] leading-[0.98] tracking-tightest text-ink-900 max-w-5xl">
             every tool
@@ -37,8 +37,8 @@ export default function FeaturesPage() {
       </section>
 
       {/* ── Match scoring — 10 levels ── */}
-      <section className="py-20 lg:py-24 border-t border-ink-900">
-        <div className="max-w-[1280px] mx-auto px-6 lg:px-10">
+      <section className="py-16 lg:py-24 border-t border-ink-900">
+        <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-10">
           <div className="grid lg:grid-cols-12 gap-8 mb-12">
             <div className="lg:col-span-5">
               <SectionLabel num="01" label="scoring engine" />
@@ -56,17 +56,21 @@ export default function FeaturesPage() {
           {/* Levels table */}
           <div className="border-t border-ink-900">
             {ALL_LEVELS.map(level => (
-              <div key={level.label} className="grid grid-cols-12 gap-4 py-5 border-b border-ink-200 items-center hover:bg-ink-50 transition-colors px-4 -mx-4">
-                <div className="col-span-2 num text-[22px] font-medium text-ink-900">
+              <div key={level.label} className="flex items-center gap-3 sm:grid sm:grid-cols-12 sm:gap-4 py-4 sm:py-5 border-b border-ink-200 hover:bg-ink-50 transition-colors">
+                <div
+                  className="w-3 h-3 sm:hidden rounded-full shrink-0"
+                  style={{ background: `linear-gradient(135deg, ${level.gradientFrom}, ${level.gradientTo})` }}
+                />
+                <div className="sm:col-span-2 num text-[20px] sm:text-[22px] font-medium text-ink-900 shrink-0">
                   {level.min}+
                 </div>
-                <div className="col-span-4 font-chunk text-[22px] tracking-tight text-ink-900">
+                <div className="flex-1 sm:col-span-4 font-chunk text-[18px] sm:text-[22px] tracking-tight text-ink-900">
                   {level.label}
                 </div>
-                <div className="col-span-5 text-[14px] text-ink-500 italic font-serif">
+                <div className="hidden sm:block sm:col-span-5 text-[14px] text-ink-500 italic font-serif">
                   {level.subtitle}
                 </div>
-                <div className="col-span-1 flex justify-end">
+                <div className="hidden sm:col-span-1 sm:flex justify-end">
                   <div
                     className="w-4 h-4 rounded-full"
                     style={{ background: `linear-gradient(135deg, ${level.gradientFrom}, ${level.gradientTo})` }}
@@ -79,8 +83,8 @@ export default function FeaturesPage() {
       </section>
 
       {/* ── Gap Analysis ── */}
-      <section className="py-20 lg:py-24 border-t border-ink-900">
-        <div className="max-w-[1280px] mx-auto px-6 lg:px-10">
+      <section className="py-16 lg:py-24 border-t border-ink-900">
+        <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-10">
           <div className="grid lg:grid-cols-12 gap-12 items-start">
             <div className="lg:col-span-6">
               <SectionLabel num="02" label="gap analysis" />
@@ -131,8 +135,8 @@ export default function FeaturesPage() {
       </section>
 
       {/* ── Resume Generation ── */}
-      <section className="py-20 lg:py-24 border-t border-ink-900">
-        <div className="max-w-[1280px] mx-auto px-6 lg:px-10">
+      <section className="py-16 lg:py-24 border-t border-ink-900">
+        <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-10">
           <div className="grid lg:grid-cols-12 gap-12 items-start">
             {/* Resume mockup */}
             <div className="lg:col-span-6 order-2 lg:order-1">
@@ -191,8 +195,8 @@ export default function FeaturesPage() {
       </section>
 
       {/* ── Style Presets ── */}
-      <section className="py-20 lg:py-24 border-t border-ink-900">
-        <div className="max-w-[1280px] mx-auto px-6 lg:px-10">
+      <section className="py-16 lg:py-24 border-t border-ink-900">
+        <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-10">
           <div className="mb-12">
             <SectionLabel num="04" label="style engine" />
             <h2 className="font-chunk text-big text-ink-900 max-w-3xl">
@@ -206,7 +210,7 @@ export default function FeaturesPage() {
               { style: 'classic', font: 'Georgia', size: '11pt', cols: '1col', color: '#0A0B0E', desc: 'Serif font, traditional single-column.' },
               { style: 'two-column', font: 'Helvetica', size: '10pt', cols: '2col', color: '#FF4D2E', desc: 'Flare accents, two-column density.' },
             ].map(p => (
-              <div key={p.style} className="border-r border-b border-ink-900 p-8 bg-cream">
+              <div key={p.style} className="border-r border-b border-ink-900 p-5 sm:p-8 bg-cream">
                 <div className="flex items-center gap-3 mb-6">
                   <div className="w-10 h-10 border-2 flex-shrink-0" style={{ background: p.color, borderColor: p.color }} />
                   <div>
@@ -231,8 +235,8 @@ export default function FeaturesPage() {
       </section>
 
       {/* ── Activity log ── */}
-      <section className="py-20 lg:py-24 border-t border-ink-900">
-        <div className="max-w-[1280px] mx-auto px-6 lg:px-10">
+      <section className="py-16 lg:py-24 border-t border-ink-900">
+        <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-10">
           <div className="mb-12">
             <SectionLabel num="05" label="activity log" />
             <h2 className="font-chunk text-big text-ink-900 max-w-3xl">
@@ -263,15 +267,15 @@ export default function FeaturesPage() {
               { score: 72, title: 'Staff Engineer', company: 'Linear', status: 'applied', date: 'Jan 10' },
               { score: 48, title: 'Senior SWE', company: 'Notion', status: 'rejected', date: 'Jan 05' },
             ].map(job => (
-              <div key={job.title} className="grid grid-cols-12 gap-4 items-center py-5 border-b border-ink-200 px-4 -mx-4 hover:bg-ink-50 transition-colors">
-                <div className="col-span-1 num text-[28px] font-chunk text-ink-900">{job.score}</div>
-                <div className="col-span-5">
-                  <p className="font-chunk text-[18px] tracking-tight text-ink-900">{job.title}</p>
-                  <p className="text-[13px] text-ink-500">{job.company}</p>
+              <div key={job.title} className="flex items-center gap-3 sm:grid sm:grid-cols-12 sm:gap-4 py-4 sm:py-5 border-b border-ink-200 hover:bg-ink-50 transition-colors">
+                <div className="num text-[24px] sm:text-[28px] font-chunk text-ink-900 sm:col-span-1 shrink-0">{job.score}</div>
+                <div className="flex-1 sm:col-span-5 min-w-0">
+                  <p className="font-chunk text-[16px] sm:text-[18px] tracking-tight text-ink-900 truncate">{job.title}</p>
+                  <p className="text-[12px] sm:text-[13px] text-ink-500">{job.company}</p>
                 </div>
-                <div className="col-span-3 font-mono text-[11px] text-ink-400 tracking-caps uppercase">{job.date}</div>
-                <div className="col-span-3 flex justify-end">
-                  <span className="font-mono text-[10px] tracking-caps uppercase px-3 py-1 border border-ink-900">{job.status}</span>
+                <div className="hidden sm:block sm:col-span-3 font-mono text-[11px] text-ink-400 tracking-caps uppercase">{job.date}</div>
+                <div className="sm:col-span-3 sm:flex sm:justify-end shrink-0">
+                  <span className="font-mono text-[10px] tracking-caps uppercase px-2 sm:px-3 py-1 border border-ink-900">{job.status}</span>
                 </div>
               </div>
             ))}
@@ -281,7 +285,7 @@ export default function FeaturesPage() {
 
       {/* ── CTA ── */}
       <section className="py-24 border-t border-ink-900 bg-ink-900 text-cream">
-        <div className="max-w-[1280px] mx-auto px-6 lg:px-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-8">
+        <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-8">
           <div>
             <p className="font-mono text-[11px] text-citrus tracking-caps uppercase mb-3">№ 06</p>
             <h3 className="font-chunk text-[clamp(2rem,4vw,3.5rem)] leading-tight">

@@ -7,6 +7,17 @@ export async function DELETE() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
+  // Revoke the Google OAuth grant before deleting — must happen while session still exists
+  const { data: { session } } = await supabase.auth.getSession()
+  const providerToken = session?.provider_token
+  if (providerToken) {
+    try {
+      await fetch(`https://oauth2.googleapis.com/revoke?token=${providerToken}`, { method: 'POST' })
+    } catch {
+      // Ignore — token may be expired; auth.identities is cascade-deleted with the user record
+    }
+  }
+
   // Remove all uploaded PDF files
   const { data: files } = await supabase.storage.from('resumes').list(user.id)
   if (files && files.length > 0) {

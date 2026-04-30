@@ -14,7 +14,7 @@ export default async function VaultPage() {
     .order('created_at', { ascending: false })
 
   return (
-    <div className="max-w-4xl mx-auto px-6">
+    <div className="max-w-4xl mx-auto px-4 sm:px-6">
       <div className="mb-10">
         <p className="font-mono text-[11px] text-crimson-500 tracking-caps uppercase mb-4">№ 02 — vault</p>
         <h1 className="font-chunk text-[clamp(2.5rem,5vw,4rem)] leading-none tracking-tightest text-ink-900">

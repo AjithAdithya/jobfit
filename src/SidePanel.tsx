@@ -27,7 +27,10 @@ import MatchHistory from './components/MatchHistory'
 import CoverLetter from './components/CoverLetter'
 import StylePresets from './components/StylePresets'
 import ProfileView from './components/ProfileView'
+import HardRequirementsRibbon from './components/HardRequirementsRibbon'
 import OnboardingOverlay from './components/OnboardingOverlay'
+import { runHardRequirementsCheck } from './lib/hardRequirementsChecker'
+import type { HardRequirement } from './lib/hardRequirementsChecker'
 import { useProfile } from './hooks/useProfile'
 import { hasDriveAccess, createGoogleDoc, DriveAuthError } from './lib/gdrive'
 import { MissingApiKeyError } from './lib/anthropic'
@@ -73,7 +76,7 @@ const Alert: React.FC<{
 }
 
 const SidePanel: React.FC = () => {
-  const { user, loading: authLoading, signingIn, authError, clearAuthError, getRedirectUri, signInWithGoogle, signOut } = useAuth()
+  const { user, loading: authLoading, signingIn, authError, clearAuthError, signInWithGoogle, signOut } = useAuth()
   const { uploadAndProcess, processing: resumeProcessing } = useResumes()
   const [loading, setLoading] = useState(false)
   const [analyzing, setAnalyzing] = useState(false)
@@ -98,6 +101,7 @@ const SidePanel: React.FC = () => {
   const [driveError, setDriveError] = useState<string | null>(null)
   const [showOnboarding, setShowOnboarding] = useState(false)
   const [showKeyToast, setShowKeyToast] = useState(false)
+  const [hardRequirements, setHardRequirements] = useState<HardRequirement[]>([])
 
   // Paste-box state
   const [pasteMode, setPasteMode] = useState(false)
@@ -109,7 +113,7 @@ const SidePanel: React.FC = () => {
     activeHistoryItem, setActiveHistory,
   } = useUIStore()
 
-  const { completeness: profileCompleteness } = useProfile(user?.id)
+  const { completeness: profileCompleteness, profile } = useProfile(user?.id)
 
   const fileInputRef = useRef<HTMLInputElement>(null)
   const profileMenuRef = useRef<HTMLDivElement>(null)
@@ -143,6 +147,7 @@ const SidePanel: React.FC = () => {
       setSelectedGaps(activeHistoryItem.selected_gaps || [])
       setSelectedKeywords(activeHistoryItem.selected_keywords || [])
       setGeneratedResume(activeHistoryItem.generated_resume || null)
+      setHardRequirements(activeHistoryItem.hard_requirements || [])
     }
   }, [currentView, activeHistoryItem])
 
@@ -151,12 +156,19 @@ const SidePanel: React.FC = () => {
   React.useEffect(() => {
     if (user && prevUserRef.current === null) {
       chrome.storage.local.get(
-        ['jobfit_onboarding_v1', 'jobfit_anthropic_key', 'jobfit_voyage_key'],
-        (result) => {
-          const onboardingDone = !!result.jobfit_onboarding_v1
+        ['jobfit_anthropic_key', 'jobfit_voyage_key'],
+        async (result) => {
           const hasKeys =
             !!(result.jobfit_anthropic_key || import.meta.env.VITE_ANTHROPIC_API_KEY) &&
             !!(result.jobfit_voyage_key || import.meta.env.VITE_VOYAGE_API_KEY)
+
+          const { data } = await supabase
+            .from('user_profiles')
+            .select('onboarding_completed')
+            .eq('user_id', user.id)
+            .single()
+          const onboardingDone = !!data?.onboarding_completed
+
           if (!onboardingDone) {
             setShowOnboarding(true)
           } else if (!hasKeys) {
@@ -245,6 +257,26 @@ const SidePanel: React.FC = () => {
     try {
       const result = await runJobMatchAnalysis(content)
       setAnalysis(result)
+      setHardRequirements([])
+
+      // Fire hard-requirements check in background — doesn't block render
+      if (!result.notJDWarning && activeResumeId) {
+        supabase
+          .from('resume_chunkies')
+          .select('content')
+          .eq('resume_id', activeResumeId)
+          .then(({ data }) => {
+            if (!data?.length) return
+            const resumeText = data.map((d: any) => d.content).join('\n\n')
+            runHardRequirementsCheck(content, resumeText).then(reqs => {
+              setHardRequirements(reqs)
+              const histItem = useUIStore.getState().activeHistoryItem
+              if (histItem?.id && reqs.length > 0) {
+                supabase.from('analysis_history').update({ hard_requirements: reqs }).eq('id', histItem.id)
+              }
+            })
+          })
+      }
 
       if (result.notJDWarning) {
         setWarning(`This page may not be a job description — ${result.notJDWarning}`)
@@ -379,7 +411,9 @@ const SidePanel: React.FC = () => {
         selectedGaps,
         selectedKeywords,
         fullContext,
-        cumulativeFeedback
+        cumulativeFeedback,
+        undefined,
+        profile
       )
 
       if (guardianResult && !guardianResult.safe) {
@@ -398,34 +432,65 @@ const SidePanel: React.FC = () => {
       }
 
       // Auto-save to history + record version
-      const { activeHistoryItem: histItem } = useUIStore.getState()
+      let { activeHistoryItem: histItem } = useUIStore.getState()
+
+      // Fallback: if store was cleared (popup reopen / failed analysis save),
+      // try to recover the row by matching job URL
+      if (!histItem?.id && jobContext?.url && jobContext.url !== 'manual' && user) {
+        const { data: found } = await supabase
+          .from('analysis_history')
+          .select('id')
+          .eq('user_id', user.id)
+          .eq('job_url', jobContext.url)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle()
+        if (found) {
+          histItem = found
+          useUIStore.getState().setActiveHistory(found)
+        }
+      }
+
       if (histItem?.id) {
-        await supabase.from('analysis_history').update({
+        const { error: updateError } = await supabase.from('analysis_history').update({
           generated_resume: generated,
           updated_at: new Date().toISOString(),
         }).eq('id', histItem.id)
 
-        // Compute the next version number for this history item
-        const { data: { user } } = await supabase.auth.getUser()
-        const { data: latest } = await supabase
-          .from('resume_versions')
-          .select('version_number')
-          .eq('analysis_history_id', histItem.id)
-          .order('version_number', { ascending: false })
-          .limit(1)
-          .maybeSingle()
-        const nextVersion = ((latest?.version_number as number | undefined) ?? 0) + 1
+        if (updateError) {
+          console.error('[generate] failed to save generated_resume:', updateError)
+          setWarning('Resume generated but could not be saved to history.')
+        } else {
+          useUIStore.getState().setActiveHistory({ ...histItem, generated_resume: generated })
 
-        if (user?.id) {
-          await supabase.from('resume_versions').insert({
-            user_id: user.id,
-            analysis_history_id: histItem.id,
-            version_number: nextVersion,
-            latex: generated,
-            revision_note: trimmedNote ?? null,
-            source: 'extension',
-          })
+          // Compute the next version number for this history item
+          const { data: { user: currentUser } } = await supabase.auth.getUser()
+          const { data: latest } = await supabase
+            .from('resume_versions')
+            .select('version_number')
+            .eq('analysis_history_id', histItem.id)
+            .order('version_number', { ascending: false })
+            .limit(1)
+            .maybeSingle()
+          const nextVersion = ((latest?.version_number as number | undefined) ?? 0) + 1
+
+          if (currentUser?.id) {
+            const { error: versionError } = await supabase.from('resume_versions').insert({
+              user_id: currentUser.id,
+              analysis_history_id: histItem.id,
+              version_number: nextVersion,
+              latex: generated,
+              revision_note: trimmedNote ?? null,
+              source: 'extension',
+            })
+            if (versionError) {
+              console.error('[generate] failed to save resume version:', versionError)
+            }
+          }
         }
+      } else {
+        console.warn('[generate] no history item linked — generated resume not saved to Supabase')
+        setWarning('Resume generated but not saved to history — re-run the job analysis first.')
       }
     } catch (err: any) {
       if (err instanceof MissingApiKeyError) { goToSettings(); return }
@@ -569,28 +634,12 @@ const SidePanel: React.FC = () => {
           </button>
 
           {authError && (
-            <div className="w-full max-w-[320px] mt-2 space-y-2">
+            <div className="w-full max-w-[320px] mt-2">
               <div className="bg-crimson-50 border border-crimson-200 rounded p-3 text-xs text-crimson-700 text-left">
                 <p className="font-bold mb-1">Sign-in failed</p>
-                <p className="whitespace-pre-wrap break-words">{authError}</p>
+                <p>{authError}</p>
                 <button onClick={clearAuthError} className="mt-2 text-crimson-500 underline text-[11px]">Dismiss</button>
               </div>
-              {authError.includes('Redirect URL') || authError.includes('redirect URL') || authError.includes('Redirect URLs') ? (
-                <div className="bg-ink-100 border border-ink-200 rounded p-3 text-xs text-ink-600 text-left">
-                  <p className="font-bold text-ink-800 mb-1">Configure Supabase</p>
-                  <p className="mb-1">Add this exact URL to <span className="font-mono">Auth → URL Configuration → Redirect URLs</span>:</p>
-                  <div className="flex items-center gap-1">
-                    <code className="flex-1 bg-ink-200 px-2 py-1 rounded text-[10px] break-all font-mono">{getRedirectUri()}</code>
-                    <button
-                      onClick={() => navigator.clipboard.writeText(getRedirectUri())}
-                      className="shrink-0 text-ink-500 hover:text-ink-900 transition-colors"
-                      title="Copy"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" strokeWidth="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" strokeWidth="2"/></svg>
-                    </button>
-                  </div>
-                </div>
-              ) : null}
             </div>
           )}
         </div>
@@ -603,6 +652,7 @@ const SidePanel: React.FC = () => {
       <AnimatePresence>
         {showOnboarding && (
           <OnboardingOverlay
+            userId={user!.id}
             onComplete={(goToProfile) => {
               setShowOnboarding(false)
               setView(goToProfile ? 'profile' : 'dashboard')
@@ -921,6 +971,8 @@ const SidePanel: React.FC = () => {
                       </div>
                     </div>
                   )}
+
+                  <HardRequirementsRibbon requirements={hardRequirements} />
 
                   {(() => {
                     const level = getMatchLevel(analysis.score)

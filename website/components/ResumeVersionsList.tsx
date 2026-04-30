@@ -104,9 +104,9 @@ export default function ResumeVersionsList({ historyId }: { historyId: string })
           const isOpen = openId === v.id
           return (
             <li key={v.id} className="px-4 py-3">
-              <div className="flex items-start gap-4">
+              <div className="flex flex-col sm:flex-row sm:items-start gap-3 sm:gap-4">
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-baseline gap-3">
+                  <div className="flex items-baseline gap-3 flex-wrap">
                     <span className="font-chunk text-[18px] text-ink-900 num leading-none">v{v.version_number}</span>
                     <span className="font-mono text-[10px] text-ink-400 tracking-caps uppercase flex items-center gap-1">
                       <Clock className="w-2.5 h-2.5" /> {formatTime(v.created_at)}
@@ -117,7 +117,7 @@ export default function ResumeVersionsList({ historyId }: { historyId: string })
                     <p className="text-[12px] text-ink-600 italic font-serif mt-1.5 leading-snug">"{v.revision_note}"</p>
                   )}
                 </div>
-                <div className="flex items-center gap-2 shrink-0">
+                <div className="flex items-center gap-2 shrink-0 self-start sm:self-auto">
                   <button
                     onClick={() => isOpen ? closePreview() : compileVersion(v)}
                     className="inline-flex items-center gap-1 px-2.5 py-1 border border-ink-200 hover:border-ink-900 text-[10px] font-mono uppercase tracking-caps text-ink-600 hover:text-ink-900 transition-colors"
@@ -155,7 +155,7 @@ export default function ResumeVersionsList({ historyId }: { historyId: string })
                     <pre className="p-3 text-[11px] text-red-600 bg-red-50 whitespace-pre-wrap overflow-auto max-h-48">{compileError}</pre>
                   )}
                   {pdfUrl && !compiling && (
-                    <iframe src={pdfUrl} title={`v${v.version_number} PDF`} style={{ border: 'none', width: '100%', height: '900px', display: 'block' }} />
+                    <iframe src={pdfUrl} title={`v${v.version_number} PDF`} className="block w-full border-0 h-[60vh] md:h-[700px] lg:h-[900px]" />
                   )}
                 </div>
               )}
