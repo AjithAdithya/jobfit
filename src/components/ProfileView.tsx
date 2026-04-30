@@ -1,8 +1,10 @@
 import React, { useState, useCallback, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowRight, Check, X, Plus, Link, Code2, Globe } from 'lucide-react'
+import { ArrowRight, Check, X, Plus, Link, Code2, Globe, FileText, Loader2, Sparkles } from 'lucide-react'
 import { useProfile, computeCompleteness } from '../hooks/useProfile'
 import type { UserProfile } from '../hooks/useProfile'
+import { supabase } from '../lib/supabase'
+import { extractProfileFromResume } from '../lib/profileExtractor'
 
 const INDUSTRIES = [
   'Software', 'Fintech', 'Healthcare', 'E-commerce', 'EdTech',
@@ -68,10 +70,14 @@ const Field: React.FC<FieldProps> = ({ label, children, hint }) => (
 interface Props {
   userId: string
   onBack: () => void
+  activeResumeId?: string | null
+  activeResumeName?: string | null
 }
 
-const ProfileView: React.FC<Props> = ({ userId, onBack }) => {
+const ProfileView: React.FC<Props> = ({ userId, onBack, activeResumeId, activeResumeName }) => {
   const { profile, loading, saving, savedAt, save } = useProfile(userId)
+  const [extracting, setExtracting] = useState(false)
+  const [extractError, setExtractError] = useState<string | null>(null)
 
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [local, setLocal] = useState<Partial<UserProfile>>({})
@@ -98,6 +104,39 @@ const ProfileView: React.FC<Props> = ({ userId, onBack }) => {
   }, [local, save])
 
   const completeness = computeCompleteness(local)
+
+  const handleExtract = useCallback(async () => {
+    if (!activeResumeId) return
+    setExtracting(true)
+    setExtractError(null)
+    try {
+      const { data: chunks } = await supabase
+        .from('resume_chunkies')
+        .select('content')
+        .eq('resume_id', activeResumeId)
+        .order('section')
+      if (!chunks?.length) throw new Error('No resume content found')
+      const text = chunks.map((c: { content: string }) => c.content).join('\n\n')
+      const fields = await extractProfileFromResume(text)
+      // Merge: only overwrite fields that are currently empty
+      const merged: Partial<UserProfile> = {}
+      for (const [k, v] of Object.entries(fields)) {
+        const key = k as keyof UserProfile
+        const cur = local[key]
+        const empty = cur === null || cur === undefined || (typeof cur === 'string' && !cur.trim()) || (Array.isArray(cur) && !cur.length)
+        if (empty) (merged as any)[key] = v
+      }
+      if (Object.keys(merged).length) {
+        const next = { ...local, ...merged }
+        setLocal(next)
+        await save(merged)
+      }
+    } catch (err: any) {
+      setExtractError(err.message || 'Extraction failed')
+    } finally {
+      setExtracting(false)
+    }
+  }, [activeResumeId, local, save])
 
   const completionColor =
     completeness >= 80 ? 'bg-ink-900' :
@@ -171,6 +210,43 @@ const ProfileView: React.FC<Props> = ({ userId, onBack }) => {
           />
         </div>
       </div>
+
+      {/* ── Extract from resume card */}
+      {activeResumeId && (
+        <div className="mb-5 border border-ink-200 bg-white p-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-ink-100 shrink-0">
+              <FileText className="w-4 h-4 text-ink-500" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-mono text-[9px] text-ink-400 tracking-caps uppercase mb-0.5">extract from resume</p>
+              <p className="text-[12px] text-ink-900 font-medium truncate">{activeResumeName ?? 'Current resume'}</p>
+            </div>
+            <button
+              onClick={handleExtract}
+              disabled={extracting}
+              className="shrink-0 flex items-center gap-1.5 px-3 py-2 bg-ink-900 hover:bg-crimson-500 disabled:opacity-50 text-cream text-[10px] font-mono tracking-caps uppercase transition-colors"
+            >
+              {extracting
+                ? <><Loader2 className="w-3 h-3 animate-spin" /> extracting…</>
+                : <><Sparkles className="w-3 h-3" /> extract</>
+              }
+            </button>
+          </div>
+          <AnimatePresence>
+            {extractError && (
+              <motion.p
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="font-mono text-[9px] text-flare mt-2 pt-2 border-t border-ink-100"
+              >
+                {extractError}
+              </motion.p>
+            )}
+          </AnimatePresence>
+        </div>
+      )}
 
       <div className="space-y-6 pb-8">
         {/* ── Identity */}

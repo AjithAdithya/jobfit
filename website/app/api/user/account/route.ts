@@ -14,11 +14,18 @@ export async function DELETE() {
     await supabase.storage.from('resumes').remove(paths)
   }
 
-  // Delete all user data (chunks before parents to satisfy FKs)
-  await supabase.from('resume_chunkies').delete().eq('user_id', user.id)
+  // FK children must be deleted before their parents
+  await Promise.all([
+    supabase.from('resume_chunkies').delete().eq('user_id', user.id),
+    supabase.from('resume_versions').delete().eq('user_id', user.id),
+    supabase.from('generations').delete().eq('user_id', user.id),
+  ])
+
   await Promise.all([
     supabase.from('resumes').delete().eq('user_id', user.id),
     supabase.from('analysis_history').delete().eq('user_id', user.id),
+    supabase.from('user_profiles').delete().eq('user_id', user.id),
+    supabase.from('style_presets').delete().eq('user_id', user.id),
   ])
 
   // Delete the auth user — requires service role key

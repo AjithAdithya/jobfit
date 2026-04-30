@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Check, Plus, X, Linkedin, Github, Globe } from 'lucide-react'
+import { Check, Plus, X, Linkedin, Github, Globe, FileText, ChevronDown, Loader2, Sparkles } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { computeCompleteness, completenessColor } from '@/lib/profileUtils'
 import type { UserProfile } from '@/lib/profileUtils'
@@ -92,6 +92,25 @@ export default function ProfileForm({ initial, userId }: { initial: Partial<User
   const [tagInput, setTagInput] = useState('')
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
+  // Extract from resume
+  const [resumes, setResumes] = useState<{ id: string; file_name: string }[]>([])
+  const [selectedResumeId, setSelectedResumeId] = useState<string>('')
+  const [extracting, setExtracting] = useState(false)
+  const [extractError, setExtractError] = useState<string | null>(null)
+
+  useEffect(() => {
+    supabase
+      .from('resumes')
+      .select('id, file_name')
+      .order('created_at', { ascending: false })
+      .then(({ data }) => {
+        if (data?.length) {
+          setResumes(data)
+          setSelectedResumeId(data[0].id)
+        }
+      })
+  }, [supabase])
+
   useEffect(() => {
     if (savedAt) {
       setShowSaved(true)
@@ -112,6 +131,37 @@ export default function ProfileForm({ initial, userId }: { initial: Partial<User
       setSavedAt(Date.now())
     }, 600)
   }, [local, userId, supabase])
+
+  const handleExtract = useCallback(async () => {
+    if (!selectedResumeId) return
+    setExtracting(true)
+    setExtractError(null)
+    try {
+      const res = await fetch('/api/profile/extract', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ resumeId: selectedResumeId }),
+      })
+      if (!res.ok) {
+        const err = await res.json()
+        throw new Error(err.error || 'Extraction failed')
+      }
+      const fields: Partial<UserProfile> = await res.json()
+      // Only fill in currently empty fields
+      const merged: Partial<UserProfile> = {}
+      for (const [k, v] of Object.entries(fields)) {
+        const key = k as keyof UserProfile
+        const cur = local[key]
+        const empty = cur === null || cur === undefined || (typeof cur === 'string' && !(cur as string).trim()) || (Array.isArray(cur) && !(cur as unknown[]).length)
+        if (empty) (merged as Record<string, unknown>)[key] = v
+      }
+      if (Object.keys(merged).length) await patch(merged)
+    } catch (err: any) {
+      setExtractError(err.message || 'Extraction failed')
+    } finally {
+      setExtracting(false)
+    }
+  }, [selectedResumeId, local, patch])
 
   const addRole = () => {
     const t = tagInput.trim()
@@ -135,6 +185,55 @@ export default function ProfileForm({ initial, userId }: { initial: Partial<User
 
   return (
     <div className="space-y-10">
+      {/* Extract from resume card */}
+      {resumes.length > 0 && (
+        <div className="border border-ink-200 bg-white p-6">
+          <p className="font-mono text-[10px] text-ink-400 tracking-caps uppercase mb-4">extract from resume</p>
+          <div className="flex items-center gap-3">
+            <div className="p-3 bg-ink-100 shrink-0">
+              <FileText className="w-5 h-5 text-ink-500" />
+            </div>
+            <div className="relative flex-1">
+              <select
+                className="w-full appearance-none pl-4 pr-10 py-3 bg-white border border-ink-300 text-[14px] text-ink-900 focus:outline-none focus:border-crimson-500 cursor-pointer"
+                value={selectedResumeId}
+                onChange={e => setSelectedResumeId(e.target.value)}
+              >
+                {resumes.map(r => (
+                  <option key={r.id} value={r.id}>{r.file_name}</option>
+                ))}
+              </select>
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-400 pointer-events-none" />
+            </div>
+            <button
+              onClick={handleExtract}
+              disabled={extracting || !selectedResumeId}
+              className="shrink-0 flex items-center gap-2 px-5 py-3 bg-ink-900 hover:bg-crimson-500 disabled:opacity-50 text-cream text-[12px] font-mono tracking-caps uppercase transition-colors"
+            >
+              {extracting
+                ? <><Loader2 className="w-4 h-4 animate-spin" /> extracting…</>
+                : <><Sparkles className="w-4 h-4" /> extract</>
+              }
+            </button>
+          </div>
+          <AnimatePresence>
+            {extractError && (
+              <motion.p
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="font-mono text-[11px] text-flare mt-3 pt-3 border-t border-ink-100"
+              >
+                {extractError}
+              </motion.p>
+            )}
+          </AnimatePresence>
+          <p className="font-mono text-[10px] text-ink-300 tracking-caps uppercase mt-3">
+            only fills empty fields — existing data is not overwritten
+          </p>
+        </div>
+      )}
+
       {/* Progress header */}
       <div className="border border-ink-200 bg-white p-6">
         <div className="flex items-center justify-between mb-3">

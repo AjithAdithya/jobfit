@@ -4,7 +4,7 @@ import {
   Sparkles, Settings as SettingsIcon, Loader2, ArrowRight,
   CheckCircle2, AlertCircle, LayoutGrid, Upload, Check,
   Brain, Target, Zap, Home, Briefcase, Download, FileText,
-  Mail, Palette, AlertTriangle, ClipboardPaste, ChevronDown, X, LogOut, ArrowUpRight, User,
+  Mail, Palette, AlertTriangle, ClipboardPaste, ChevronDown, X, LogOut, ArrowUpRight, User, Key,
 } from 'lucide-react'
 import LatexPreview from './components/LatexPreview'
 import { useAuth } from './hooks/useAuth'
@@ -27,6 +27,7 @@ import MatchHistory from './components/MatchHistory'
 import CoverLetter from './components/CoverLetter'
 import StylePresets from './components/StylePresets'
 import ProfileView from './components/ProfileView'
+import OnboardingOverlay from './components/OnboardingOverlay'
 import { useProfile } from './hooks/useProfile'
 import { hasDriveAccess, createGoogleDoc, DriveAuthError } from './lib/gdrive'
 import { MissingApiKeyError } from './lib/anthropic'
@@ -95,6 +96,8 @@ const SidePanel: React.FC = () => {
 
   const [driveConnected, setDriveConnected] = useState(false)
   const [driveError, setDriveError] = useState<string | null>(null)
+  const [showOnboarding, setShowOnboarding] = useState(false)
+  const [showKeyToast, setShowKeyToast] = useState(false)
 
   // Paste-box state
   const [pasteMode, setPasteMode] = useState(false)
@@ -143,11 +146,27 @@ const SidePanel: React.FC = () => {
     }
   }, [currentView, activeHistoryItem])
 
-  // On login, always land on the dashboard
+  // On login: check onboarding flag + API keys to decide where to send the user
   const prevUserRef = React.useRef<string | null>(null)
   React.useEffect(() => {
     if (user && prevUserRef.current === null) {
-      setView('dashboard')
+      chrome.storage.local.get(
+        ['jobfit_onboarding_v1', 'jobfit_anthropic_key', 'jobfit_voyage_key'],
+        (result) => {
+          const onboardingDone = !!result.jobfit_onboarding_v1
+          const hasKeys =
+            !!(result.jobfit_anthropic_key || import.meta.env.VITE_ANTHROPIC_API_KEY) &&
+            !!(result.jobfit_voyage_key || import.meta.env.VITE_VOYAGE_API_KEY)
+          if (!onboardingDone) {
+            setShowOnboarding(true)
+          } else if (!hasKeys) {
+            setView('settings')
+            setShowKeyToast(true)
+          } else {
+            setView('dashboard')
+          }
+        }
+      )
     }
     prevUserRef.current = user?.id ?? null
   }, [user])
@@ -580,7 +599,18 @@ const SidePanel: React.FC = () => {
   }
 
   return (
-    <div className="flex flex-col h-screen bg-cream text-ink-900 font-sans overflow-hidden">
+    <div className="flex flex-col h-screen bg-cream text-ink-900 font-sans overflow-hidden relative">
+      <AnimatePresence>
+        {showOnboarding && (
+          <OnboardingOverlay
+            onComplete={(goToProfile) => {
+              setShowOnboarding(false)
+              setView(goToProfile ? 'profile' : 'dashboard')
+            }}
+          />
+        )}
+      </AnimatePresence>
+
       {/* Header */}
       <header className="px-5 py-3 flex items-center justify-between z-20 bg-cream border-b border-ink-200">
         <div className="flex items-center gap-2.5">
@@ -648,6 +678,16 @@ const SidePanel: React.FC = () => {
 
       {/* Main Viewport */}
       <main className="flex-1 overflow-y-auto px-5 py-6 custom-scrollbar relative">
+        <AnimatePresence>
+          {showKeyToast && currentView === 'settings' && (
+            <Alert
+              key="key-toast"
+              message="API keys are missing — add them below to start using JobFit."
+              icon={<Key className="w-3.5 h-3.5" />}
+              onDismiss={() => setShowKeyToast(false)}
+            />
+          )}
+        </AnimatePresence>
         <AnimatePresence mode="wait">
 
           {/* ── Dashboard ────────────────────────────────────────────── */}
@@ -1220,7 +1260,7 @@ const SidePanel: React.FC = () => {
 
           {currentView === 'resumes' && <ResumeManager />}
           {currentView === 'history' && <MatchHistory />}
-          {currentView === 'settings' && <SettingsView />}
+          {currentView === 'settings' && <SettingsView highlightKeys={showKeyToast} />}
           {currentView === 'profile' && user && (
             <motion.div
               key="profile"
@@ -1228,7 +1268,7 @@ const SidePanel: React.FC = () => {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
             >
-              <ProfileView userId={user.id} onBack={() => setView('dashboard')} />
+              <ProfileView userId={user.id} onBack={() => setView('dashboard')} activeResumeId={activeResumeId} activeResumeName={activeResumeName} />
             </motion.div>
           )}
           {currentView === 'cover_letter' && analysis && jobContext && (

@@ -2,10 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Shield, Key, Mail, LogOut, ChevronDown, Zap, Loader2,
-  Eye, EyeOff, Check, Trash2, AlertTriangle,
+  Eye, EyeOff, Check, X, Trash2, AlertTriangle,
 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabase';
+import { validateAnthropicKey, validateVoyageKey } from '../lib/keyValidator';
+import type { KeyStatus } from '../lib/keyValidator';
 
 interface ModelStats {
   model: string;
@@ -15,7 +17,11 @@ interface ModelStats {
   cost: number;
 }
 
-const Settings: React.FC = () => {
+interface SettingsProps {
+  highlightKeys?: boolean;
+}
+
+const Settings: React.FC<SettingsProps> = ({ highlightKeys = false }) => {
   const { user, signOut } = useAuth();
 
   const [anthropicKey, setAnthropicKey] = useState('');
@@ -24,7 +30,12 @@ const Settings: React.FC = () => {
   const [showVoyageKey, setShowVoyageKey] = useState(false);
   const [keysSaved, setKeysSaved] = useState(false);
   const [apiStatus, setApiStatus] = useState<'valid' | 'missing' | 'checking'>('checking');
-  const [showKeys, setShowKeys] = useState(false);
+  const [showKeys, setShowKeys] = useState(highlightKeys);
+  const [anthropicValidating, setAnthropicValidating] = useState(false);
+  const [voyageValidating, setVoyageValidating] = useState(false);
+  const [anthropicKeyStatus, setAnthropicKeyStatus] = useState<KeyStatus | null>(null);
+  const [voyageKeyStatus, setVoyageKeyStatus] = useState<KeyStatus | null>(null);
+  const [saving, setSaving] = useState(false);
 
   const [modelStats, setModelStats] = useState<ModelStats[]>([]);
   const [totalCalls, setTotalCalls] = useState(0);
@@ -78,29 +89,65 @@ const Settings: React.FC = () => {
       .then(() => setLoading(false), () => setLoading(false));
   }, [user]);
 
-  const handleSaveKeys = () => {
-    chrome.storage.local.set(
-      { jobfit_anthropic_key: anthropicKey.trim(), jobfit_voyage_key: voyageKey.trim() },
-      () => {
-        const hasAnthropic = !!(anthropicKey.trim() || import.meta.env.VITE_ANTHROPIC_API_KEY);
-        const hasVoyage = !!(voyageKey.trim() || import.meta.env.VITE_VOYAGE_API_KEY);
-        setApiStatus(hasAnthropic && hasVoyage ? 'valid' : 'missing');
-        setKeysSaved(true);
-        setTimeout(() => setKeysSaved(false), 2500);
-      }
-    );
+  const handleSaveKeys = async () => {
+    setSaving(true)
+    setAnthropicKeyStatus(null)
+    setVoyageKeyStatus(null)
+
+    const trimmedAnthropic = anthropicKey.trim()
+    const trimmedVoyage = voyageKey.trim()
+
+    setAnthropicValidating(!!trimmedAnthropic)
+    setVoyageValidating(!!trimmedVoyage)
+
+    const [aStatus, vStatus] = await Promise.all([
+      trimmedAnthropic ? validateAnthropicKey(trimmedAnthropic) : Promise.resolve<KeyStatus | null>(null),
+      trimmedVoyage ? validateVoyageKey(trimmedVoyage) : Promise.resolve<KeyStatus | null>(null),
+    ])
+
+    setAnthropicKeyStatus(aStatus)
+    setVoyageKeyStatus(vStatus)
+    setAnthropicValidating(false)
+    setVoyageValidating(false)
+
+    const anthropicOk = aStatus === 'valid' || (!trimmedAnthropic && !!import.meta.env.VITE_ANTHROPIC_API_KEY)
+    const voyageOk = vStatus === 'valid' || (!trimmedVoyage && !!import.meta.env.VITE_VOYAGE_API_KEY)
+
+    if (anthropicOk && voyageOk) {
+      chrome.storage.local.set(
+        { jobfit_anthropic_key: trimmedAnthropic, jobfit_voyage_key: trimmedVoyage },
+        () => {
+          setApiStatus('valid')
+          setKeysSaved(true)
+          setTimeout(() => setKeysSaved(false), 2500)
+        }
+      )
+    } else {
+      setApiStatus('missing')
+    }
+
+    setSaving(false)
+  }
+
+  const deleteAllUserData = async (userId: string) => {
+    // FK children first, then parent tables
+    await Promise.all([
+      supabase.from('resume_chunkies').delete().eq('user_id', userId),
+      supabase.from('resume_versions').delete().eq('user_id', userId),
+      supabase.from('generations').delete().eq('user_id', userId),
+    ]);
+    await Promise.all([
+      supabase.from('resumes').delete().eq('user_id', userId),
+      supabase.from('analysis_history').delete().eq('user_id', userId),
+      supabase.from('user_profiles').delete().eq('user_id', userId),
+      supabase.from('style_presets').delete().eq('user_id', userId),
+    ]);
   };
 
   const handleDeleteData = async () => {
     if (!user) return;
     setDeleting(true);
-    await Promise.all([
-      supabase.from('resume_chunkies').delete().eq('user_id', user.id),
-      supabase.from('resumes').delete().eq('user_id', user.id),
-      supabase.from('analysis_history').delete().eq('user_id', user.id),
-      supabase.from('generations').delete().eq('user_id', user.id),
-      supabase.from('style_presets').delete().eq('user_id', user.id),
-    ]);
+    await deleteAllUserData(user.id);
     setDeleting(false);
     setDeleteModal(null);
   };
@@ -108,13 +155,7 @@ const Settings: React.FC = () => {
   const handleDeleteAccount = async () => {
     if (!user || deleteConfirmText !== 'DELETE') return;
     setDeleting(true);
-    await Promise.all([
-      supabase.from('resume_chunkies').delete().eq('user_id', user.id),
-      supabase.from('resumes').delete().eq('user_id', user.id),
-      supabase.from('analysis_history').delete().eq('user_id', user.id),
-      supabase.from('generations').delete().eq('user_id', user.id),
-      supabase.from('style_presets').delete().eq('user_id', user.id),
-    ]);
+    await deleteAllUserData(user.id);
     chrome.storage.local.remove(['jobfit_anthropic_key', 'jobfit_voyage_key']);
     setDeleting(false);
     signOut();
@@ -163,7 +204,17 @@ const Settings: React.FC = () => {
       </div>
 
       {/* API Keys */}
-      <div className="bg-white border border-ink-200 overflow-hidden">
+      <motion.div
+        animate={highlightKeys && apiStatus !== 'valid' ? {
+          boxShadow: [
+            '0 0 0px 0px rgba(239,68,68,0)',
+            '0 0 16px 4px rgba(239,68,68,0.45)',
+            '0 0 0px 0px rgba(239,68,68,0)',
+          ],
+        } : { boxShadow: '0 0 0px 0px rgba(0,0,0,0)' }}
+        transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
+        className="bg-white border border-ink-200 overflow-hidden"
+      >
         <button
           onClick={() => setShowKeys(v => !v)}
           className="w-full flex items-center gap-4 p-4 hover:bg-ink-50 transition-colors"
@@ -203,7 +254,7 @@ const Settings: React.FC = () => {
                     <input
                       type={showAnthropicKey ? 'text' : 'password'}
                       value={anthropicKey}
-                      onChange={e => setAnthropicKey(e.target.value)}
+                      onChange={e => { setAnthropicKey(e.target.value); setAnthropicKeyStatus(null) }}
                       placeholder="sk-ant-api03-..."
                       className="flex-1 bg-ink-50 border border-ink-200 px-3 py-2 text-xs text-ink-900 placeholder-ink-400 focus:outline-none focus:border-crimson-500"
                     />
@@ -213,6 +264,10 @@ const Settings: React.FC = () => {
                     >
                       {showAnthropicKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
+                    {anthropicValidating && <Loader2 className="w-3.5 h-3.5 animate-spin text-ink-400 shrink-0" />}
+                    {!anthropicValidating && anthropicKeyStatus === 'valid' && <Check className="w-3.5 h-3.5 text-green-500 shrink-0" />}
+                    {!anthropicValidating && anthropicKeyStatus === 'invalid' && <X className="w-3.5 h-3.5 text-flare shrink-0" />}
+                    {!anthropicValidating && anthropicKeyStatus === 'error' && <AlertTriangle className="w-3.5 h-3.5 text-citrus shrink-0" />}
                   </div>
                 </div>
 
@@ -223,7 +278,7 @@ const Settings: React.FC = () => {
                     <input
                       type={showVoyageKey ? 'text' : 'password'}
                       value={voyageKey}
-                      onChange={e => setVoyageKey(e.target.value)}
+                      onChange={e => { setVoyageKey(e.target.value); setVoyageKeyStatus(null) }}
                       placeholder="pa-..."
                       className="flex-1 bg-ink-50 border border-ink-200 px-3 py-2 text-xs text-ink-900 placeholder-ink-400 focus:outline-none focus:border-crimson-500"
                     />
@@ -233,21 +288,31 @@ const Settings: React.FC = () => {
                     >
                       {showVoyageKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
+                    {voyageValidating && <Loader2 className="w-3.5 h-3.5 animate-spin text-ink-400 shrink-0" />}
+                    {!voyageValidating && voyageKeyStatus === 'valid' && <Check className="w-3.5 h-3.5 text-green-500 shrink-0" />}
+                    {!voyageValidating && voyageKeyStatus === 'invalid' && <X className="w-3.5 h-3.5 text-flare shrink-0" />}
+                    {!voyageValidating && voyageKeyStatus === 'error' && <AlertTriangle className="w-3.5 h-3.5 text-citrus shrink-0" />}
                   </div>
                 </div>
 
                 <button
                   onClick={handleSaveKeys}
-                  className="w-full flex items-center justify-center gap-2 p-3 bg-crimson-500 hover:bg-crimson-600 text-cream font-bold uppercase tracking-widest text-[10px] transition-all active:scale-95"
+                  disabled={saving}
+                  className="w-full flex items-center justify-center gap-2 p-3 bg-crimson-500 hover:bg-crimson-600 disabled:opacity-50 text-cream font-bold uppercase tracking-widest text-[10px] transition-all active:scale-95"
                 >
-                  {keysSaved ? <Check className="w-3 h-3 text-citrus" /> : <Key className="w-3 h-3" />}
-                  {keysSaved ? 'Saved!' : 'Save Keys'}
+                  {saving ? (
+                    <><Loader2 className="w-3 h-3 animate-spin" /> Validating…</>
+                  ) : keysSaved ? (
+                    <><Check className="w-3 h-3 text-citrus" /> Saved!</>
+                  ) : (
+                    <><Key className="w-3 h-3" /> Save Keys</>
+                  )}
                 </button>
               </div>
             </motion.div>
           )}
         </AnimatePresence>
-      </div>
+      </motion.div>
 
       {/* AI Usage */}
       <div className="bg-white border border-ink-200 overflow-hidden">
