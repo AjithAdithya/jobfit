@@ -23,7 +23,7 @@ const FALLBACK_MODELS = [
   "claude-haiku-4-5",
   "claude-haiku-4-5-20251001",
   "claude-sonnet-4-6",
-  "claude-opus-4-7"
+  "claude-sonnet-4-6"
 ];
 
 export async function callClaude(
@@ -190,7 +190,7 @@ export async function callClaudeStream(
   const apiKey = await resolveAnthropicKey();
   if (!apiKey) throw new MissingApiKeyError();
 
-  const model = options?.model ?? 'claude-opus-4-7';
+  const model = options?.model ?? 'claude-sonnet-4-6';
   const maxTokens = options?.maxTokens ?? 4096;
 
   const response = await fetch("https://api.anthropic.com/v1/messages", {

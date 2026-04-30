@@ -582,7 +582,7 @@ Draft the 4-paragraph cover letter now. Use ONLY facts from the resume context a
 
 export async function generateCoverLetter(input: CoverLetterInput): Promise<string> {
   return callClaudeLogged(COVER_LETTER_SYSTEM_PROMPT, buildCoverLetterPrompt(input), 'cover_letter', {
-    model: 'claude-opus-4-7',
+    model: 'claude-sonnet-4-6',
     maxTokens: 2048,
   });
 }
@@ -596,7 +596,7 @@ export async function generateCoverLetterStream(
     buildCoverLetterPrompt(input),
     'cover_letter',
     onChunk,
-    { model: 'claude-opus-4-7', maxTokens: 2048 }
+    { model: 'claude-sonnet-4-6', maxTokens: 2048 }
   );
 }
 

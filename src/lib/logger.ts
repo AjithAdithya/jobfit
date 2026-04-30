@@ -16,7 +16,7 @@ const MODEL_COSTS: Record<string, { input: number; output: number }> = {
   'claude-haiku-4-5':          { input: 1.0e-6,  output: 5.0e-6  },
   'claude-haiku-4-5-20251001': { input: 1.0e-6,  output: 5.0e-6  },
   'claude-sonnet-4-6':         { input: 3.0e-6,  output: 15.0e-6 },
-  'claude-opus-4-7':           { input: 15.0e-6, output: 75.0e-6 },
+  'claude-sonnet-4-6':           { input: 15.0e-6, output: 75.0e-6 },
 };
 
 function djb2Hash(str: string): string {
@@ -144,7 +144,7 @@ export async function callClaudeStreamLogged(
   options?: ClaudeCallOptions & { analysisHistoryId?: string }
 ): Promise<void> {
   const start = Date.now();
-  const model = options?.model ?? 'claude-opus-4-7';
+  const model = options?.model ?? 'claude-sonnet-4-6';
   let success = true;
   let errorMessage: string | undefined;
   let outputLength = 0;

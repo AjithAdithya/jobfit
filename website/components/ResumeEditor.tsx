@@ -555,7 +555,7 @@ export default function ResumeEditor(props: Props) {
                 <button
                   onClick={() => setSourceCollapsed(false)}
                   title="Show source"
-                  className="h-8 md:h-auto md:w-8 shrink-0 bg-crimson-500 hover:bg-crimson-600 transition-colors flex items-center justify-center border-b md:border-b-0 md:border-r border-crimson-600"
+                  className="h-8 md:h-auto md:w-8 shrink-0 bg-crimson-500 hover:bg-crimson-600 transition-colors flex items-center md:items-start justify-center md:pt-3 border-b md:border-b-0 md:border-r border-crimson-600"
                 >
                   <span className="md:hidden font-mono text-[9px] text-white tracking-widest uppercase select-none">
                     source

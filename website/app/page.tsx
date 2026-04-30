@@ -1,105 +1,10 @@
 import Link from 'next/link'
+import Image from 'next/image'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import BetaButton from '@/components/BetaButton'
+import ProductShowcase from '@/components/ProductShowcase'
 import { ArrowUpRight, ArrowRight } from 'lucide-react'
-
-/* ============================================================
-   EXTENSION MOCKUP — editorial, Ajith-styled
-   ============================================================ */
-function ExtensionMockup() {
-  return (
-    <div className="relative w-full bg-cream border border-ink-900 shadow-print-xl" style={{ fontFamily: 'Poppins, sans-serif' }}>
-      {/* Header strip */}
-      <div className="flex items-center justify-between px-5 py-4 border-b border-ink-200">
-        <div className="flex items-center gap-2.5">
-          <div className="w-7 h-7 rounded-full border border-ink-900 flex items-center justify-center relative">
-            <span className="font-chunk text-[11px] leading-none tracking-tighter">JF</span>
-            <span className="absolute -top-0.5 -right-0.5 text-[8px] text-crimson-500">✦</span>
-          </div>
-          <span className="font-chunk text-[14px] tracking-tight text-ink-900">Job</span><span className="serif-accent text-crimson-500 text-[14px]">fit</span>
-        </div>
-        <span className="font-mono text-[9px] text-ink-500 tracking-caps uppercase">v.0.1</span>
-      </div>
-
-      {/* Job info */}
-      <div className="px-5 pt-5 pb-4 border-b border-ink-200">
-        <p className="font-mono text-[9px] text-ink-400 tracking-caps uppercase mb-1">№ 01 — analyzing</p>
-        <h3 className="font-chunk text-[22px] leading-[1.05] tracking-tighter text-ink-900">senior frontend engineer</h3>
-        <p className="text-[12px] text-ink-500 mt-1">stripe · stripe.com/jobs</p>
-      </div>
-
-      {/* Score block — big editorial number */}
-      <div className="px-5 py-6 border-b border-ink-200">
-        <div className="flex items-start justify-between">
-          <div>
-            <p className="font-mono text-[9px] text-ink-400 tracking-caps uppercase mb-2">compatibility</p>
-            <h2 className="font-chunk text-[28px] leading-none text-ink-900">
-              excellent <span className="serif-accent text-crimson-500">fit</span>
-            </h2>
-            <p className="text-[11px] text-ink-500 italic mt-1 font-serif">highly competitive candidate</p>
-          </div>
-          <div className="flex items-baseline gap-1">
-            <span className="num text-[52px] leading-none tracking-tighter font-medium text-ink-900">85</span>
-            <span className="num text-[12px] text-ink-400">/100</span>
-          </div>
-        </div>
-
-        {/* Level bar */}
-        <div className="mt-5 flex gap-[2px]">
-          {[0,1,2,3,4,5,6,7,8,9].map(i => (
-            <div key={i} className={`h-1.5 flex-1 ${i < 9 ? 'bg-citrus' : 'bg-ink-200'}`} />
-          ))}
-        </div>
-        <div className="mt-1 flex justify-between">
-          <span className="font-mono text-[9px] text-ink-400">no fit</span>
-          <span className="font-mono text-[9px] text-ink-900 font-medium">elite</span>
-        </div>
-      </div>
-
-      {/* Matching strengths */}
-      <div className="px-5 py-4 border-b border-ink-200">
-        <div className="flex items-baseline justify-between mb-3">
-          <p className="font-mono text-[9px] text-ink-400 tracking-caps uppercase">matching strengths</p>
-          <span className="num text-[14px] text-ink-900">
-            <span className="font-medium">06</span><span className="text-ink-400"> / 09</span>
-          </span>
-        </div>
-        <ul className="space-y-1.5">
-          {['React & TypeScript expertise', 'Performance optimization', '5+ years frontend'].map((s, i) => (
-            <li key={i} className="flex items-start gap-2 text-[12px] leading-snug">
-              <span className="font-mono text-[10px] text-ink-400 num">0{i+1}</span>
-              <span className="text-ink-700">{s}</span>
-            </li>
-          ))}
-        </ul>
-      </div>
-
-      {/* Keywords */}
-      <div className="px-5 py-4 border-b border-ink-200">
-        <p className="font-mono text-[9px] text-ink-400 tracking-caps uppercase mb-3">target keywords</p>
-        <div className="flex flex-wrap gap-1.5">
-          {['TypeScript', 'React', 'GraphQL', 'CI/CD'].map(k => (
-            <span key={k} className="px-2.5 py-1 bg-ink-900 text-cream text-[11px] rounded-sm">{k}</span>
-          ))}
-          {['Node.js', 'AWS'].map(k => (
-            <span key={k} className="px-2.5 py-1 border border-ink-300 text-ink-500 text-[11px] rounded-sm">{k}</span>
-          ))}
-        </div>
-      </div>
-
-      {/* CTA */}
-      <div className="px-5 py-4 grid grid-cols-2 gap-2">
-        <button className="px-3 py-2.5 bg-ink-900 text-cream text-[12px] font-medium rounded-md flex items-center justify-center gap-1.5">
-          generate resume <span>→</span>
-        </button>
-        <button className="px-3 py-2.5 border border-ink-900 text-ink-900 text-[12px] font-medium rounded-md">
-          download .docx
-        </button>
-      </div>
-    </div>
-  )
-}
 
 /* ============================================================
    PAGE
@@ -161,13 +66,22 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* Right — mockup */}
+            {/* Right — screenshot */}
             <div className="lg:col-span-5 flex justify-center lg:justify-end lg:-mr-6">
-              <div className="relative w-full max-w-[380px]">
+              <div className="relative w-full max-w-[360px]">
                 <div className="hidden sm:block absolute -top-6 -left-6 font-mono text-[10px] text-ink-400 tracking-caps uppercase">
                   fig. 01 · the extension
                 </div>
-                <ExtensionMockup />
+                <div className="rounded-[2.5rem] border-4 border-ink-900 shadow-print-xl overflow-hidden bg-ink-900">
+                  <Image
+                    src="/screenshots/ext-03-match-score.png"
+                    alt="JobFit extension showing your match score"
+                    width={360}
+                    height={640}
+                    className="w-full h-auto block"
+                    priority
+                  />
+                </div>
               </div>
             </div>
           </div>
@@ -197,12 +111,15 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* ── PRODUCT SHOWCASE — three-act narrative ── */}
+      <ProductShowcase />
+
       {/* ── THE SIX FEATURES — editorial grid ── */}
       <section className="py-16 lg:py-32">
         <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-10">
           <div className="grid lg:grid-cols-12 gap-8 mb-16">
             <div className="lg:col-span-5">
-              <p className="font-mono text-[11px] text-crimson-500 tracking-caps uppercase mb-4">№ 02 — the toolkit</p>
+              <p className="font-mono text-[11px] text-crimson-500 tracking-caps uppercase mb-4">№ 05 — the toolkit</p>
               <h2 className="font-chunk text-big text-ink-900">
                 six <span className="serif-accent text-crimson-500">precise</span> tools.<br />
                 nothing more.
@@ -246,7 +163,7 @@ export default function HomePage() {
       <section className="py-16 lg:py-32 bg-ink-900 text-cream">
         <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-10">
           <div className="mb-16">
-            <p className="font-mono text-[11px] text-citrus tracking-caps uppercase mb-4">№ 03 — the workflow</p>
+            <p className="font-mono text-[11px] text-citrus tracking-caps uppercase mb-4">№ 06 — the workflow</p>
             <h2 className="font-chunk text-big">
               from job post to tailored resume<br />
               in <span className="serif-accent text-citrus">three</span> steps.
@@ -285,22 +202,41 @@ export default function HomePage() {
       {/* ── PULL QUOTE ── */}
       <section className="py-16 lg:py-32">
         <div className="max-w-[1100px] mx-auto px-4 sm:px-6 lg:px-10">
-          <p className="font-mono text-[11px] text-ink-400 tracking-caps uppercase mb-8 text-center">№ 04 — principle</p>
-          <blockquote className="font-serif italic text-[clamp(2rem,5vw,4rem)] leading-[1.1] text-ink-900 text-center">
-            "your keys,<br />
-            your data,<br />
-            <span className="text-crimson-500">your control</span>."
-          </blockquote>
-          <p className="text-center text-[14px] text-ink-500 mt-8 max-w-lg mx-auto">
-            Three privacy principles, in order of importance. Bring your own Anthropic and Voyage API keys. They live in your browser. They never touch our servers.
-          </p>
-          <div className="mt-10 flex justify-center">
-            <Link
-              href="/privacy"
-              className="inline-flex items-center gap-2 px-6 py-3 border border-ink-900 text-ink-900 rounded-md hover:bg-ink-900 hover:text-cream transition-colors text-[15px]"
-            >
-              read the full privacy policy <ArrowRight className="w-4 h-4" />
-            </Link>
+          <p className="font-mono text-[11px] text-ink-400 tracking-caps uppercase mb-10 text-center">№ 07 — principle</p>
+          <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+            <div>
+              <blockquote className="font-serif italic text-[clamp(2rem,4vw,3.5rem)] leading-[1.1] text-ink-900">
+                "your keys,<br />
+                your data,<br />
+                <span className="text-crimson-500">your control</span>."
+              </blockquote>
+              <p className="text-[14px] text-ink-500 mt-8 max-w-sm">
+                Three privacy principles, in order of importance. Bring your own Anthropic and Voyage API keys. They live in your browser. They never touch our servers.
+              </p>
+              <div className="mt-8">
+                <Link
+                  href="/privacy"
+                  className="inline-flex items-center gap-2 px-6 py-3 border border-ink-900 text-ink-900 rounded-md hover:bg-ink-900 hover:text-cream transition-colors text-[15px]"
+                >
+                  read the full privacy policy <ArrowRight className="w-4 h-4" />
+                </Link>
+              </div>
+            </div>
+            {/* Settings screenshot — proof of principle */}
+            <div className="flex justify-center lg:justify-end">
+              <div className="w-full max-w-[260px]">
+                <div className="rounded-[2rem] border-[3px] border-ink-900 overflow-hidden bg-ink-900 shadow-lg">
+                  <Image
+                    src="/screenshots/ext-02-settings.png"
+                    alt="JobFit settings — your API keys stored locally in your browser"
+                    width={390}
+                    height={844}
+                    className="w-full h-auto block"
+                  />
+                </div>
+                <p className="font-mono text-[9px] text-ink-400 tracking-caps uppercase mt-3 text-center">your keys. your browser.</p>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -310,7 +246,7 @@ export default function HomePage() {
         <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-10">
           <div className="grid lg:grid-cols-12 gap-8 items-end">
             <div className="lg:col-span-7">
-              <p className="font-mono text-[11px] text-crimson-500 tracking-caps uppercase mb-4">№ 05 — ready?</p>
+              <p className="font-mono text-[11px] text-crimson-500 tracking-caps uppercase mb-4">№ 08 — ready?</p>
               <h2 className="font-chunk text-[clamp(3rem,7vw,6.5rem)] leading-[0.98] tracking-tightest text-ink-900">
                 install it.<br />
                 land the <span className="serif-accent text-crimson-500">interview</span>.
