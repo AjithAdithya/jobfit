@@ -71,6 +71,16 @@ const CoverLetter: React.FC<CoverLetterProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
+  // Pre-load any previously generated cover letter for this job
+  useEffect(() => {
+    if (activeHistoryItem?.cover_letter && !streamedText) {
+      setStreamedText(activeHistoryItem.cover_letter);
+      if (activeHistoryItem.cover_letter_tone) {
+        setSelectedTone(activeHistoryItem.cover_letter_tone as CoverLetterTone);
+      }
+    }
+  }, []);
+
   const fetchPersonalizedContext = async (): Promise<string> => {
     setStage('Searching your resume for relevant experience...');
 
@@ -173,6 +183,34 @@ const CoverLetter: React.FC<CoverLetterProps> = ({
           cover_letter: fullText,
           cover_letter_tone: selectedTone,
         }).eq('id', activeHistoryItem.id);
+
+        // Update the in-memory history item so the analysis view pill picks it up immediately
+        useUIStore.getState().setActiveHistory({
+          ...activeHistoryItem,
+          cover_letter: fullText,
+          cover_letter_tone: selectedTone,
+        });
+
+        // Version it
+        const { data: { user: authUser } } = await supabase.auth.getUser();
+        if (authUser) {
+          const { data: latest } = await supabase
+            .from('cover_letter_versions')
+            .select('version_number')
+            .eq('analysis_history_id', activeHistoryItem.id)
+            .order('version_number', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+          const nextVersion = ((latest?.version_number as number | undefined) ?? 0) + 1;
+          await supabase.from('cover_letter_versions').insert({
+            user_id: authUser.id,
+            analysis_history_id: activeHistoryItem.id,
+            version_number: nextVersion,
+            content: fullText,
+            tone: selectedTone,
+            source: 'extension',
+          });
+        }
       }
     } catch (err: any) {
       console.error('Cover letter generation error:', err);
@@ -409,13 +447,39 @@ body { font-family: Georgia, serif; font-size: 11pt; line-height: 1.5; color: #0
               <Loader2 className="w-3 h-3 animate-spin" /> {stage}
             </div>
           )}
-          <div className="relative p-5 bg-white border border-ink-200 min-h-[300px] max-h-[500px] overflow-y-auto custom-scrollbar">
-            <div className="text-sm text-ink-900 whitespace-pre-wrap leading-relaxed" style={{ fontFamily: 'Georgia, serif' }}>
-              {streamedText}
-              {generating && (
+          <div className="relative bg-white border border-ink-200">
+            {generating ? (
+              <div className="p-5 min-h-[300px] text-sm text-ink-900 whitespace-pre-wrap leading-relaxed" style={{ fontFamily: 'Georgia, serif' }}>
+                {streamedText}
                 <span className="inline-block w-0.5 h-4 bg-crimson-500 ml-0.5 animate-pulse" />
-              )}
-            </div>
+              </div>
+            ) : (
+              <textarea
+                className="w-full p-5 min-h-[300px] text-sm text-ink-900 leading-relaxed resize-none focus:outline-none focus:border-crimson-500"
+                style={{ fontFamily: 'Georgia, serif' }}
+                value={streamedText}
+                onChange={e => setStreamedText(e.target.value)}
+                onBlur={async e => {
+                  const text = e.target.value;
+                  if (!activeHistoryItem?.id || !text.trim()) return;
+                  await supabase.from('analysis_history').update({ cover_letter: text }).eq('id', activeHistoryItem.id);
+                  useUIStore.getState().setActiveHistory({ ...activeHistoryItem, cover_letter: text });
+                  const { data: { user: authUser } } = await supabase.auth.getUser();
+                  if (authUser) {
+                    const { data: latest } = await supabase
+                      .from('cover_letter_versions').select('version_number')
+                      .eq('analysis_history_id', activeHistoryItem.id)
+                      .order('version_number', { ascending: false }).limit(1).maybeSingle();
+                    await supabase.from('cover_letter_versions').insert({
+                      user_id: authUser.id,
+                      analysis_history_id: activeHistoryItem.id,
+                      version_number: ((latest?.version_number as number | undefined) ?? 0) + 1,
+                      content: text, tone: selectedTone, source: 'extension',
+                    });
+                  }
+                }}
+              />
+            )}
           </div>
           {streamedText && !generating && (
             <p className="num text-[10px] text-ink-400 text-right">

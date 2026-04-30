@@ -310,13 +310,12 @@ OUTPUT FORMAT — complete LaTeX document using EXACTLY this structure. Skip any
 {\\Large\\textbf{FULL NAME}}\\\\[2pt]
 email \\quad| phone \\quad| City, ST \\quad| LinkedIn URL |\\quad GitHub URL \\quad| Portfolio URL
 \\end{center}
-\\noindent\\rule{\\linewidth}{0.2pt}
 
 \\vspace{1pt}\\noindent\\textbf{\\large PROFESSIONAL SUMMARY}\\\\[-2pt]
 \\noindent\\rule{\\linewidth}{0.2pt}\\\\[2pt]
 Summary.
 
-\\vspace{3pt}\\noindent\\textbf{\\large EXPERIENCE}\\\\[-2pt]
+\\vspace{1pt}\\noindent\\textbf{\\large EXPERIENCE}\\\\[-2pt]
 \\noindent\\rule{\\linewidth}{0.2pt}
 
 \\noindent\\textbf{Job Title} \\hfill \\textit{Month Year -- Present}\\\\
@@ -325,13 +324,13 @@ Summary.
   \\item Bullet with metric.
 \\end{itemize}
 
-\\vspace{3pt}\\noindent\\textbf{\\large EDUCATION}\\\\[-2pt]
+\\vspace{1pt}\\noindent\\textbf{\\large EDUCATION}\\\\[-2pt]
 \\noindent\\rule{\\linewidth}{0.2pt}
 
 \\noindent\\textbf{Degree} \\hfill \\textit{Year}\\\\
 \\textit{University}
 
-\\vspace{3pt}\\noindent\\textbf{\\large SKILLS}\\\\[-2pt]
+\\vspace{1pt}\\noindent\\textbf{\\large SKILLS}\\\\[-2pt]
 \\noindent\\rule{\\linewidth}{0.2pt}
 
 \\noindent\\textbf{Category:} skill1, skill2

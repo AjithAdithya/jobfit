@@ -4,7 +4,7 @@ import {
   Sparkles, Settings as SettingsIcon, Loader2, ArrowRight,
   CheckCircle2, AlertCircle, LayoutGrid, Upload, Check,
   Brain, Target, Zap, Home, Briefcase, Download, FileText,
-  Mail, Palette, AlertTriangle, ClipboardPaste, ChevronDown, X, LogOut, ArrowUpRight, User, Key,
+  Mail, Palette, AlertTriangle, ClipboardPaste, ChevronDown, X, LogOut, ArrowUpRight, User, Key, Copy,
 } from 'lucide-react'
 import LatexPreview from './components/LatexPreview'
 import { useAuth } from './hooks/useAuth'
@@ -92,6 +92,10 @@ const SidePanel: React.FC = () => {
   const [regenerateNote, setRegenerateNote] = useState('')
   const [revisionHistory, setRevisionHistory] = useState<Array<{ id: string; note: string; at: number }>>([]);
   const [showStylePresets, setShowStylePresets] = useState(false)
+  const [editorTab, setEditorTab] = useState<'resume' | 'cover_letter'>('resume')
+  const [generatedCoverLetter, setGeneratedCoverLetter] = useState<string | null>(null)
+  const [clNote, setClNote] = useState('')
+  const [clCopied, setClCopied] = useState(false)
   const [activeSection, setActiveSection] = useState<'matches' | 'gaps' | 'keywords' | null>(null)
   const toggleSection = (key: 'matches' | 'gaps' | 'keywords') =>
     setActiveSection(prev => prev === key ? null : key)
@@ -147,6 +151,7 @@ const SidePanel: React.FC = () => {
       setSelectedGaps(activeHistoryItem.selected_gaps || [])
       setSelectedKeywords(activeHistoryItem.selected_keywords || [])
       setGeneratedResume(activeHistoryItem.generated_resume || null)
+      setGeneratedCoverLetter(activeHistoryItem.cover_letter || null)
       setHardRequirements(activeHistoryItem.hard_requirements || [])
     }
   }, [currentView, activeHistoryItem])
@@ -586,6 +591,55 @@ const SidePanel: React.FC = () => {
     a.href = pdfUrl
     a.download = 'JobFit_Resume.pdf'
     document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+  }
+
+  const handleCoverLetterSave = async (text: string, note?: string) => {
+    if (!text.trim()) return
+    setGeneratedCoverLetter(text)
+    const { activeHistoryItem: histItem } = useUIStore.getState()
+    if (!histItem?.id || !user) return
+    await supabase.from('analysis_history').update({
+      cover_letter: text,
+      updated_at: new Date().toISOString(),
+    }).eq('id', histItem.id)
+    useUIStore.getState().setActiveHistory({ ...histItem, cover_letter: text })
+    const { data: { user: authUser } } = await supabase.auth.getUser()
+    if (!authUser) return
+    const { data: latest } = await supabase
+      .from('cover_letter_versions').select('version_number')
+      .eq('analysis_history_id', histItem.id)
+      .order('version_number', { ascending: false }).limit(1).maybeSingle()
+    await supabase.from('cover_letter_versions').insert({
+      user_id: authUser.id,
+      analysis_history_id: histItem.id,
+      version_number: ((latest?.version_number as number | undefined) ?? 0) + 1,
+      content: text,
+      revision_note: note ?? null,
+      source: 'extension',
+    })
+  }
+
+  const handleCopyCl = async () => {
+    if (!generatedCoverLetter) return
+    await navigator.clipboard.writeText(generatedCoverLetter)
+    setClCopied(true)
+    setTimeout(() => setClCopied(false), 2000)
+  }
+
+  const handleDownloadClDocx = () => {
+    if (!generatedCoverLetter) return
+    const paragraphs = generatedCoverLetter
+      .split(/\n{2,}/)
+      .map(p => `<p style="margin:0 0 12pt 0;font-family:Georgia,serif;font-size:11pt;line-height:1.5;">${p.replace(/\n/g, '<br/>')}</p>`)
+      .join('')
+    const header = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>Cover Letter</title></head><body>"
+    const source = 'data:application/vnd.ms-word;charset=utf-8,' + encodeURIComponent(header + paragraphs + '</body></html>')
+    const a = document.createElement('a')
+    document.body.appendChild(a)
+    a.href = source
+    a.download = `JobFit_CoverLetter_${(jobContext?.title || 'cover').replace(/[^a-z0-9]/gi, '_').slice(0, 30)}.doc`
     a.click()
     document.body.removeChild(a)
   }
@@ -1199,56 +1253,114 @@ const SidePanel: React.FC = () => {
                     )}
                   </div>
 
-                  {/* Style Presets toggle */}
-                  {!generatedResume && (selectedGaps.length > 0 || selectedKeywords.length > 0) && (
-                    <button
-                      onClick={() => setShowStylePresets(!showStylePresets)}
-                      className="w-full text-xs font-bold text-ink-500 hover:text-ink-700 transition-colors py-1 flex items-center justify-center gap-2"
-                    >
-                      <Palette className="w-3 h-3" />
-                      {showStylePresets ? 'Hide style options' : 'Customize resume style'}
-                    </button>
-                  )}
-
-                  <AnimatePresence>
-                    {showStylePresets && !generatedResume && (
-                      <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: 'auto' }}
-                        exit={{ opacity: 0, height: 0 }}
-                        className="overflow-hidden"
+                  {/* ── Resume | Cover Letter pill ── */}
+                  <div className="mt-4 space-y-4">
+                    <div className="grid grid-cols-2 gap-px bg-ink-200 border border-ink-200 p-px">
+                      <button
+                        onClick={() => setEditorTab('resume')}
+                        className={`flex items-center justify-center gap-2 py-2.5 text-[10px] font-bold uppercase tracking-widest transition-all ${
+                          editorTab === 'resume' ? 'bg-ink-900 text-cream' : 'bg-white text-ink-500 hover:text-ink-900 hover:bg-ink-50'
+                        }`}
                       >
-                        <StylePresets onStyleApplied={(_style: ResumeStyle) => {}} />
-                      </motion.div>
+                        <FileText className="w-3 h-3" /> Resume
+                      </button>
+                      <button
+                        onClick={() => setEditorTab('cover_letter')}
+                        className={`flex items-center justify-center gap-2 py-2.5 text-[10px] font-bold uppercase tracking-widest transition-all ${
+                          editorTab === 'cover_letter' ? 'bg-ink-900 text-cream' : 'bg-white text-ink-500 hover:text-ink-900 hover:bg-ink-50'
+                        }`}
+                      >
+                        <Mail className="w-3 h-3" /> Cover Letter
+                      </button>
+                    </div>
+
+                    {/* ── Resume tab ── */}
+                    {editorTab === 'resume' && (<>
+                      {!generatedResume && (selectedGaps.length > 0 || selectedKeywords.length > 0) && (
+                        <button
+                          onClick={() => setShowStylePresets(!showStylePresets)}
+                          className="w-full text-xs font-bold text-ink-500 hover:text-ink-700 transition-colors py-1 flex items-center justify-center gap-2"
+                        >
+                          <Palette className="w-3 h-3" />
+                          {showStylePresets ? 'Hide style options' : 'Customize resume style'}
+                        </button>
+                      )}
+                      <AnimatePresence>
+                        {showStylePresets && !generatedResume && (
+                          <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            exit={{ opacity: 0, height: 0 }}
+                            className="overflow-hidden"
+                          >
+                            <StylePresets onStyleApplied={(_style: ResumeStyle) => {}} />
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                      {(plannerIntent === 'tailor_resume') && !generatedResume && (
+                        <motion.button
+                          initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+                          onClick={() => handleGenerateResume()}
+                          disabled={generatingResume}
+                          className="w-full flex items-center justify-center gap-3 p-4 bg-crimson-500 hover:bg-crimson-600 disabled:opacity-50 text-cream font-bold uppercase tracking-widest transition-all shadow-print-sm active:scale-95 border border-crimson-600"
+                        >
+                          {generatingResume ? <Loader2 className="w-5 h-5 animate-spin" /> : <Sparkles className="w-5 h-5" />}
+                          Generate Tailored Resume
+                        </motion.button>
+                      )}
+                    </>)}
+
+                    {/* ── Cover Letter tab ── */}
+                    {editorTab === 'cover_letter' && (
+                      !generatedCoverLetter ? (
+                        <button
+                          onClick={() => setView('cover_letter')}
+                          className="w-full flex items-center justify-center gap-3 p-4 bg-ink-900 hover:bg-ink-700 text-cream font-bold uppercase tracking-widest text-xs border border-ink-900 transition-all active:scale-95"
+                        >
+                          <Mail className="w-4 h-4" /> Write Cover Letter
+                        </button>
+                      ) : (
+                        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
+                          <h3 className="font-chunk text-xl text-ink-900 flex items-center gap-2">
+                            <CheckCircle2 className="w-5 h-5 text-ink-700" /> Cover Letter
+                          </h3>
+                          <textarea
+                            className="w-full p-4 bg-white border border-ink-200 text-sm text-ink-900 leading-relaxed resize-none focus:outline-none focus:border-crimson-500 min-h-[280px]"
+                            style={{ fontFamily: 'Georgia, serif' }}
+                            value={generatedCoverLetter}
+                            onChange={e => setGeneratedCoverLetter(e.target.value)}
+                            onBlur={e => handleCoverLetterSave(e.target.value)}
+                          />
+                          <p className="num text-[10px] text-ink-400 text-right -mt-2">
+                            {generatedCoverLetter.trim().split(/\s+/).length} words
+                          </p>
+                          <div className="grid grid-cols-2 gap-3">
+                            <button
+                              onClick={handleCopyCl}
+                              className="flex items-center justify-center gap-2 p-3 bg-ink-50 hover:bg-ink-100 text-ink-900 font-bold uppercase tracking-widest text-xs border border-ink-200 hover:border-ink-900 transition-all active:scale-95"
+                            >
+                              {clCopied ? <Check className="w-3.5 h-3.5 text-ink-700" /> : <Copy className="w-3.5 h-3.5" />}
+                              {clCopied ? 'Copied' : 'Copy'}
+                            </button>
+                            <button
+                              onClick={handleDownloadClDocx}
+                              className="flex items-center justify-center gap-2 p-3 bg-crimson-500 hover:bg-crimson-600 text-cream font-bold uppercase tracking-widest text-xs shadow-print-sm transition-all active:scale-95"
+                            >
+                              <Download className="w-3.5 h-3.5" /> DOCX
+                            </button>
+                          </div>
+                          <button
+                            onClick={() => setView('cover_letter')}
+                            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-ink-50 hover:bg-ink-900 hover:text-cream border border-ink-200 hover:border-ink-900 text-[10px] font-bold uppercase tracking-widest text-ink-600 transition-all"
+                          >
+                            <Sparkles className="w-3 h-3" /> Regenerate Cover Letter
+                          </button>
+                        </motion.div>
+                      )
                     )}
-                  </AnimatePresence>
 
-                  {/* Generate Resume button */}
-                  {(plannerIntent === 'tailor_resume') && !generatedResume && (
-                    <motion.button
-                      initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-                      onClick={() => handleGenerateResume()}
-                      disabled={generatingResume}
-                      className="w-full mt-4 flex items-center justify-center gap-3 p-4 bg-crimson-500 hover:bg-crimson-600 disabled:opacity-50 text-cream font-bold uppercase tracking-widest transition-all shadow-print-sm active:scale-95 border border-crimson-600"
-                    >
-                      {generatingResume ? <Loader2 className="w-5 h-5 animate-spin" /> : <Sparkles className="w-5 h-5" />}
-                      Generate Tailored Resume
-                    </motion.button>
-                  )}
-
-                  {/* Cover Letter button */}
-                  {analysis && !generatingResume && (
-                    <button
-                      onClick={() => setView('cover_letter')}
-                      className="w-full flex items-center justify-center gap-3 p-4 bg-ink-900 hover:bg-ink-700 text-cream font-bold uppercase tracking-widest text-xs border border-ink-900 transition-all active:scale-95"
-                    >
-                      <Mail className="w-4 h-4" />
-                      Write Cover Letter
-                    </button>
-                  )}
-
-                  {/* Generated Resume */}
-                  {generatedResume && (
+                    {/* ── Resume content (inside Resume tab) ── */}
+                    {editorTab === 'resume' && generatedResume && (
                     <motion.div
                       initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
                       className="mt-6 space-y-4"
@@ -1355,6 +1467,7 @@ const SidePanel: React.FC = () => {
                       </div>
                     </motion.div>
                   )}
+                  </div>{/* end pill wrapper */}
                 </div>
               ) : !error && (
                 <div className="py-20 flex flex-col items-center text-center space-y-6">
