@@ -63,7 +63,7 @@ export async function GET(req: NextRequest) {
 
     const { data, error } = await supabase
       .from('resume_versions')
-      .select('id, version_number, revision_note, source, created_at, latex')
+      .select('id, version_number, revision_note, source, created_at, latex, is_selected')
       .eq('analysis_history_id', historyId)
       .eq('user_id', user.id)
       .order('version_number', { ascending: false })
@@ -72,6 +72,46 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ versions: data })
   } catch (err: any) {
     console.error('Resume version list error:', err)
+    return NextResponse.json({ error: err.message || 'Server error' }, { status: 500 })
+  }
+}
+
+export async function PATCH(req: NextRequest) {
+  try {
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+    const { historyId, versionId } = await req.json()
+    if (!historyId || !versionId) {
+      return NextResponse.json({ error: 'historyId and versionId are required' }, { status: 400 })
+    }
+
+    const { data: hist } = await supabase
+      .from('analysis_history')
+      .select('id')
+      .eq('id', historyId)
+      .eq('user_id', user.id)
+      .single()
+    if (!hist) return NextResponse.json({ error: 'History not found' }, { status: 404 })
+
+    // Unset all, then set the chosen one
+    await supabase
+      .from('resume_versions')
+      .update({ is_selected: false })
+      .eq('analysis_history_id', historyId)
+      .eq('user_id', user.id)
+
+    const { error } = await supabase
+      .from('resume_versions')
+      .update({ is_selected: true })
+      .eq('id', versionId)
+      .eq('user_id', user.id)
+
+    if (error) throw error
+    return NextResponse.json({ ok: true })
+  } catch (err: any) {
+    console.error('Resume version select error:', err)
     return NextResponse.json({ error: err.message || 'Server error' }, { status: 500 })
   }
 }

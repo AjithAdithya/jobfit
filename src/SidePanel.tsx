@@ -859,7 +859,7 @@ const SidePanel: React.FC = () => {
                   <div className="p-2.5 bg-ink-100 group-hover:bg-crimson-500 transition-colors">
                     {resumeProcessing ? <Loader2 className="w-4 h-4 animate-spin text-crimson-500 group-hover:text-cream" /> : <Upload className="w-4 h-4 text-ink-500 group-hover:text-cream" />}
                   </div>
-                  <span className="eyebrow text-ink-500 group-hover:text-ink-900 transition-colors text-[9px]">Resumes</span>
+                  <span className="eyebrow text-ink-500 group-hover:text-ink-900 transition-colors text-[9px]">Upload Resume</span>
                 </button>
                 <button
                   onClick={() => setView('history')}
