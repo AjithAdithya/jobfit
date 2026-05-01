@@ -72,7 +72,7 @@ export default function HomePage() {
                 <div className="hidden sm:block absolute -top-6 -left-6 font-mono text-[10px] text-ink-400 tracking-caps uppercase">
                   fig. 01 · the extension
                 </div>
-                <div className="rounded-[2.5rem] border-4 border-ink-900 shadow-print-xl overflow-hidden bg-ink-900">
+                <div className="rounded-xl border-4 border-ink-900 shadow-print-xl overflow-hidden bg-ink-900">
                   <Image
                     src="/screenshots/ext-03-match-score.png"
                     alt="JobFit extension showing your match score"
@@ -225,7 +225,7 @@ export default function HomePage() {
             {/* Settings screenshot — proof of principle */}
             <div className="flex justify-center lg:justify-end">
               <div className="w-full max-w-[260px]">
-                <div className="rounded-[2rem] border-[3px] border-ink-900 overflow-hidden bg-ink-900 shadow-lg">
+                <div className="rounded-xl border-[3px] border-ink-900 overflow-hidden bg-ink-900 shadow-lg">
                   <Image
                     src="/screenshots/ext-02-settings.png"
                     alt="JobFit settings — your API keys stored locally in your browser"

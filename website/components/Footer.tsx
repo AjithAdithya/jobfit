@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import Image from 'next/image'
 import BetaButton from './BetaButton'
 
 export default function Footer() {
@@ -52,6 +53,47 @@ export default function Footer() {
               "your keys, your data, your <span className="text-crimson-500">control</span>."
             </p>
             <p className="text-[13px] text-ink-500 mt-2">Bring your own Anthropic and Voyage AI keys. We never see or store them.</p>
+          </div>
+        </div>
+
+        {/* Made by */}
+        <div className="py-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 border-t border-ink-200">
+          <div className="flex items-center gap-4">
+            <Image
+              src="/logo-mark-black.png"
+              alt="Ajith Adithya R K"
+              width={32}
+              height={32}
+              className="opacity-80"
+            />
+            <div>
+              <p className="font-mono text-[10px] text-ink-400 tracking-caps uppercase mb-1">designed &amp; built by</p>
+              <p className="font-chunk text-[1.1rem] leading-none text-ink-900 tracking-tight">Ajith Adithya R K</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-6">
+            <Link
+              href="https://www.linkedin.com/in/ajithadithyark"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-mono text-[10px] text-ink-500 hover:text-crimson-500 tracking-caps uppercase transition-colors underline decoration-1 underline-offset-[0.2em]"
+            >
+              linkedin
+            </Link>
+            <Link
+              href="mailto:ajith98adithya@gmail.com"
+              className="font-mono text-[10px] text-ink-500 hover:text-crimson-500 tracking-caps uppercase transition-colors underline decoration-1 underline-offset-[0.2em]"
+            >
+              email
+            </Link>
+            <Link
+              href="https://ajith98.vercel.app"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-mono text-[10px] text-ink-500 hover:text-crimson-500 tracking-caps uppercase transition-colors underline decoration-1 underline-offset-[0.2em]"
+            >
+              portfolio ↗
+            </Link>
           </div>
         </div>
 

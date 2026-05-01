@@ -4,7 +4,7 @@ function PhoneFrame({ src, alt, size = 'lg' }: { src: string; alt: string; size?
   return (
     <div className={[
       'border-[3px] border-ink-900 overflow-hidden bg-ink-900 shadow-lg',
-      size === 'lg' ? 'rounded-[2rem]' : 'rounded-[1.5rem]',
+      size === 'lg' ? 'rounded-xl' : 'rounded-lg',
     ].join(' ')}>
       <Image
         src={src}
@@ -48,8 +48,8 @@ export default function ProductShowcase() {
             <div className="lg:col-span-5 flex justify-center order-first lg:order-first">
               <div className="w-full max-w-[280px]">
                 <PhoneFrame
-                  src="/screenshots/ext-03-match-score.png"
-                  alt="JobFit extension showing your match score and hard requirements"
+                  src="/screenshots/ext-04-match-resume.png"
+                  alt="JobFit extension showing generated tailored resume"
                   size="lg"
                 />
               </div>
@@ -67,20 +67,6 @@ export default function ProductShowcase() {
                 and returns a score across ten named levels — from "no fit" to "elite fit" —
                 with the specific gaps you'd need to close.
               </p>
-              {/* Home thumbnail */}
-              <div className="mt-8 flex items-end gap-4">
-                <div className="w-[90px] flex-shrink-0">
-                  <PhoneFrame
-                    src="/screenshots/ext-01-home.png"
-                    alt="Extension home — your open roles at a glance"
-                    size="sm"
-                  />
-                  <p className="font-mono text-[9px] text-ink-400 tracking-caps uppercase mt-2 text-center">home view</p>
-                </div>
-                <p className="text-[13px] text-ink-500 italic font-serif pb-2 leading-snug">
-                  Your open roles,<br />at a glance.
-                </p>
-              </div>
             </div>
 
           </div>
@@ -133,8 +119,9 @@ export default function ProductShowcase() {
           {/* 4-screenshot strip — the full generation flow */}
           <div className="border-t border-cream/20 pt-10">
             <p className="font-mono text-[10px] text-cream/40 tracking-caps uppercase mb-8">the full flow</p>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 lg:gap-8">
+            <div className="grid grid-cols-3 md:grid-cols-5 gap-4 lg:gap-6">
               {[
+                { src: '/screenshots/ext-01-home.png', label: 'home' },
                 { src: '/screenshots/ext-05-resume-preview.png', label: 'resume preview' },
                 { src: '/screenshots/ext-06-resume-notes.png', label: 'revision notes' },
                 { src: '/screenshots/ext-07-cl-intel.png', label: 'company intel' },
