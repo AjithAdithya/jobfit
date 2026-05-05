@@ -1,0 +1,60 @@
+name: Render JobFit Walkthrough Video
+
+on:
+  # Run manually from GitHub Actions tab
+  workflow_dispatch:
+  # Or auto-trigger on pushes that touch the video source
+  push:
+    paths:
+      - "video/src/**"
+      - "video/public/**"
+      - "video/package.json"
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: video/package-lock.json
+
+      - name: Install dependencies
+        working-directory: video
+        run: npm ci
+
+      - name: Install Chrome for rendering
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y chromium-browser
+          echo "CHROME_PATH=$(which chromium-browser)" >> $GITHUB_ENV
+
+      - name: Create output directory
+        working-directory: video
+        run: mkdir -p out
+
+      - name: Render walkthrough video
+        working-directory: video
+        run: |
+          npx remotion render \
+            WalkthroughVideo \
+            out/jobfit-walkthrough.mp4 \
+            --codec=h264 \
+            --browser-executable="$CHROME_PATH" \
+            --concurrency=4 \
+            --gl=swiftshader
+        env:
+          DISPLAY: ":99"
+
+      - name: Upload rendered video
+        uses: actions/upload-artifact@v4
+        with:
+          name: jobfit-walkthrough-video
+          path: video/out/jobfit-walkthrough.mp4
+          retention-days: 30

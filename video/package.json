@@ -1,0 +1,24 @@
+{
+  "name": "jobfit-video",
+  "version": "2.0.0",
+  "description": "JobFit AI — 60s LinkedIn walkthrough video",
+  "scripts": {
+    "preview": "remotion studio src/index.ts --browser-executable=\"C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe\"",
+    "render": "remotion render src/index.ts WalkthroughVideo out/jobfit-walkthrough.mp4 --codec=h264 --browser-executable=\"C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe\"",
+    "render:vertical": "remotion render src/index.ts WalkthroughVideo out/jobfit-walkthrough-9x16.mp4 --codec=h264 --props={\"vertical\":true} --browser-executable=\"C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe\"",
+    "render:webm": "remotion render src/index.ts WalkthroughVideo out/jobfit-walkthrough.webm --codec=vp8 --browser-executable=\"C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe\""
+  },
+  "dependencies": {
+    "@remotion/cli": "4.0.290",
+    "@remotion/google-fonts": "4.0.290",
+    "lucide-react": "^0.460.0",
+    "remotion": "4.0.290"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.11",
+    "@types/react-dom": "^18.3.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "typescript": "^5.6.2"
+  }
+}
