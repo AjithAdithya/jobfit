@@ -1,9 +1,17 @@
-name: Render JobFit Walkthrough Video
+name: Render JobFit Videos
 
 on:
-  # Run manually from GitHub Actions tab
   workflow_dispatch:
-  # Or auto-trigger on pushes that touch the video source
+    inputs:
+      composition:
+        description: "Which composition to render"
+        required: true
+        default: "JobFitCinematic"
+        type: choice
+        options:
+          - JobFitCinematic
+          - WalkthroughVideo
+          - both
   push:
     paths:
       - "video/src/**"
@@ -29,7 +37,7 @@ jobs:
         working-directory: video
         run: npm ci
 
-      - name: Install Chrome for rendering
+      - name: Install Chrome
         run: |
           sudo apt-get update
           sudo apt-get install -y chromium-browser
@@ -39,7 +47,22 @@ jobs:
         working-directory: video
         run: mkdir -p out
 
-      - name: Render walkthrough video
+      - name: Render JobFitCinematic (v2 1080×1080)
+        if: ${{ github.event_name == 'push' || inputs.composition == 'JobFitCinematic' || inputs.composition == 'both' }}
+        working-directory: video
+        run: |
+          npx remotion render \
+            JobFitCinematic \
+            out/jobfit-cinematic.mp4 \
+            --codec=h264 \
+            --browser-executable="$CHROME_PATH" \
+            --concurrency=4 \
+            --gl=swiftshader
+        env:
+          DISPLAY: ":99"
+
+      - name: Render WalkthroughVideo (v1 1280×720)
+        if: ${{ inputs.composition == 'WalkthroughVideo' || inputs.composition == 'both' }}
         working-directory: video
         run: |
           npx remotion render \
@@ -52,9 +75,9 @@ jobs:
         env:
           DISPLAY: ":99"
 
-      - name: Upload rendered video
+      - name: Upload rendered videos
         uses: actions/upload-artifact@v4
         with:
-          name: jobfit-walkthrough-video
-          path: video/out/jobfit-walkthrough.mp4
+          name: jobfit-videos
+          path: video/out/*.mp4
           retention-days: 30
