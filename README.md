@@ -4,6 +4,8 @@ A Chrome extension that analyzes job postings against your resume, scores your f
 
 📘 **[Product Wiki on Notion](https://www.notion.so/JobFit-AI-Product-Wiki-358a26bbfbf981a6b04fc80eba69270a)**
 
+**[Product Website](https://jobfit-amber.vercel.app)**
+
 ---
 
 ## What it does
