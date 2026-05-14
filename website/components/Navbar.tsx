@@ -15,7 +15,8 @@ const MARKETING_NAV = [
 
 const APP_NAV = [
   { href: '/dashboard', label: 'dashboard', num: '01' },
-  { href: '/dashboard/vault', label: 'vault', num: '02' },
+  { href: '/dashboard/jobs', label: 'jobs', num: '02' },
+  { href: '/dashboard/vault', label: 'vault', num: '03' },
 ]
 
 function Monogram() {

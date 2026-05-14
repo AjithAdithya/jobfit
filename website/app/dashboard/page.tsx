@@ -2,7 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getMatchLevel } from '@/lib/matchLevel'
 import { computeCompleteness, completenessColor } from '@/lib/profileUtils'
 import Link from 'next/link'
-import { ArrowUpRight, Pencil, ArrowRight } from 'lucide-react'
+import { ArrowUpRight, Pencil, ArrowRight, Briefcase } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -43,6 +43,86 @@ async function getStats(userId: string, supabase: ReturnType<typeof createClient
   }, {})
 
   return { items, avgScore, statusCounts, resumeCount: resumes?.length || 0 }
+}
+
+async function RecommendedJobsTeaser({
+  userId,
+  supabase,
+}: {
+  userId: string
+  supabase: ReturnType<typeof createClient>
+}) {
+  const { data: topJobs } = await supabase.rpc('list_user_jobs', {
+    p_user_id: userId,
+    p_location_type: null,
+    p_score_floor: 0,
+    p_role_family: null,
+    p_source: null,
+    p_max_age_days: 35,
+    p_include_hidden: false,
+    p_include_saved: null,
+    p_limit: 3,
+    p_offset: 0,
+  })
+
+  const jobs = topJobs ?? []
+
+  return (
+    <div className="mb-10 lg:mb-12">
+      <div className="flex items-baseline justify-between mb-4 gap-4">
+        <div>
+          <p className="font-mono text-[10px] text-crimson-500 tracking-caps uppercase mb-2">№ 02</p>
+          <h2 className="font-chunk text-[clamp(1.75rem,5vw,3rem)] tracking-tight text-ink-900">
+            recommended <span className="serif-accent text-crimson-500">jobs</span>
+          </h2>
+        </div>
+        <Link
+          href="/dashboard/jobs"
+          className="font-mono text-[10px] text-ink-500 tracking-caps uppercase hover:text-ink-900 transition-colors shrink-0"
+        >
+          view all →
+        </Link>
+      </div>
+
+      {jobs.length === 0 ? (
+        <Link href="/dashboard/jobs/preferences" className="block border border-dashed border-ink-200 p-8 hover:border-ink-900 transition-colors group">
+          <div className="flex items-center gap-4">
+            <Briefcase className="w-8 h-8 text-ink-300 group-hover:text-ink-900 transition-colors" />
+            <div>
+              <p className="font-chunk text-[18px] text-ink-900 mb-1">set up your job feed</p>
+              <p className="font-serif italic text-[13px] text-ink-500">tell us your target roles — we score every posting nightly.</p>
+            </div>
+            <ArrowRight className="w-5 h-5 text-ink-300 group-hover:text-ink-900 transition-colors ml-auto shrink-0" />
+          </div>
+        </Link>
+      ) : (
+        <div className="space-y-2">
+          {jobs.map((job: any) => {
+            const level = getMatchLevel(job.score)
+            return (
+              <Link
+                key={job.job_id}
+                href={`/dashboard/jobs/${job.job_id}`}
+                className="flex items-center gap-4 border border-ink-200 hover:border-ink-900 transition-colors p-4 sm:p-5 group"
+              >
+                <div className="flex flex-col items-center gap-1 shrink-0">
+                  <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: level.hex }} />
+                  <span className="font-mono text-[10px] text-ink-500 num">{job.score}</span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-chunk text-[16px] sm:text-[18px] tracking-tight text-ink-900 group-hover:text-crimson-500 transition-colors truncate">
+                    {job.job_title}
+                  </p>
+                  <p className="font-mono text-[11px] text-ink-500">{job.company}</p>
+                </div>
+                <ArrowRight className="w-4 h-4 text-ink-300 group-hover:text-ink-900 transition-colors shrink-0" />
+              </Link>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
 }
 
 export default async function DashboardPage() {
@@ -152,11 +232,14 @@ export default async function DashboardPage() {
         </div>
       )}
 
+      {/* Recommended jobs teaser */}
+      <RecommendedJobsTeaser userId={user.id} supabase={supabase} />
+
       {/* Recent */}
       <div>
         <div className="flex items-baseline justify-between mb-6 gap-4">
           <div>
-            <p className="font-mono text-[10px] text-crimson-500 tracking-caps uppercase mb-2">№ 02</p>
+            <p className="font-mono text-[10px] text-crimson-500 tracking-caps uppercase mb-2">№ 03</p>
             <h2 className="font-chunk text-[clamp(1.75rem,5vw,3rem)] tracking-tight text-ink-900">
               recent <span className="serif-accent text-crimson-500">activity</span>
             </h2>

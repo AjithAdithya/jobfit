@@ -8,6 +8,7 @@
     "build": "tsc -b && vite build",
     "zip": "npm run build && cd dist && powershell Compress-Archive -Force -Path * -DestinationPath ../jobfit-extension.zip && echo \"Created jobfit-extension.zip\"",
     "lint": "eslint .",
+    "lint:scoring-parity": "node --loader ts-node/esm scripts/check-scoring-parity.ts",
     "preview": "vite preview"
   },
   "dependencies": {
